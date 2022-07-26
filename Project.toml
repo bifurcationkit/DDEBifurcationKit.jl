@@ -1,0 +1,13 @@
+name = "DDEBifurcationKit"
+uuid = "954e4062-bdb8-4e3f-9eee-d47105dd3e65"
+authors = ["Romain Veltz <romain.veltz@inria.fr> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.5"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
