@@ -50,12 +50,12 @@ BK.hasAdjoint(prob::ConstantDDEBifProblem) = true
 
 function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
 	print(io, prefix * "┌─ Constant Delays Bifurcation Problem with uType ")
-	printstyled(io, getVectorType(prob), color=:cyan, bold = true)
+	printstyled(io, BK.getVectorType(prob), color=:cyan, bold = true)
 	print(io, prefix * "\n├─ Inplace:  ")
-	printstyled(io, isInplace(prob), color=:cyan, bold = true)
+	printstyled(io, BK.isInplace(prob), color=:cyan, bold = true)
 	# printstyled(io, isSymmetric(prob), color=:cyan, bold = true)
 	print(io, "\n" * prefix * "└─ Parameter: ")
-	printstyled(io, BifurcationKit.getLensSymbol(getLens(prob)), color=:cyan, bold = true)
+	printstyled(io, BK.getLensSymbol(getLens(prob)), color=:cyan, bold = true)
 end
 
 struct JacobianConstantDDE{Tp,T1,T2,T3,Td}
@@ -109,7 +109,7 @@ function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
 	J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
 	Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd[ii] = z), p), x) for ii in eachindex(prob.delays0)]
-	return JacobianConstantDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(prob.delays0,p))
+	return JacobianConstantDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
 end
 
 function jad(prob::ConstantDDEBifProblem, x, p)
