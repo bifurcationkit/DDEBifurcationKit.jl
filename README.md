@@ -1,6 +1,6 @@
 # DDEBifurcationKit
 
-`DDEBifurcationKit.jl` is a component package in the `BifurcationKit` ecosystem. It holds the delay differential equation utilities. While completely independent
+`DDEBifurcationKit.jl` is a component package in the `BifurcationKit` ecosystem. It holds the delay differential equation (DDE) utilities. While completely independent
 and usable on its own, users interested in using this
 functionality should check out [BifurcationKit.jl](https://github.com/bifurcationkit/BifurcationKit.jl).
 

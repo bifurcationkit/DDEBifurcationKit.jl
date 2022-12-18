@@ -22,6 +22,27 @@ function (hopfpb::HopfDDEProblem)(x::ArrayPartition, params)
 	ArrayPartition(res...)
 end
 ###################################################################################################
+# define a problem <: AbstractBifurcationProblem
+# @inline hasAdjoint(hopfpb::HopfMAProblem) = hasAdjoint(hopfpb.prob)
+# @inline isSymmetric(hopfpb::HopfMAProblem) = isSymmetric(hopfpb.prob)
+# residual(hopfpb::HopfMAProblem, x, p) = hopfpb.prob(x, p)
+# # jacobian(hopfpb::HopfMAProblem, x, p) = hopfpb.jacobian(x, p)
+# jacobian(hopfpb::HopfMAProblem{Tprob, Nothing, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = (x = x, params = p, hopfpb = hopfpb.prob)
+#
+struct JacobianHopfDDE{T1,T2,T3,T4}
+	prob::T1
+	J::T2
+	x::T3
+	p::T4
+end
+
+(l::BK.DefaultLS)(J::JacobianHopfDDE, args...; kw...) = l(J.J, args...; kw...)
+
+
+BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = JacobianHopfDDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
+#
+# jacobian(hopfpb::HopfMAProblem{Tprob, FiniteDifferences, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = dx -> (hopfpb.prob(x .+ 1e-8 .* dx, p) .- hopfpb.prob(x .- 1e-8 .* dx, p)) / (2e-8)
+################################################################################################### Newton / Continuation functions
 """
 $(SIGNATURES)
 
@@ -222,24 +243,6 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 		newpar = set(par, lens1, p1)
 		newpar = set(newpar, lens2, p2)
 
-		a = hopfPb.a
-		b = hopfPb.b
-
-		# expression of the jacobian
-		J_at_xp = jacobian(hopfPb.prob_vf, x, newpar)
-
-		# compute new b
-		T = typeof(p1)
-		newb = hopfPb.linbdsolver(J_at_xp, a, b, T(0), hopfPb.zero, T(1); shift = Complex(0, -ω), Mass = hopfPb.massmatrix)[1]
-
-		# compute new a
-		JAd_at_xp = hasAdjoint(hopfPb) ? jad(hopfPb.prob_vf, x, newpar) : adjoint(J_at_xp)
-		newa = hopfPb.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = adjoint(hopfPb.massmatrix))[1]
-
-		hopfPb.a .= newa ./ normC(newa)
-		# do not normalize with dot(newb, hopfPb.a), it prevents BT detection
-		hopfPb.b .= newb ./ normC(newb)
-
 		# we stop continuation at Bogdanov-Takens points
 
 		# CA NE DEVRAIT PAS ETRE ISSNOT?
@@ -267,36 +270,36 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 
 		probhopf = iter.prob.prob
 
-		a = probhopf.a
-		b = probhopf.b
-
 		# expression of the jacobian
 		J_at_xp = BK.jacobian(probhopf.prob_vf, x, newpar)
 
 		# compute new b
 		T = typeof(p1)
 		# ζ = probhopf.linbdsolver(J_at_xp, a, b, T(0), probhopf.zero, T(1); shift = Complex(0, -ω), Mass = hopfPb.massmatrix)[1]
+		λ = Complex(0, ω)
 		ζ = @. z.x[2] + im * z.x[3]
 		ζ ./= normC(ζ)
 
-		# compute new a
-		# JAd_at_xp = BK.hasAdjoint(probhopf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
+		# compute new ζstar
+		# JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
+
+		JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
+		ζstar, λstar = BK.getAdjointBasis(JAd_at_xp, conj(λ), BK.getContParams(iter).newtonOptions.eigsolver.eigsolver)
 		# ζstar = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
 		# test function for Bogdanov-Takens
-		# JE ME DEMANDE SI CA NE FOUT PAS LA MERDE AVEC LA BISSECTION. EN EFFET BT EST DE SIGNE CONSTANT ET DONC LA BISSSECTION ET LE CHANGEMENT DE SIGNES VONT MERDER. IL SUFFIT PE DE PRENDRE ω - ϵ Newton
 		probhopf.BT = ω
 		# BT2 = real( dot(ζstar ./ normC(ζstar), ζ) )
 		# ζstar ./= dot(ζ, ζstar)
 
-		# hp = Hopf(x, p1, ω, newpar, lens1, ζ, ζstar, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
-		# hopfNormalForm(prob_vf, hp, options_newton.linsolver, verbose = false)
+		hp = BK.Hopf(x, p1, ω, newpar, lens1, ζ, ζstar, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
+		BK.hopfNormalForm(probhopf.prob_vf, hp, options_newton.linsolver, verbose = false)
 
 		# lyapunov coefficient
-		# probhopf.l1 = hp.nf.b
+		probhopf.l1 = hp.nf.b
 		# test for Bautin bifurcation.
 		# If GH is too large, we take the previous value to avoid spurious detection
 		# GH will be large close to BR points
-		# probhopf.GH = abs(real(hp.nf.b)) < 1e5 ? real(hp.nf.b) : state.eventValue[2][2]
+		probhopf.GH = abs(real(hp.nf.b)) < 1e5 ? real(hp.nf.b) : state.eventValue[2][2]
 		return probhopf.BT, probhopf.GH
 	end
 
@@ -309,16 +312,16 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 	prob_h = reMake(prob_h, recordFromSolution = _printsol2)
 
 	# eigen solver
-	eigsolver = BK.HopfEig(BK.getsolver(opt_hopf_cont.newtonOptions.eigsolver))
+	eigsolver = HopfDDEEig(BK.getsolver(opt_hopf_cont.newtonOptions.eigsolver))
 
 	# event for detecting codim 2 points
 	if computeEigenElements
-		event = PairOfEvents(ContinuousEvent(2, testBT_GH, computeEigenElements, ("bt", "gh"), threshBT), BifDetectEvent)
+		event = BK.PairOfEvents(BK.ContinuousEvent(2, testBT_GH, computeEigenElements, ("bt", "gh"), threshBT), BifDetectEvent)
 		# careful here, we need to adjust the tolerance for stability to avoid
 		# spurious ZH or HH bifurcations
 		@set! opt_hopf_cont.tolStability = 10opt_hopf_cont.newtonOptions.tol
 	else
-		event = ContinuousEvent(2, testBT_GH, false, ("bt", "gh"), threshBT)
+		event = BK.ContinuousEvent(2, testBT_GH, false, ("bt", "gh"), threshBT)
 	end
 
 	prob_h = reMake(prob_h, recordFromSolution = _printsol2)
@@ -575,7 +578,7 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 	prob_h = reMake(prob_h, recordFromSolution = _printsol2)
 
 	# eigen solver
-	eigsolver = BK.HopfEig(BK.getsolver(opt_hopf_cont.newtonOptions.eigsolver))
+	eigsolver = HopfDDEEig(BK.getsolver(opt_hopf_cont.newtonOptions.eigsolver))
 
 	# event for detecting codim 2 points
 	if computeEigenElements
@@ -651,3 +654,23 @@ function BK.continuationHopf(prob::ConstantDDEBifProblem,
 					kwargs...)
 end
 
+
+# structure to compute the eigenvalues along the Hopf branch
+struct HopfDDEEig{S} <: BK.AbstractCodim2EigenSolver
+	eigsolver::S
+end
+
+function (eig::HopfDDEEig)(Jddehopf, nev; kwargs...)
+	xh = Jddehopf.x.x[1]			# hopf point
+	p1, ω = Jddehopf.x.x[4]			# first parameter
+
+	newpar = set(Jddehopf.p, BK.getLens(Jddehopf.prob.prob), p1)
+
+	J = BK.jacobian(Jddehopf.prob.prob.prob_vf, xh, newpar)
+
+	eigenelts = eig.eigsolver(J, nev; kwargs...)
+
+	@show nev
+	# @infiltrate
+	return eigenelts
+end
