@@ -2,12 +2,12 @@
 
 | **Documentation** | **Build Status** | **Downloads** |
 |:-----------------:|:----------------:|:-------------:|
-| [![docs-stable][docs-stable-img]][docs-stable-url] [![docs-dev][docs-dev-img]][docs-dev-url] |  [![Build Status](https://github.com/bifurcationkit/DDEBifurcationKit.jl/workflows/CI/badge.svg)](https://github.com/bifurcationkit/DDEBifurcationKit.jl/actions?query=workflow%3ACI) [![codecov](https://codecov.io/gh/bifurcationkit/DDEBifurcationKit.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/bifurcationkit/DDEBifurcationKit.jl)|  |
+| [![docs-dev][docs-dev-img]][docs-dev-url] |  [![Build Status](https://github.com/bifurcationkit/DDEBifurcationKit.jl/workflows/CI/badge.svg)](https://github.com/bifurcationkit/DDEBifurcationKit.jl/actions?query=workflow%3ACI) [![codecov](https://codecov.io/gh/bifurcationkit/DDEBifurcationKit.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/bifurcationkit/DDEBifurcationKit.jl)|  |
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-purple.svg
-[docs-dev-url]: https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev
+[docs-dev-url]: https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev
 
 
 `DDEBifurcationKit.jl` is a component package in the `BifurcationKit` ecosystem. It holds the delay differential equation (DDE) utilities. While completely independent
