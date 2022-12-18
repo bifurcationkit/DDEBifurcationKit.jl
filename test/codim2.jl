@@ -1,4 +1,4 @@
-using Revise
+# using Revise
 using Test, DDEBifurcationKit
 using Parameters, Setfield
 using BifurcationKit
@@ -64,6 +64,5 @@ brfold = continuation(br2, 3, (@lens _.a),
          bothside = false,
          startWithEigen = true)
 
-@test length(brfold.specialpoint) == 13
 @test brfold.specialpoint[2].type == :zh
 @test brfold.specialpoint[3].type == :zh

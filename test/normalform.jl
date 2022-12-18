@@ -1,4 +1,5 @@
-using Revise, DDEBifurcationKit
+# using Revise
+using DDEBifurcationKit, Parameters, Setfield, BifurcationKit
 using Test
 
 function wrightVF(x, xd, p)
@@ -20,7 +21,7 @@ optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 9., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 4, nInversion = 12 )
 br = continuation(prob, PALC(), opts)
 
-BK.getNormalForm(br, 1)
+BifurcationKit.getNormalForm(br, 1)
 
 function NFcoeff(N)
    # Faria 2006
@@ -31,10 +32,10 @@ function NFcoeff(N)
    return (a=K1, b=K2)
 end
 
-h1 = BK.getNormalForm(br, 1)
+h1 = BifurcationKit.getNormalForm(br, 1)
 @test isapprox(real(h1.nf.a), NFcoeff(0).a; rtol = 1e-5)
 @test isapprox(real(h1.nf.b), NFcoeff(0).b; rtol = 1e-5)
 
-h2 = BK.getNormalForm(br, 2)
+h2 = BifurcationKit.getNormalForm(br, 2)
 @test isapprox(real(h2.nf.a), NFcoeff(2).a; rtol = 1e-5)
 @test isapprox(real(h2.nf.b), NFcoeff(2).b; rtol = 1e-5)
