@@ -3,7 +3,6 @@ cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
 
-# https://ddebiftool.sourceforge.net/demos/neuron/html/demo1_stst.html
 using Revise, DDEBifurcationKit, Parameters, Setfield
 using BifurcationKit
 const BK = BifurcationKit

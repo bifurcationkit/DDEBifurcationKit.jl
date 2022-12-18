@@ -8,7 +8,6 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose
 	δ = BK.getDelta(prob)
 
 	# jacobian at the bifurcation point
-	# c'est recalcule ici!!!! 2x
 	L = BK.jacobian(prob, x0, parbif)
 	Δ0 = Δ(L, 0λ0)
 	Δ2ω = Δ(L, 2λ0)
@@ -17,6 +16,7 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose
 	cζ = conj.(pt.ζ)
 	ζstar = copy(pt.ζstar)
 	ζstar ./= conj(dot(ζstar, Δ(Val(:der), L, ζ, λ0)))
+	# test the normalisation
 	if ~isapprox(dot(ζstar, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-2)
 		@warn "We found instead $(dot(ζstar, Δ(Val(:der), L, ζ, λ0)))"
 	end
