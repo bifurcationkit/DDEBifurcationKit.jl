@@ -22,17 +22,17 @@ $(TYPEDFIELDS)
 
 ## Constructors
 
-- `BifurcationProblem(F, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
+- `ConstantDDEBifProblem(F, delays, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
 struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: AbstractDDEBifurcationProblem
 	"Vector field, typically a [`BifFunction`](@ref)"
 	VF::Tvf
-	"function delays"
+	"function delays. It takes the parameters and return the non-zero delays in an `AsbtractVector` form. Example: `delays = par -> [1.]`"
 	delays::Tdf
 	"Initial guess"
 	u0::Tu
-	"initial delays"
+	"initial delays (set internally by the constructor)"
 	delays0::Td
 	"parameters"
 	params::Tp
@@ -219,17 +219,17 @@ $(TYPEDFIELDS)
 
 ## Constructors
 
-- `BifurcationProblem(F, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
+- `SDDDEBifProblem(F, delays, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
-struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: BifurcationKit.AbstractBifurcationProblem
+struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: AbstractDDEBifurcationProblem
 	"Vector field, typically a [`BifFunction`](@ref)"
 	VF::Tvf
-	"function delays"
+	"function delays. It takes the parameters and the state and return the non-zero delays in an `AsbtractVector` form. Example: `delays = (par, u) -> [1. + u[1]^2]`"
 	delays::Tdf
 	"Initial guess"
 	u0::Tu
-	"initial delays"
+	"initial delays (set internally by the constructor)"
 	delays0::Td
 	"parameters"
 	params::Tp
