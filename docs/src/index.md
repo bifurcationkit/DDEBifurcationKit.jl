@@ -71,13 +71,13 @@ Type of delay: Constant (C), state-dependent (SD), nested (N)
 | Continuation PALC (Natural, Secant, Tangent, Polynomial) | C/SD| | | | |
 | Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | |
 | Fold Point continuation |C/SD | Y |  |  |
-| Hopf Point continuation | C/SD | N | `AbstractArray` | | |
+| Hopf Point continuation | C/SD |  | `AbstractArray` | | |
 | ~~Bogdanov-Takens Point newton~~ | C/SD | Y | `AbstractArray` | | |
 | Branch point / Fold / Hopf normal form | C/SD | Y|  | |  | |
 | Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  
 | <span style="color:red">**Automatic bifurcation diagram computation of equilibria**</span> | C/SD| Y| `AbstractArray` |  | |
 | ~~Periodic Orbit (Trapezoid) Newton / continuation~~ | | | `AbstractVector` |  | |
-| Periodic Orbit (Collocation) Newton / continuation | C |  | `AbstractVector` |  | |
+| Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
 | ~~Periodic Orbit (Parallel Poincaré / Standard Shooting) Newton / continuation~~ | | | `AbstractArray` |   | |
 | ~~Fold, Neimark-Sacker, Period doubling detection~~ | | | `AbstractVector` |   | |
 | ~~Continuation of Fold of periodic orbits~~ | | | `AbstractVector` |  |  |

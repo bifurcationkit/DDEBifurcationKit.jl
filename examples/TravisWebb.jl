@@ -38,6 +38,7 @@ opts = ContinuationPar(pMax = 10., pMin = 0., newtonOptions = optn, ds = 0.01, d
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 
 plot(br)
+################################################################################
 hopfpt = BK.getNormalForm(br, 1)
 plot(hopfpt.ζ |> real)
 ################################################################################

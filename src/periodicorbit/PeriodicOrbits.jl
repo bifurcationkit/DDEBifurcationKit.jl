@@ -15,8 +15,8 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 	cb = get(kwargs, :callbackN, BK.cbDefault)
 
 	hopfpt = BK.hopfNormalForm(br.prob, br, ind_bif; nev = nev, verbose = verbose)
-	@error "Careful here"
-	@set! hopfpt.nf.a = 1.
+	# @error "Careful here"
+	# @set! hopfpt.nf.a = 1.
 
 	# compute predictor for point on new branch
 	ds = isnothing(δp) ? _contParams.ds : δp
