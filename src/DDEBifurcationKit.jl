@@ -12,6 +12,7 @@ module DDEBifurcationKit
 	include("EigSolver.jl")
 	include("codim2/codim2.jl")
 	include("codim2/Hopf.jl")
+	include("codim2/Fold.jl")
 
 	export ConstantDDEBifProblem, SDDDEBifProblem
 	export DDE_DefaultEig

@@ -121,7 +121,7 @@ function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
 	return JacobianConstantDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
 end
 
-function jad(prob::ConstantDDEBifProblem, x, p)
+function BK.jad(prob::ConstantDDEBifProblem, x, p)
 	J = BK.jacobian(prob, x, p)
 	J.Jall .= J.Jall'
 	J.J0 .= J.J0'
@@ -176,6 +176,16 @@ end
 
 function (l::BK.MatrixBLS)(iter::BK.AbstractContinuationIterable, state::BK.AbstractContinuationState, J::JacobianConstantDDE, args...; kwargs...)
 	l(iter, state, J.Jall, args...; kwargs...)
+end
+
+function (l::BK.MatrixBLS)(J::JacobianConstantDDE, args...; kwargs...)
+	l(J.Jall, args...; kwargs...)
+end
+
+function (l::BK.MatrixBLS)(J::JacobianConstantDDE, dR,
+						dzu, dzp::T, R::AbstractVecOrMat, n::T,
+						ξu::T = T(1), ξp::T = T(1) ; kwargs...) where {T <: Number, Tξ}
+	l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
 end
 
 """
