@@ -162,6 +162,15 @@ function Δ(J::JacobianDDE, v, λ)
 	res
 end
 
+function A(J::JacobianDDE, v, λ)
+	res = (0λ) .* v
+	mul!(res, J.J0, v, 1, 1)
+	for (ind, A) in pairs(J.Jd)
+		mul!(res, A, v, exp(-λ * J.delays[ind]), 1)
+	end
+	res
+end
+
 function Δ(::Val{:der}, J::JacobianDDE, v, λ)
 	res = Complex.(v)
 	for (ind, A) in pairs(J.Jd)

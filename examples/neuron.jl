@@ -87,7 +87,7 @@ probpo = PeriodicOrbitOCollProblem(60, 4; N = 2)
 		probpo;
 		verbosity = 2,	plot = true,
 		args_po...,
-		ampfactor = 1/0.3593 * 0.0610*2.2,
+		# ampfactor = 1/0.3593 * 0.0610*2.2,
 		δp = 0.001,
 		normC = norminf,
 		)

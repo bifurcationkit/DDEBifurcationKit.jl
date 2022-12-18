@@ -43,12 +43,12 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose
 	R20 = 2 .* R2(ζθ, ζθc)
 	Ψ110 = Complex.(expθ(L, ls(Δ0, -R20)[1], 0))
 
-	# a = ⟨R11(ζ) + 2R20(ζ,Ψ001),ζ∗⟩
-	# av = (apply(jacobian(prob, x0, set(parbif, lens, p + δ)), ζ) .- apply(jacobian(prob, x0, set(parbif, lens, p - δ)), ζ)) ./ (2δ)
-	av = zero(ζ)
+	# a = ⟨R11(ζ) + 2R20(ζ,Ψ001), ζ∗⟩
+	_Jp = BK.jacobian(prob, x0, set(parbif, lens, p + δ))
+	_Jm = BK.jacobian(prob, x0, set(parbif, lens, p - δ))
+	av = (A(_Jp, ζ, λ0) .- A(_Jm,  ζ, λ0)) ./ (2δ)
 	av .+= 2 .* R2(ζθ, Ψ001)
 	a = dot(ζstar, av)
-	a = 0
 
 	# b = ⟨2R20(ζ,Ψ110) + 2R20(cζ,Ψ200) + 3R30(ζ,ζ,cζ), ζ∗⟩)
 	bv = 2 .* R2(ζθ, Ψ110) .+ 2 .* R2(ζθc, Ψ200) .+ 3 .* R3(ζθ, ζθ, ζθc)

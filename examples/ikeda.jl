@@ -63,7 +63,7 @@ probpo = PeriodicOrbitTrapProblem(M = 100, jacobian = :DenseAD, N = 1)
 	# regular continuation options
 	verbosity = 2,	plot = true,
 	args_po...,
-	ampfactor = 1/0.467829783456199 ,#* 0.014,
+	# ampfactor = 1/0.467829783456199 ,#* 0.014,
 	δp = 0.01,
 	)
 
