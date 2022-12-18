@@ -29,9 +29,9 @@ end
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
 
-prob = DDEBK.SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
+prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
 
-optn = NewtonPar(verbose = true, eigsolver = DDEBK.DDE_NLEVEigSolver(maxit=100))
+optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 3, )
 br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
 plot(br)

@@ -7,11 +7,14 @@ module DDEBifurcationKit
 
 	abstract type AbstractDDEBifurcationProblem <: BK.AbstractBifurcationProblem end
 
-	include("problems.jl")
+	include("Problems.jl")
 	include("NormalForms.jl")
 	include("EigSolver.jl")
 	include("codim2/codim2.jl")
 	include("codim2/Hopf.jl")
+
+	export ConstantDDEBifProblem, SDDDEBifProblem
+	export DDE_DefaultEig
 
 
 

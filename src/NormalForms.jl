@@ -54,7 +54,7 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose
 	bv = 2 .* R2(ζθ, Ψ110) .+ 2 .* R2(ζθc, Ψ200) .+ 3 .* R3(ζθ, ζθ, ζθc)
 	b = dot(ζstar, bv)
 
-	# @info "info" b real(b)/ω/2 parbif δ #Ψ110 Ψ200 2λ0
+	# @info "info" b real(b)/ω/2 parbif δ Ψ110 Ψ200 2λ0
 
 	# return coefficients of the normal form
 	verbose && println((a = a, b = b))
@@ -107,7 +107,7 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem,
 	ζ ./= scaleζ(ζ)
 
 	# left eigen-elements
-	_Jt = BK.hasAdjoint(prob) ? jad(prob, convert(Teigvec, bifpt.x), parbif) : adjoint(L)
+	_Jt = BK.hasAdjoint(prob) ? BK.jad(prob, convert(Teigvec, bifpt.x), parbif) : adjoint(L)
 	ζstar, λstar = BK.getAdjointBasis(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = verbose)
 
 	# check that λstar ≈ conj(λ)

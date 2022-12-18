@@ -3,6 +3,9 @@ using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
+# sup norm
+norminf(x) = norm(x, Inf)
+
 using Plots
 
 function neuronVF(x, xd, p)
@@ -13,19 +16,16 @@ function neuronVF(x, xd, p)
    ]
 end
 
-function delaysF(par)
-   [par.τ1, par.τ2, par.τs]
-end
+delaysF(par) = [par.τ1, par.τ2, par.τs]
 
-
-pars = (κ = 0.5, β=-1, a12=1, a21=0.5, τ1=0.2, τ2=0.2, τs=1.5)
+pars = (κ = 0.5, β = -1, a12 = 1, a21 = 0.5, τ1 = 0.2, τ2 = 0.2, τs = 1.5)
 x0 = [0.01, 0.001]
 
-prob = DDEBK.ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs))
+prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs))
 
-optn = NewtonPar(verbose = true, eigsolver = DDEBK.DDE_NLEVEigSolver(maxit=100))
+optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
-br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
+br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true, normC = norminf)
 
 plot(br)
 ################################################################################

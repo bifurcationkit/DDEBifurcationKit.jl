@@ -28,9 +28,9 @@ end
 pars = (Λ=0.1,b=0.)
 x0 = [-sqrt(pi)]
 
-prob = DDEBK.ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@lens _.Λ), recordFromSolution=(x,p)-> (x=x[1], _x=1))
+prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@lens _.Λ), recordFromSolution=(x,p)-> (x=x[1], _x=1))
 
-optn = NewtonPar(verbose = false, eigsolver = DDEBK.DDE_NLEVEigSolver(maxit=100))
+optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 2., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 4, nInversion = 12 )
 br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
 plot(br)
