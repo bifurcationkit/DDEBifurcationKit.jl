@@ -100,7 +100,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
 	return ConstantDDEBifProblem(VF, delayF, u0, delayF(parms), parms, lens, plotSolution, recordFromSolution, δ)
 end
 
-struct JacobianConstantDDE{Tp,T1,T2,T3,Td}
+struct JacobianDDE{Tp,T1,T2,T3,Td}
 	prob::Tp
 	Jall::T1
 	J0::T2
@@ -127,7 +127,7 @@ function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
 	else
 		J0, Jd = prob.VF.J(x, p)
 	end
-	return JacobianConstantDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
+	return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
 end
 
 function BK.jad(prob::ConstantDDEBifProblem, x, p)
@@ -140,7 +140,7 @@ function BK.jad(prob::ConstantDDEBifProblem, x, p)
 	J
 end
 
-function expθ(J::JacobianConstantDDE, x, λ::T) where T
+function expθ(J::JacobianDDE, x, λ::T) where T
 	buffer = [one(T)*x]
 	for τ in J.delays
 		push!(buffer, copy(x) * exp(λ*(-τ)))
@@ -148,12 +148,12 @@ function expθ(J::JacobianConstantDDE, x, λ::T) where T
 	VectorOfArray(buffer)
 end
 
-function Δ(prob::ConstantDDEBifProblem, x, p, v, λ)
+function Δ(prob::AbstractDDEBifurcationProblem, x, p, v, λ)
 	J = BK.jacobian(prob, x, p)
 	Δ(J, v, λ)
 end
 
-function Δ(J::JacobianConstantDDE, v, λ)
+function Δ(J::JacobianDDE, v, λ)
 	res = λ .* v
 	mul!(res, J.J0, v, -1, 1)
 	for (ind, A) in pairs(J.Jd)
@@ -162,7 +162,7 @@ function Δ(J::JacobianConstantDDE, v, λ)
 	res
 end
 
-function Δ(::Val{:der}, J::JacobianConstantDDE, v, λ)
+function Δ(::Val{:der}, J::JacobianDDE, v, λ)
 	res = Complex.(v)
 	for (ind, A) in pairs(J.Jd)
 		mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
@@ -170,7 +170,7 @@ function Δ(::Val{:der}, J::JacobianConstantDDE, v, λ)
 	res
 end
 
-function Δ(J::JacobianConstantDDE, λ)
+function Δ(J::JacobianDDE, λ)
 	n = size(J.Jall, 1)
 	res = λ .* I(n) .- J.J0
 	for (ind, A) in pairs(J.Jd)
@@ -179,19 +179,19 @@ function Δ(J::JacobianConstantDDE, λ)
 	res
 end
 
-function (l::BK.DefaultLS)(J::JacobianConstantDDE, args...; kwargs...)
+function (l::BK.DefaultLS)(J::JacobianDDE, args...; kwargs...)
 	l(J.Jall, args...; kwargs...)
 end
 
-function (l::BK.MatrixBLS)(iter::BK.AbstractContinuationIterable, state::BK.AbstractContinuationState, J::JacobianConstantDDE, args...; kwargs...)
+function (l::BK.MatrixBLS)(iter::BK.AbstractContinuationIterable, state::BK.AbstractContinuationState, J::JacobianDDE, args...; kwargs...)
 	l(iter, state, J.Jall, args...; kwargs...)
 end
 
-function (l::BK.MatrixBLS)(J::JacobianConstantDDE, args...; kwargs...)
+function (l::BK.MatrixBLS)(J::JacobianDDE, args...; kwargs...)
 	l(J.Jall, args...; kwargs...)
 end
 
-function (l::BK.MatrixBLS)(J::JacobianConstantDDE, dR,
+function (l::BK.MatrixBLS)(J::JacobianDDE, dR,
 						dzu, dzp::T, R::AbstractVecOrMat, n::T,
 						ξu::T = T(1), ξp::T = T(1) ; kwargs...) where {T <: Number, Tξ}
 	l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
@@ -248,6 +248,7 @@ BK.isSymmetric(::SDDDEBifProblem) = false
 BK.getVectorType(prob::SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
 BK.getLens(prob::SDDDEBifProblem) = prob.lens
 BK.hasAdjoint(prob::SDDDEBifProblem) = true
+BK.getDelta(prob::SDDDEBifProblem) = prob.δ
 
 function SDDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
 				dF = nothing,
@@ -303,5 +304,15 @@ function BK.jacobian(prob::SDDDEBifProblem, x, p)
 	J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
 	Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd[ii] = z), p), x) for ii in eachindex(prob.delays0)]
-	return JacobianConstantDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
+	return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
+end
+
+function BK.jad(prob::SDDDEBifProblem, x, p)
+	J = BK.jacobian(prob, x, p)
+	J.Jall .= J.Jall'
+	J.J0 .= J.J0'
+	for _J in J.Jd
+		_J .= _J'
+	end
+	J
 end

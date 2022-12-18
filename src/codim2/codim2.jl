@@ -53,7 +53,7 @@ for op in (:HopfDDEProblem,)
 		jad(pb::$op, args...) = jad(pb.prob_vf, args...)
 
 		# constructor
-		function $op(prob::ConstantDDEBifProblem, a, b, linsolve::BK.AbstractLinearSolver, linbdsolver = BK.MatrixBLS(); usehessian = true, massmatrix = LinearAlgebra.I)
+		function $op(prob::AbstractDDEBifurcationProblem, a, b, linsolve::BK.AbstractLinearSolver, linbdsolver = BK.MatrixBLS(); usehessian = true, massmatrix = LinearAlgebra.I)
 			# determine scalar type associated to vectors a and b
 			α = norm(a) # this is valid, see https://jutho.github.io/KrylovKit.jl/stable/#Package-features-and-alternatives-1
 			Ty = eltype(α)

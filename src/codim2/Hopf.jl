@@ -41,7 +41,7 @@ BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Tre
 #
 # jacobian(hopfpb::HopfMAProblem{Tprob, FiniteDifferences, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = dx -> (hopfpb.prob(x .+ 1e-8 .* dx, p) .- hopfpb.prob(x .- 1e-8 .* dx, p)) / (2e-8)
 ################################################################################################### Newton / Continuation functions
-function BK.newtonHopf(prob::ConstantDDEBifProblem,
+function BK.newtonHopf(prob::AbstractDDEBifurcationProblem,
 			hopfpointguess::ArrayPartition,
 			par,
 			eigenvec, eigenvec_ad,
@@ -71,7 +71,7 @@ function BK.newtonHopf(prob::ConstantDDEBifProblem,
 end
 
 function BK.newtonHopf(br::BK.AbstractBranchResult, ind_hopf::Int;
-			prob::ConstantDDEBifProblem = br.prob,
+			prob::AbstractDDEBifurcationProblem = br.prob,
 			normN = norm,
 			options = br.contparams.newtonOptions,
 			verbose = true,
@@ -109,7 +109,7 @@ function BK.newtonHopf(br::BK.AbstractBranchResult, ind_hopf::Int;
 end
 
 
-function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractContinuationAlgorithm,
+function BK.continuationHopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.AbstractContinuationAlgorithm,
 				hopfpointguess::ArrayPartition, par,
 				lens1::Lens, lens2::Lens,
 				eigenvec, eigenvec_ad,
@@ -274,7 +274,7 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 	return correctBifurcation(br)
 end
 
-function BK.continuationHopf(prob::ConstantDDEBifProblem,
+function BK.continuationHopf(prob::AbstractDDEBifurcationProblem,
 						br::BK.AbstractBranchResult, ind_hopf::Int64,
 						lens2::Lens,
 						options_cont::ContinuationPar = br.contparams;
@@ -321,7 +321,7 @@ function BK.continuationHopf(prob::ConstantDDEBifProblem,
 					kwargs...)
 end
 
-function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractContinuationAlgorithm,
+function BK.continuationHopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.AbstractContinuationAlgorithm,
 				hopfpointguess::ArrayPartition, par,
 				lens1::Lens, lens2::Lens,
 				eigenvec, eigenvec_ad,
@@ -488,7 +488,7 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 	return correctBifurcation(br)
 end
 
-function BK.continuationHopf(prob::ConstantDDEBifProblem,
+function BK.continuationHopf(prob::AbstractDDEBifurcationProblem,
 						br::BK.AbstractBranchResult, ind_hopf::Int64,
 						lens2::Lens,
 						options_cont::ContinuationPar = br.contparams;
