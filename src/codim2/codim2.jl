@@ -68,43 +68,6 @@ for op in (:HopfDDEProblem,)
 	end
 end
 ################################################################################
-#
-# function BK.newton(br::BK.AbstractResult{Tkind, Tprob}, ind_bif::Int64; normN = norm, options = br.contparams.newtonOptions, startWithEigen = false, lens2::Lens = (@lens _), kwargs...) where {Tkind, Tprob <: ConstantDDEBifProblem}
-# 	@assert length(br.specialpoint) > 0 "The branch does not contain bifurcation points"
-# 	if br.specialpoint[ind_bif].type == :hopf
-# 		return newtonHopf(br, ind_bif; normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
-# 	elseif br.specialpoint[ind_bif].type == :bt
-# 		return newtonBT(br, ind_bif; lens2 = lens2, normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
-# 	else
-# 		return newtonFold(br, ind_bif; normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
-# 	end
-# end
-################################################################################
-function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
-					ind_bif::Int64,
-					lens2::Lens,
-					options_cont::ContinuationPar = br.contparams ;
-					startWithEigen = false,
-					detectCodim2Bifurcation::Int = 0,
-					kwargs...) where {Tkind, Tprob <: ConstantDDEBifProblem}
-	@assert length(br.specialpoint) > 0 "The branch does not contain bifurcation points"
-	# options to detect codim2 bifurcations
-	computeEigenElements = options_cont.detectBifurcation > 0
-	_options_cont = BK.detectCodim2Parameters(detectCodim2Bifurcation, options_cont; kwargs...)
-
-	if br.specialpoint[ind_bif].type == :hopf
-		return continuationHopf(br.prob, br, ind_bif, lens2, _options_cont;
-			startWithEigen = startWithEigen,
-			computeEigenElements = computeEigenElements,
-			kwargs...)
-	else
-		return continuationFold(br.prob, br, ind_bif, lens2, _options_cont;
-			startWithEigen = startWithEigen,
-			computeEigenElements = computeEigenElements,
-			kwargs...)
-	end
-end
-################################################################################
 """
 $(SIGNATURES)
 
