@@ -1,3 +1,5 @@
+abstract type AbstractDDEBifurcationProblem <: BK.AbstractBifurcationProblem end
+
 """
 $(TYPEDEF)
 
@@ -23,7 +25,7 @@ $(TYPEDFIELDS)
 - `BifurcationProblem(F, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
-struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} <: BifurcationKit.AbstractBifurcationProblem
+struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: AbstractDDEBifurcationProblem
 	"Vector field, typically a [`BifFunction`](@ref)"
 	VF::Tvf
 	"function delays"
@@ -40,6 +42,8 @@ struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} <: B
 	plotSolution::Tplot
 	"`recordFromSolution = (x, p) -> norm(x)` function used record a few indicators about the solution. It could be `norm` or `(x, p) -> x[1]`. This is also useful when saving several huge vectors is not possible for memory reasons (for example on GPU...). This function can return pretty much everything but you should keep it small. For example, you can do `(x, p) -> (x1 = x[1], x2 = x[2], nrm = norm(x))` or simply `(x, p) -> (sum(x), 1)`. This will be stored in `contres.branch` (see below). Finally, the first component is used to plot in the continuation curve."
 	recordFromSolution::Trec
+	"delta for Finite differences"
+	δ::Tδ
 end
 
 BK.isInplace(::ConstantDDEBifProblem) = false
@@ -47,26 +51,20 @@ BK.isSymmetric(::ConstantDDEBifProblem) = false
 BK.getVectorType(prob::ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
 BK.getLens(prob::ConstantDDEBifProblem) = prob.lens
 BK.hasAdjoint(prob::ConstantDDEBifProblem) = true
+BK.getDelta(prob::ConstantDDEBifProblem) = prob.δ
+BK.d2F(prob::ConstantDDEBifProblem, x, p, dx1, dx2) = BK.d2F(prob.VF, x, p, dx1, dx2)
+BK.d3F(prob::ConstantDDEBifProblem, x, p, dx1, dx2, dx3) = BK.d3F(prob.VF, x, p, dx1, dx2, dx3)
 
 function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
 	print(io, prefix * "┌─ Constant Delays Bifurcation Problem with uType ")
 	printstyled(io, BK.getVectorType(prob), color=:cyan, bold = true)
 	print(io, prefix * "\n├─ Inplace:  ")
 	printstyled(io, BK.isInplace(prob), color=:cyan, bold = true)
-	# printstyled(io, isSymmetric(prob), color=:cyan, bold = true)
 	print(io, "\n" * prefix * "└─ Parameter: ")
 	printstyled(io, BK.getLensSymbol(getLens(prob)), color=:cyan, bold = true)
 end
 
-struct JacobianConstantDDE{Tp,T1,T2,T3,Td}
-	prob::Tp
-	Jall::T1
-	J0::T2
-	Jd::T3
-	delays::Td
-end
-
-function ConstantDDEBifProblem(F, delayF, u0, delays0, parms, lens = (@lens _);
+function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
 				dF = nothing,
 				dFad = nothing,
 				J = nothing,
@@ -76,10 +74,14 @@ function ConstantDDEBifProblem(F, delayF, u0, delays0, parms, lens = (@lens _);
 				issymmetric::Bool = false,
 				recordFromSolution = BifurcationKit.recordSolDefault,
 				plotSolution = BifurcationKit.plotDefault,
-				inplace = false)
+				inplace = false,
+				δ = convert(eltype(u0), 1e-8)
+				)
+
+	Fc = (xd, p) -> F(xd[1], xd[2:end], p)
 	J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
-	dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> F(x .+ t .* dx, p), 0.) : dF
-	d1Fad(x,p,dx1) = ForwardDiff.derivative(t -> F(x .+ t .* dx1, p), 0.)
+	dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
+	d1Fad(x,p,dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
 	if isnothing(d2F)
 		d2F = (x,p,dx1,dx2) -> ForwardDiff.derivative(t -> d1Fad(x .+ t .* dx2, p, dx1), 0.)
 		d2Fc = (x,p,dx1,dx2) -> BilinearMap((_dx1, _dx2) -> d2F(x,p,_dx1,_dx2))(dx1,dx2)
@@ -95,7 +97,7 @@ function ConstantDDEBifProblem(F, delayF, u0, delays0, parms, lens = (@lens _);
 
 	d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
 	VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
-	return ConstantDDEBifProblem(VF, delayF, u0, delays0, parms, lens, plotSolution, recordFromSolution)
+	return ConstantDDEBifProblem(VF, delayF, u0, delayF(parms), parms, lens, plotSolution, recordFromSolution, δ)
 end
 
 
