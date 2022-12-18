@@ -131,11 +131,41 @@ function jad(prob::ConstantDDEBifProblem, x, p)
 	J
 end
 
+function expθ(J::JacobianConstantDDE, x, λ::T) where T
+	buffer = [one(T)*x]
+	for τ in J.delays
+		push!(buffer, copy(x) * exp(λ*(-τ)))
+	end
+	VectorOfArray(buffer)
+end
+
 function Δ(prob::ConstantDDEBifProblem, x, p, v, λ)
 	J = BK.jacobian(prob, x, p)
-	res = λ .* v .- J.J0*v
+	Δ(J, v, λ)
+end
+
+function Δ(J::JacobianConstantDDE, v, λ)
+	res = λ .* v
+	mul!(res, J.J0, v, -1, 1)
 	for (ind, A) in pairs(J.Jd)
-		res .-= exp(-λ * J.delays[ind]) .* (A * v)
+		mul!(res, A, v, -exp(-λ * J.delays[ind]), 1)
+	end
+	res
+end
+
+function Δ(::Val{:der}, J::JacobianConstantDDE, v, λ)
+	res = Complex.(v)
+	for (ind, A) in pairs(J.Jd)
+		mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
+	end
+	res
+end
+
+function Δ(J::JacobianConstantDDE, λ)
+	n = size(J.Jall, 1)
+	res = λ .* I(n) .- J.J0
+	for (ind, A) in pairs(J.Jd)
+		res .+= (-exp(-λ * J.delays[ind])) .* A
 	end
 	res
 end
