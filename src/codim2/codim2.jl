@@ -77,10 +77,8 @@ function correctBifurcation(contres::ContResult)
 	if contres.prob.prob isa HopfDDEProblem == false
 		return contres
 	end
-	if contres.prob.prob isa FoldProblemMinimallyAugmented
-		conversion = Dict(:bp => :bt, :hopf => :zh, :fold => :cusp, :nd => :nd)
-	elseif contres.prob.prob isa HopfDDEProblem
-		conversion = Dict(:bp => :zh, :hopf => :hh, :fold => :nd, :nd => :nd, :ghbt => :bt, :btgh => :bt)
+	if contres.prob.prob isa HopfDDEProblem
+		conversion = Dict(:bp => :zh, :hopf => :hh, :fold => :nd, :nd => :nd, :ghbt => :bt, :btgh => :bt, :ghbp => :zh)
 	else
 		throw("Error! this should not occur. Please open an issue on the website of BifurcationKit.jl")
 	end

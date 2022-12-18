@@ -7,7 +7,6 @@ function (hp::HopfDDEProblem)(x, vR, vI, p::T, ω::T, params) where T
 	# input:
 	# - x guess for the point at which the jacobian has a purely imaginary eigenvalue
 	# - p guess for the parameter for which the jacobian has a purely imaginary eigenvalue
-	a = hp.a
 	b = hp.b
 	# update parameter
 	par = set(params, BK.getLens(hp), p)
@@ -67,8 +66,6 @@ function BK.newtonHopf(prob::ConstantDDEBifProblem,
 
 	# options for the Newton Solver
 	opt_hopf = @set options.linsolver = BK.DefaultLS()
-
-	# return prob_h
 
 	# solve the hopf equations
 	return BK.newton(prob_h, opt_hopf, normN = normN, kwargs...)
@@ -571,7 +568,5 @@ function (eig::HopfDDEEig)(Jddehopf, nev; kwargs...)
 
 	eigenelts = eig.eigsolver(J, nev; kwargs...)
 
-	@show nev
-	# @infiltrate
 	return eigenelts
 end
