@@ -28,17 +28,16 @@ end
 # # jacobian(hopfpb::HopfMAProblem, x, p) = hopfpb.jacobian(x, p)
 # jacobian(hopfpb::HopfMAProblem{Tprob, Nothing, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = (x = x, params = p, hopfpb = hopfpb.prob)
 #
-struct JacobianHopfDDE{T1,T2,T3,T4}
+struct JacobianCodim2DDE{T1,T2,T3,T4}
 	prob::T1
 	J::T2
 	x::T3
 	p::T4
 end
 
-(l::BK.DefaultLS)(J::JacobianHopfDDE, args...; kw...) = l(J.J, args...; kw...)
+(l::BK.DefaultLS)(J::JacobianCodim2DDE, args...; kw...) = l(J.J, args...; kw...)
 
-
-BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = JacobianHopfDDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
+BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
 #
 # jacobian(hopfpb::HopfMAProblem{Tprob, FiniteDifferences, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = dx -> (hopfpb.prob(x .+ 1e-8 .* dx, p) .- hopfpb.prob(x .- 1e-8 .* dx, p)) / (2e-8)
 ################################################################################################### Newton / Continuation functions
@@ -217,7 +216,7 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 		# compute new ζstar
 		# JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
 
-		JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
+		JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? BK.jad(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
 		ζstar, λstar = BK.getAdjointBasis(JAd_at_xp, conj(λ), BK.getContParams(iter).newtonOptions.eigsolver.eigsolver)
 		# ζstar = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
 		# test function for Bogdanov-Takens
@@ -307,7 +306,7 @@ function BK.continuationHopf(prob::ConstantDDEBifProblem,
 		L = BK.jacobian(prob, bifpt.x, parbif)
 
 		# jacobian adjoint at bifurcation point
-		_Jt = ~BK.hasAdjoint(prob) ? adjoint(L) : jad(prob, bifpt.x, parbif)
+		_Jt = ~BK.hasAdjoint(prob) ? adjoint(L) : BK.jad(prob, bifpt.x, parbif)
 
 		ζstar, λstar = BK.getAdjointBasis(_Jt, conj(λ), br.contparams.newtonOptions.eigsolver; nev = br.contparams.nev, verbose = false)
 		ζad .= ζstar ./ dot(ζstar, ζ)
