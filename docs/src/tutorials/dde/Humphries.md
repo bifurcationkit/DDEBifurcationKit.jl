@@ -1,4 +1,4 @@
-# Humphries model (codim 2)
+# Humphries model (codim 2, periodic orbit)
 
 ```@contents
 Pages = ["Humphries.md"]
@@ -70,6 +70,51 @@ brhopf = continuation(br, 2, (@lens _.κ2),
 
 scene = plot(brhopf, vars = (:κ1, :κ2))
 ```
+
+## Branch of periodic orbits
+
+We compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation. We use a lot of time sections $N_{tst}=200$ to have enough precision to resolve the sophisticated branch of periodic solutions especially near the first Fold point around $\kappa_1\approx 10$.
+
+```julia
+# continuation parameters
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, pMax = 12., pMin=-5., maxSteps = 3000,
+	nev = 3, tolStability = 1e-8, detectBifurcation = 0, plotEveryStep = 20, saveSolEveryStep=1)
+	@set! opts_po_cont.newtonOptions.tol = 1e-9
+	@set! opts_po_cont.newtonOptions.verbose = true
+
+	# arguments for periodic orbits
+	args_po = (	recordFromSolution = (x, p) -> begin
+			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			_max = maximum(xtt[1,:])
+			_min = minimum(xtt[1,:])
+			return (amp = _max - _min,
+					period = getPeriod(p.prob, x, nothing))
+		end,
+		plotSolution = (x, p; k...) -> begin
+			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			plot!(xtt.t, xtt[1,:]; label = "x", k...)
+			plot!(br; subplot = 1, putspecialptlegend = false)
+			end,
+		normC = norminf)
+
+probpo = PeriodicOrbitOCollProblem(200, 2; N = 1)
+br_pocoll = continuation(
+	br, 2, opts_po_cont,
+	probpo;
+	alg = PALC(tangent = Bordered()),
+	# regular continuation options
+	verbosity = 2,	plot = true,
+	args_po...,
+	ampfactor = 1/0.467829783456199 * 0.1,
+	δp = 0.01,
+	callbackN = BK.cbMaxNorm(10.0)
+	end
+	)	
+```
+
+which gives
+
+![](Humphries.png)
 
 ## References
 [^Hum]: > Humphries et al. (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701)
