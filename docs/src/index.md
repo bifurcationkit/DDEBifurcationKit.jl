@@ -63,7 +63,7 @@ The examples which follow have not **all** been written with the goal of perform
 
 Custom state means, we can use something else than `AbstractArray`, for example your own `struct`.
 
-Type of delay: Constant (D), state-dependent (S), nested (N)
+Type of delay: Constant (C), state-dependent (SD), nested (N)
 
 |Features| delay type | Matrix Free|Custom state| [Tutorial](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/tutorials/tutorials/) | GPU |
 |---|---|---|---|---|---|

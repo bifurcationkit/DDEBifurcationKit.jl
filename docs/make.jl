@@ -1,4 +1,3 @@
-# we use this hacky way because AsymptoticNumericalMethod is not registered
 using Pkg
 
 using Documenter, DDEBifurcationKit, Setfield, BifurcationKit
@@ -51,6 +50,6 @@ makedocs(doctest = false,
 	)
 
 deploydocs(
-	repo = "github.com/bifurcationkit/BifurcationKitDocs.jl.git",
+	repo = "github.com/bifurcationkit/DDEBifurcationKit.jl.git",
 	devbranch = "main"
 )

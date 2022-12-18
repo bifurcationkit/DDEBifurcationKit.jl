@@ -2,7 +2,7 @@
 
 | **Documentation** | **Build Status** | **Downloads** |
 |:-----------------:|:----------------:|:-------------:|
-| [![docs-stable][docs-stable-img]][docs-stable-url] [![docs-dev][docs-dev-img]][docs-dev-url] |   |  |
+| [![docs-stable][docs-stable-img]][docs-stable-url] [![docs-dev][docs-dev-img]][docs-dev-url] |  [![Build Status](https://github.com/bifurcationkit/DDEBifurcationKit.jl/workflows/CI/badge.svg)](https://github.com/bifurcationkit/DDEBifurcationKit.jl/actions?query=workflow%3ACI) [![codecov](https://codecov.io/gh/bifurcationkit/DDEBifurcationKit.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/bifurcationkit/DDEBifurcationKit.jl)|  |
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable
@@ -43,7 +43,7 @@ If you use this package for your work, we ask that you cite the following paper.
 
 ## Main features
 
-Type of delay: Constant (D), state-dependent (S), nested (N)
+Type of delay: Constant (C), state-dependent (SD), nested (N)
 
 |Features| delay type | Matrix Free|Custom state| [Tutorial](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/tutorials/tutorials/) | GPU |
 |---|---|---|---|---|---|
