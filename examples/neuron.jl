@@ -25,12 +25,12 @@ prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
-br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true, normC = norminf)
+br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true, normC = norminf)
 
 plot(br)
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21))
-br2 = BK.continuation(prob2, PALC(), opts; verbosity = 3, plot = true, bothside = true, normC = norminf)
+br2 = BK.continuation(prob2, PALC(), setproperties(opts, ds = 0.1, pMax = 3., nInversion=8); verbosity = 3, plot = true, bothside = false, normC = norminf)
 BK.getNormalForm(br2, 3)
 #Hopf l1 ≈ −0.0601.
 ################################################################################

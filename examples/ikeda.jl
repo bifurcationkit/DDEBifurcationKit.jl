@@ -19,11 +19,7 @@ function ikedaVF(x, xd, p)
    ]
 end
 
-function delaysF(par)
-   [
-      1.0,
-   ]
-end
+delaysF(par) = [1.0]
 
 pars = (Λ=0.1,b=0.)
 x0 = [-sqrt(pi)]
@@ -32,7 +28,7 @@ prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@lens _.Λ), recordFro
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 2., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 4, nInversion = 12 )
-br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
+br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
 plot(br)
 
 BK.getNormalForm(br, 1) # l1= -0.0591623057, b = 0.09293196762669392

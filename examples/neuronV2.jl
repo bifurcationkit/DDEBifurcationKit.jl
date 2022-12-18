@@ -29,7 +29,7 @@ prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(pMax = 1., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 9, dsmax = 0.2, nInversion = 4)
-br = BK.continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = false)
+br = continuation(prob, PALC(tangent=Bordered()), opts; verbosity = 0, plot = true, bothside = false)
 
 plot(br)
 
@@ -55,4 +55,6 @@ plot(brhopf, vars = (:a, :c), xlims = (0,0.7), ylims = (0,1))
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@lens _.c))
 
-br2 = BK.continuation(prob2, PALC(), setproperties(opts, pMax = 1.22); verbosity = 1, plot = true, bothside = false)
+br2 = continuation(prob2, PALC(), setproperties(opts, pMax = 1.22); verbosity = 1, plot = true, bothside = false)
+
+plot(br2)

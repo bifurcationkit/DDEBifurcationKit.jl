@@ -33,5 +33,5 @@ prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 3, )
-br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
+br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
 plot(br)
