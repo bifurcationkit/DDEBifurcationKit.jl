@@ -125,4 +125,4 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem,
 		:SuperCritical
 	)
 	return BK.hopfNormalForm(prob, hopfpt, options.linsolver ; verbose = verbose)
-end"
+end

@@ -68,64 +68,18 @@ for op in (:HopfDDEProblem,)
 	end
 end
 ################################################################################
-"""
-$(SIGNATURES)
-
-This function turns an initial guess for a Fold/Hopf point into a solution to the Fold/Hopf problem based on a Minimally Augmented formulation.
-
-## Arguments
-- `br` results returned after a call to [continuation](@ref Library-Continuation)
-- `ind_bif` bifurcation index in `br`
-
-# Optional arguments:
-- `options::NewtonPar`, default value `br.contparams.newtonOptions`
-- `normN = norm`
-- `options` You can pass newton parameters different from the ones stored in `br` by using this argument `options`.
-- `bdlinsolver` bordered linear solver for the constraint equation
-- `startWithEigen = false` whether to start the Minimally Augmented problem with information from eigen elements.
-- `kwargs` keywords arguments to be passed to the regular Newton-Krylov solver
-
-!!! tip "ODE problems"
-    For ODE problems, it is more efficient to use the Bordered Linear Solver using the option `bdlinsolver = MatrixBLS()`
-
-!!! tip "startWithEigen"
-    It is recommanded that you use the option `startWithEigen=true`
-"""
-function BK.newton(br::BK.AbstractResult{Tkind, Tprob}, ind_bif::Int64; normN = norm, options = br.contparams.newtonOptions, startWithEigen = false, lens2::Lens = (@lens _), kwargs...) where {Tkind, Tprob <: ConstantDDEBifProblem}
-	@assert length(br.specialpoint) > 0 "The branch does not contain bifurcation points"
-	if br.specialpoint[ind_bif].type == :hopf
-		return newtonHopf(br, ind_bif; normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
-	elseif br.specialpoint[ind_bif].type == :bt
-		return newtonBT(br, ind_bif; lens2 = lens2, normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
-	else
-		return newtonFold(br, ind_bif; normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
-	end
-end
+#
+# function BK.newton(br::BK.AbstractResult{Tkind, Tprob}, ind_bif::Int64; normN = norm, options = br.contparams.newtonOptions, startWithEigen = false, lens2::Lens = (@lens _), kwargs...) where {Tkind, Tprob <: ConstantDDEBifProblem}
+# 	@assert length(br.specialpoint) > 0 "The branch does not contain bifurcation points"
+# 	if br.specialpoint[ind_bif].type == :hopf
+# 		return newtonHopf(br, ind_bif; normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
+# 	elseif br.specialpoint[ind_bif].type == :bt
+# 		return newtonBT(br, ind_bif; lens2 = lens2, normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
+# 	else
+# 		return newtonFold(br, ind_bif; normN = normN, options = options, startWithEigen = startWithEigen, kwargs...)
+# 	end
+# end
 ################################################################################
-"""
-$(SIGNATURES)
-
-Codimension 2 continuation of Fold / Hopf points. This function turns an initial guess for a Fold/Hopf point into a curve of Fold/Hopf points based on a Minimally Augmented formulation. The arguments are as follows
-- `br` results returned after a call to [continuation](@ref Library-Continuation)
-- `ind_bif` bifurcation index in `br`
-- `lens2` second parameter used for the continuation, the first one is the one used to compute `br`, e.g. `getLens(br)`
-- `options_cont = br.contparams` arguments to be passed to the regular [continuation](@ref Library-Continuation)
-
-# Optional arguments:
-- `bdlinsolver` bordered linear solver for the constraint equation
-- `updateMinAugEveryStep` update vectors `a,b` in Minimally Formulation every `updateMinAugEveryStep` steps
-- `startWithEigen = false` whether to start the Minimally Augmented problem with information from eigen elements
-- `detectCodim2Bifurcation ∈ {0,1,2}` whether to detect Bogdanov-Takens, Bautin and Cusp. If equals `1` non precise detection is used. If equals `2`, a bisection method is used to locate the bifurcations.
-- `kwargs` keywords arguments to be passed to the regular [continuation](@ref Library-Continuation)
-
-where the parameters are as above except that you have to pass the branch `br` from the result of a call to `continuation` with detection of bifurcations enabled and `index` is the index of Hopf point in `br` you want to refine.
-
-!!! tip "ODE problems"
-    For ODE problems, it is more efficient to pass the Bordered Linear Solver using the option `bdlinsolver = MatrixBLS()`
-
-!!! tip "startWithEigen"
-    It is recommanded that you use the option `startWithEigen = true`
-"""
 function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 					ind_bif::Int64,
 					lens2::Lens,

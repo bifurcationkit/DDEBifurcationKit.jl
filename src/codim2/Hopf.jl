@@ -43,35 +43,6 @@ BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Tre
 #
 # jacobian(hopfpb::HopfMAProblem{Tprob, FiniteDifferences, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = dx -> (hopfpb.prob(x .+ 1e-8 .* dx, p) .- hopfpb.prob(x .- 1e-8 .* dx, p)) / (2e-8)
 ################################################################################################### Newton / Continuation functions
-"""
-$(SIGNATURES)
-
-This function turns an initial guess for a Hopf point into a solution to the Hopf problem based on a Minimally Augmented formulation. The arguments are as follows
-- `prob::AbstractBifurcationProblem` where `p` is a set of parameters.
-- `hopfpointguess` initial guess (x_0, p_0) for the Hopf point. It should a `BorderedArray` as returned by the function `HopfPoint`.
-- `par` parameters used for the vector field
-- `eigenvec` guess for the  iω eigenvector
-- `eigenvec_ad` guess for the -iω eigenvector
-- `options::NewtonPar` options for the Newton-Krylov algorithm, see [`NewtonPar`](@ref).
-
-# Optional arguments:
-- `normN = norm`
-- `bdlinsolver` bordered linear solver for the constraint equation
-- `kwargs` keywords arguments to be passed to the regular Newton-Krylov solver
-
-# Simplified call:
-Simplified call to refine an initial guess for a Hopf point. More precisely, the call is as follows
-
-	newtonHopf(br::AbstractBranchResult, ind_hopf::Int; normN = norm, options = br.contparams.newtonOptions, kwargs...)
-
-The parameters / options are as usual except that you have to pass the branch `br` from the result of a call to `continuation` with detection of bifurcations enabled and `index` is the index of bifurcation point in `br` you want to refine. You can pass newton parameters different from the ones stored in `br` by using the argument `options`.
-
-!!! tip "Jacobian transpose"
-    The adjoint of the jacobian `J` is computed internally when `Jᵗ = nothing` by using `transpose(J)` which works fine when `J` is an `AbstractArray`. In this case, do not pass the jacobian adjoint like `Jᵗ = (x, p) -> transpose(d_xF(x, p))` otherwise the jacobian will be computed twice!
-
-!!! tip "ODE problems"
-    For ODE problems, it is more efficient to pass the Bordered Linear Solver using the option `bdlinsolver = MatrixBLS()`
-"""
 function BK.newtonHopf(prob::ConstantDDEBifProblem,
 			hopfpointguess::ArrayPartition,
 			par,
@@ -141,41 +112,7 @@ function BK.newtonHopf(br::BK.AbstractBranchResult, ind_hopf::Int;
 	return newtonHopf(prob, hopfpointguess, getParams(br), ζ, ζad, options; normN = normN, kwargs...)
 end
 
-"""
-$(SIGNATURES)
 
-codim 2 continuation of Hopf points. This function turns an initial guess for a Hopf point into a curve of Hopf points based on a Minimally Augmented formulation. The arguments are as follows
-- `prob::AbstractBifurcationProblem`
-- `hopfpointguess` initial guess (x_0, p1_0) for the Hopf point. It should be a `Vector` or a `BorderedArray`
-- `par` set of parameters
-- `lens1` parameter axis for parameter 1
-- `lens2` parameter axis for parameter 2
-- `eigenvec` guess for the iω eigenvector at p1_0
-- `eigenvec_ad` guess for the -iω eigenvector at p1_0
-- `options_cont` keywords arguments to be passed to the regular [`continuation`](@ref)
-
-# Optional arguments:
-
-- `bdlinsolver` bordered linear solver for the constraint equation
-- `updateMinAugEveryStep` update vectors `a,b` in Minimally Formulation every `updateMinAugEveryStep` steps
-- `computeEigenElements = false` whether to compute eigenelements. If `options_cont.detecttEvent>0`, it allows the detection of ZH, HH points.
-- `kwargs` keywords arguments to be passed to the regular [`continuation`](@ref)
-
-# Simplified call:
-
-	continuationHopf(br::AbstractBranchResult, ind_hopf::Int, lens2::Lens, options_cont::ContinuationPar ;  kwargs...)
-
-where the parameters are as above except that you have to pass the branch `br` from the result of a call to `continuation` with detection of bifurcations enabled and `index` is the index of Hopf point in `br` that you want to refine.
-
-!!! tip "ODE problems"
-    For ODE problems, it is more efficient to pass the Bordered Linear Solver using the option `bdlinsolver = MatrixBLS()`
-
-!!! tip "Jacobian transpose"
-    The adjoint of the jacobian `J` is computed internally when `Jᵗ = nothing` by using `transpose(J)` which works fine when `J` is an `AbstractArray`. In this case, do not pass the jacobian adjoint like `Jᵗ = (x, p) -> transpose(d_xF(x, p))` otherwise the jacobian would be computed twice!
-
-!!! tip "Detection of Bogdanov-Takens and Bautin bifurcations"
-    In order to trigger the detection, pass `detectEvent = 1,2` in `options_cont`. Note that you need to provide `d3F` in `prob`.
-"""
 function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractContinuationAlgorithm,
 				hopfpointguess::ArrayPartition, par,
 				lens1::Lens, lens2::Lens,
@@ -388,42 +325,6 @@ function BK.continuationHopf(prob::ConstantDDEBifProblem,
 					kwargs...)
 end
 
-
-"""
-$(SIGNATURES)
-
-codim 2 continuation of Hopf points. This function turns an initial guess for a Hopf point into a curve of Hopf points based on a Minimally Augmented formulation. The arguments are as follows
-- `prob::AbstractBifurcationProblem`
-- `hopfpointguess` initial guess (x_0, p1_0) for the Hopf point. It should be a `Vector` or a `BorderedArray`
-- `par` set of parameters
-- `lens1` parameter axis for parameter 1
-- `lens2` parameter axis for parameter 2
-- `eigenvec` guess for the iω eigenvector at p1_0
-- `eigenvec_ad` guess for the -iω eigenvector at p1_0
-- `options_cont` keywords arguments to be passed to the regular [`continuation`](@ref)
-
-# Optional arguments:
-
-- `bdlinsolver` bordered linear solver for the constraint equation
-- `updateMinAugEveryStep` update vectors `a,b` in Minimally Formulation every `updateMinAugEveryStep` steps
-- `computeEigenElements = false` whether to compute eigenelements. If `options_cont.detecttEvent>0`, it allows the detection of ZH, HH points.
-- `kwargs` keywords arguments to be passed to the regular [`continuation`](@ref)
-
-# Simplified call:
-
-	continuationHopf(br::AbstractBranchResult, ind_hopf::Int, lens2::Lens, options_cont::ContinuationPar ;  kwargs...)
-
-where the parameters are as above except that you have to pass the branch `br` from the result of a call to `continuation` with detection of bifurcations enabled and `index` is the index of Hopf point in `br` that you want to refine.
-
-!!! tip "ODE problems"
-    For ODE problems, it is more efficient to pass the Bordered Linear Solver using the option `bdlinsolver = MatrixBLS()`
-
-!!! tip "Jacobian transpose"
-    The adjoint of the jacobian `J` is computed internally when `Jᵗ = nothing` by using `transpose(J)` which works fine when `J` is an `AbstractArray`. In this case, do not pass the jacobian adjoint like `Jᵗ = (x, p) -> transpose(d_xF(x, p))` otherwise the jacobian would be computed twice!
-
-!!! tip "Detection of Bogdanov-Takens and Bautin bifurcations"
-    In order to trigger the detection, pass `detectEvent = 1,2` in `options_cont`. Note that you need to provide `d3F` in `prob`.
-"""
 function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractContinuationAlgorithm,
 				hopfpointguess::ArrayPartition, par,
 				lens1::Lens, lens2::Lens,
