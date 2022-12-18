@@ -114,7 +114,7 @@ br_pocoll = continuation(
 
 which gives
 
-![](Humphries.png)
+![](humphries.png)
 
 ## References
 [^Hum]: > Humphries et al. (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701)
