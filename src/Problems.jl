@@ -79,7 +79,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
 				)
 
 	Fc = (xd, p) -> F(xd[1], xd[2:end], p)
-	J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
+	# J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
 	dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
 	d1Fad(x,p,dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
 	if isnothing(d2F)
@@ -113,11 +113,20 @@ function BK.residual(prob::ConstantDDEBifProblem, x, p)
 	prob.VF.F(x,xd,p)
 end
 
-function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
+function jacobianFD(prob::ConstantDDEBifProblem, x, p)
 	xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
 	J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
 	Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd[ii] = z), p), x) for ii in eachindex(prob.delays0)]
+	return J0, Jd
+end
+
+function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
+	if isnothing(prob.VF.J)
+		J0, Jd = jacobianFD(prob, x, p)
+	else
+		J0, Jd = prob.VF.J(x, p)
+	end
 	return JacobianConstantDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
 end
 
