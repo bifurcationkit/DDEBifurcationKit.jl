@@ -14,6 +14,9 @@ module DDEBifurcationKit
 	include("codim2/Hopf.jl")
 	include("codim2/Fold.jl")
 
+	include("periodicorbit/PeriodicOrbits.jl")
+	include("periodicorbit/PeriodicOrbitCollocation.jl")
+
 	export ConstantDDEBifProblem, SDDDEBifProblem
 	export DDE_DefaultEig
 

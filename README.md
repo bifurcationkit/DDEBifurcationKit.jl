@@ -57,7 +57,7 @@ Type of delay: Constant (D), state-dependent (S), nested (N)
 | Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  
 | <span style="color:red">**Automatic bifurcation diagram computation of equilibria**</span> | C/SD| Yes| `AbstractArray` |  | |
 | ~~Periodic Orbit (Trapezoid) Newton / continuation~~ | | | `AbstractVector` |  | |
-| ~~Periodic Orbit (Collocation) Newton / continuation~~ | |  | `AbstractVector` |  | |
+| Periodic Orbit (Collocation) Newton / continuation | C |  | `AbstractVector` |  | |
 | ~~Periodic Orbit (Parallel Poincaré / Standard Shooting) Newton / continuation~~ | | | `AbstractArray` |   | |
 | ~~Fold, Neimark-Sacker, Period doubling detection~~ | | | `AbstractVector` |   | |
 | ~~Continuation of Fold of periodic orbits~~ | | | `AbstractVector` |  |  |

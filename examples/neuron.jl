@@ -52,3 +52,65 @@ brhopf2 = continuation(br, 2, (@lens _.a21),
          bothside=true)
 
 plot(brhopf, brhopf2, legend = :top)
+
+
+################################################################################
+# computation periodic orbit
+
+# continuation parameters
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, pMax = 10., pMin=-5., maxSteps = 130,
+	nev = 3, tolStability = 1e-8, detectBifurcation = 0, plotEveryStep = 2, saveSolEveryStep=1)
+	@set! opts_po_cont.newtonOptions.tol = 1e-8
+	@set! opts_po_cont.newtonOptions.verbose = true
+
+	# arguments for periodic orbits
+	args_po = (	recordFromSolution = (x, p) -> begin
+			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			return (max = maximum(xtt[1,:]),
+					min = minimum(xtt[1,:]),
+					period = getPeriod(p.prob, x, nothing))
+		end,
+		plotSolution = (x, p; k...) -> begin
+			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			plot!(xtt.t, xtt[1,:]; label = "V1", k...)
+			plot!(xtt.t, xtt[2,:]; label = "V2", k...)
+			plot!(br2; subplot = 1, putspecialptlegend = false)
+			end,
+		normC = norminf)
+
+probpo = PeriodicOrbitOCollProblem(40, 4; N = 2)
+	# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
+	br_pocoll = @time continuation(
+		br2, 1, opts_po_cont,
+		# PeriodicOrbitOCollProblem(100, 4);
+		probpo;
+		verbosity = 2,	plot = true,
+		args_po...,
+		ampfactor = 1/0.3593 * 0.0610*2.2,
+		δp = 0.001,
+		normC = norminf,
+		callbackN = (state; k...) -> begin
+			xtt = BK.getPeriodicOrbit(probpo,state.x,nothing)
+			# plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
+			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+			# @show state.x[end]
+			# @show state.f[end]
+			state.it < 6
+		end
+		)
+
+################################################################################
+using  DifferentialEquations
+
+function neuron_DE(du,u,h,p,t)
+	@unpack κ, β, a12, a21, τs, τ1, τ2 = p
+	du[1] = -κ * u[1] + β * tanh(h(p, t-τs)[1]) + a12 * tanh(h(p, t-τ2)[2])
+	du[2] = -κ * u[2] + β * tanh(h(p, t-τs)[2]) + a21 * tanh(h(p, t-τ1)[1])
+end
+
+h(p, t) = -0*ones(2) .+ 0.25sin(t/4)
+	prob_de = DDEProblem(neuron_DE,h(pars, 0),h,(0.,20000.),setproperties(pars, a21 = br2.specialpoint[3].param + 0.001); constant_lags=delaysF(pars))
+	alg = MethodOfSteps(BS3())
+	sol = solve(prob_de,alg)
+	plot(plot(sol, xlims = (sol.t[end]-100,sol.t[end])), plot(sol),title = "a21=$(sol.prob.p.a21)")
+
