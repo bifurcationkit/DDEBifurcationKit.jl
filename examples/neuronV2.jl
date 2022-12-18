@@ -2,7 +2,7 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, Parameters, Setfield, RecursiveArrayTools
+using Revise, DDEBifurcationKit, Parameters, Setfield
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -111,14 +111,6 @@ probpo = PeriodicOrbitOCollProblem(140, 3; N = 2)
 		ampfactor = 1/0.24391300209895822 * 0.1,
 		δp = 0.001,
 		normC = norminf,
-		callbackN = (state; k...) -> begin
-			xtt = BK.getPeriodicOrbit(probpo,state.x,nothing)
-			# plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
-			# @show state.x[end]
-			# @show state.f[end]
-			state.it < 16
-		end
 		)
 ################################################################################
 using  DifferentialEquations

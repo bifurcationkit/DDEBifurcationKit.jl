@@ -20,7 +20,7 @@ Assuming that you already have Julia correctly installed, it suffices to import
 `DDEBifurcationKit.jl` in the standard way:
 
 ```julia
-import Pkg; Pkg.add("DDEBifurcationKit")
+import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")
 ```
 
 ## Support and citation
@@ -49,18 +49,18 @@ Type of delay: Constant (D), state-dependent (S), nested (N)
 |---|---|---|---|---|---|
 | (Deflated) Krylov-Newton| C/SD |  Yes | Yes| | |
 | Continuation PALC (Natural, Secant, Tangent, Polynomial) | C/SD| | | | |
-| Bifurcation / Fold / Hopf point detection | C/SD | Yes|   |  | |
-| Fold Point continuation |C/SD | Yes|  |  |
-| Hopf Point continuation | C/SD | Y | `AbstractArray` | | |
+| Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | |
+| Fold Point continuation |C/SD | Y |  |  |
+| Hopf Point continuation | C/SD | N | `AbstractArray` | | |
 | ~~Bogdanov-Takens Point newton~~ | C/SD | Y | `AbstractArray` | | |
-| Branch point / Fold / Hopf normal form | C/SD | Yes|  | |  | |
+| Branch point / Fold / Hopf normal form | C/SD | Y|  | |  | |
 | Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  
-| <span style="color:red">**Automatic bifurcation diagram computation of equilibria**</span> | C/SD| Yes| `AbstractArray` |  | |
+| <span style="color:red">**Automatic bifurcation diagram computation of equilibria**</span> | C/SD| Y| `AbstractArray` |  | |
 | ~~Periodic Orbit (Trapezoid) Newton / continuation~~ | | | `AbstractVector` |  | |
 | Periodic Orbit (Collocation) Newton / continuation | C |  | `AbstractVector` |  | |
 | ~~Periodic Orbit (Parallel Poincaré / Standard Shooting) Newton / continuation~~ | | | `AbstractArray` |   | |
 | ~~Fold, Neimark-Sacker, Period doubling detection~~ | | | `AbstractVector` |   | |
 | ~~Continuation of Fold of periodic orbits~~ | | | `AbstractVector` |  |  |
-| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD| Yes|  |  |
-|~~Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf normal forms~~ | | Yes|  |  |
+| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD| Y|  |  |
+|~~Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf normal forms~~ | | Y|  |  |
 | ~~Branching from Bogdanov-Takens points to Fold / Hopf curve~~ |  | |  `AbstractVector` | |  |

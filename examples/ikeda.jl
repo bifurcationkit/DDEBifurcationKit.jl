@@ -4,7 +4,7 @@ cd("..")
 # pkg"activate ."
 
 # https://ddebiftool.sourceforge.net/demos/neuron/html/demo1_stst.html
-using Revise, DDEBifurcationKit, Parameters, Setfield, RecursiveArrayTools
+using Revise, DDEBifurcationKit, Parameters, Setfield
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -66,13 +66,6 @@ probpo = PeriodicOrbitTrapProblem(M = 100, jacobian = :DenseAD, N = 1)
 	args_po...,
 	ampfactor = 1/0.467829783456199 ,#* 0.014,
 	δp = 0.01,
-	callbackN = (state; k...) -> begin
-		xtt = BK.getPeriodicOrbit(probpo,state.x,nothing)
-		# plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-		printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
-		@show state.x[end]
-		state.it < 18
-	end
 	)
 
 plot(br, br_pocoll)

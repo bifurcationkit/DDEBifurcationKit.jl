@@ -1,4 +1,4 @@
-using Revise, DDEBifurcationKit, Parameters, Setfield, RecursiveArrayTools
+using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -31,7 +31,9 @@ plot(br)
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21))
 br2 = BK.continuation(prob2, PALC(), setproperties(opts, ds = 0.1, pMax = 3., nInversion=8); verbosity = 3, plot = true, bothside = false, normC = norminf)
-BK.getNormalForm(br2, 3)
+
+# @set! br2.contparams.newtonOptions.eigsolver.σ = 1e-5
+BK.getNormalForm(br2, 2)
 #Hopf l1 ≈ −0.0601.
 ################################################################################
 brhopf = continuation(br, 3, (@lens _.a21),
@@ -78,26 +80,29 @@ opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, pMax = 10
 			end,
 		normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(40, 4; N = 2)
+probpo = PeriodicOrbitOCollProblem(60, 4; N = 2)
 	# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
 	br_pocoll = @time continuation(
 		br2, 1, opts_po_cont,
-		# PeriodicOrbitOCollProblem(100, 4);
 		probpo;
 		verbosity = 2,	plot = true,
 		args_po...,
 		ampfactor = 1/0.3593 * 0.0610*2.2,
 		δp = 0.001,
 		normC = norminf,
-		callbackN = (state; k...) -> begin
-			xtt = BK.getPeriodicOrbit(probpo,state.x,nothing)
-			# plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
-			# @show state.x[end]
-			# @show state.f[end]
-			state.it < 6
-		end
 		)
+
+plot(br2, br_pocoll)
+plot(br_pocoll, vars = (:param, :period))
+
+# plot the periodic orbit
+plot(layout = 2)
+	for ii = 1:10:110
+		solpo = BK.getPeriodicOrbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, nothing)
+		plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
+	end
+	xlabel!("t / period", subplot = 1)
+	plot!(br_pocoll, vars = (:param, :period), subplot = 2, xlims=(2.2,2.4))
 
 ################################################################################
 using  DifferentialEquations

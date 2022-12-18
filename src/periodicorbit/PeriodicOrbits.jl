@@ -15,18 +15,15 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 	cb = get(kwargs, :callbackN, BK.cbDefault)
 
 	hopfpt = BK.hopfNormalForm(br.prob, br, ind_bif; nev = nev, verbose = verbose)
-	@error "Attention ici"
+	@error "Careful here"
 	@set! hopfpt.nf.a = 1.
-
-	# @infiltrate
 
 	# compute predictor for point on new branch
 	ds = isnothing(δp) ? _contParams.ds : δp
 	Ty = typeof(ds)
 	pred = predictor(hopfpt, ds; verbose = verbose, ampfactor = Ty(ampfactor))
-	@error "Attention ici"
+	@error "Careful here"
 	@set! pred.p = br.specialpoint[ind_bif].param + δp
-	# return pred
 
 	verbose && printstyled(color = :green, "#"^61*
 			"\n┌─ Start branching from Hopf bif. point to periodic orbits.",
@@ -47,9 +44,8 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 
 	M = BK.getMeshSize(probPO)
 	orbitguess_a = [pred.orbit(t - ϕ) for t in LinRange(0, 2pi, M + 1)[1:M]]
-	# ADDED
+	# TODO THIS HAS BEEN ADDED FOR BETTER INITIAL GUESS
 	orbitguess_a[M] .= orbitguess_a[1]
-
 
 	# extract the vector field and use it possibly to affect the PO functional
 	prob_vf = BK.reMake(br.prob, params = BK.setParam(br, pred.p))
@@ -58,8 +54,6 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 	probPO, orbitguess = reMake(probPO, prob_vf, hopfpt, ζr, orbitguess_a, abs(2pi/pred.ω); orbit = pred.orbit)
 	# ADDED
 	probPO.xπ .= orbitguess[1:end-1]
-
-	# return probPO, orbitguess
 
 	if _contParams.newtonOptions.linsolver isa GMRESIterativeSolvers
 		_contParams = @set _contParams.newtonOptions.linsolver.N = length(orbitguess)

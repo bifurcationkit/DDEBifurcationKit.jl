@@ -3,7 +3,7 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, Parameters, Setfield, RecursiveArrayTools, LinearAlgebra, Plots, SparseArrays
+using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots, SparseArrays
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit

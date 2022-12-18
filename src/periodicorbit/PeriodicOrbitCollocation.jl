@@ -11,34 +11,29 @@ end
 
 
 function _POOCollScheme!(pb::PeriodicOrbitOCollProblem, dest, ∂u, u, ud, par, h, tmp)
-	# applyF(pb, tmp, u, par)
 	tmp2 = pb.prob_vf.VF.F(u, ud, par)
 	dest .= @. ∂u - h * tmp2
 end
 
 # function for collocation problem
-@views function functionalColl!(pb::PeriodicOrbitOCollProblem{Tprob}, out, u, period, (L, ∂L), pars, result) where {Tprob <: AbstractDDEBifurcationProblem}
+@views function functionalColl!(pb::PeriodicOrbitOCollProblem{Tprob}, out, u, period, (L, ∂L), pars, result) where {Tprob <: ConstantDDEBifProblem}
 	Ty = eltype(u)
 	n, ntimes = size(u)
 	m = pb.mesh_cache.degree
 	Ntst = pb.mesh_cache.Ntst
 	# we want slices at fixed  times, hence gj[:, j] is the fastest
 	# temporaries to reduce allocations
-	# TODO VIRER CES TMP?
 	gj  = zeros(Ty, n, m)
 	∂gj = zeros(Ty, n, m)
 	uj  = zeros(Ty, n, m+1)
 
-	# get interpolation
+	# get interpolator which allows to get result(t)
 	interp = BK.POOCollSolution(pb, result)
-
 	delays = pb.prob_vf.delays(pars)
 
-
+	# get the mesh of the OCollProblem
 	mesh = BK.getMesh(pb)
 	σ = LinRange(0,2,m)
-
-	# @infiltrate
 
 	# range for locating time slices
 	rg = UnitRange(1, m+1)
@@ -55,8 +50,7 @@ end
 		for l in 1:m
 			tσ = tj + dtj * σ[l]
 			udj = [interp(mod(tσ*period - d, period)) for d in delays]
-			# @show l, tj, tσ
-			# out[:, end] serves as buffer for now
+			# out[:, end] can serve as buffer for now in the following function
 			_POOCollScheme!(pb, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dtj, out[:, end])
 
 		end

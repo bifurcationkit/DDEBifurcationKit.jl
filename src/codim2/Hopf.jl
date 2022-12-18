@@ -439,30 +439,14 @@ function BK.continuationHopf(prob_vf::ConstantDDEBifProblem, alg::BK.AbstractCon
 		# expression of the jacobian
 		J_at_xp = BK.jacobian(probhopf.prob_vf, x, newpar)
 
-		# compute new b
+		# compute eigenvector
 		T = typeof(p1)
-		# ζ = probhopf.linbdsolver(J_at_xp, a, b, T(0), probhopf.zero, T(1); shift = Complex(0, -ω), Mass = hopfPb.massmatrix)[1]
 		ζ = @. z.x[2] + im * z.x[3]
 		ζ ./= normC(ζ)
 
-		# compute new a
-		# JAd_at_xp = BK.hasAdjoint(probhopf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
-		# ζstar = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
 		# test function for Bogdanov-Takens
-		# JE ME DEMANDE SI CA NE FOUT PAS LA MERDE AVEC LA BISSECTION. EN EFFET BT EST DE SIGNE CONSTANT ET DONC LA BISSSECTION ET LE CHANGEMENT DE SIGNES VONT MERDER. IL SUFFIT PE DE PRENDRE ω - ϵ Newton
 		probhopf.BT = ω
-		# BT2 = real( dot(ζstar ./ normC(ζstar), ζ) )
-		# ζstar ./= dot(ζ, ζstar)
-
-		# hp = Hopf(x, p1, ω, newpar, lens1, ζ, ζstar, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
-		# hopfNormalForm(prob_vf, hp, options_newton.linsolver, verbose = false)
-
-		# lyapunov coefficient
-		# probhopf.l1 = hp.nf.b
-		# test for Bautin bifurcation.
-		# If GH is too large, we take the previous value to avoid spurious detection
-		# GH will be large close to BR points
-		# probhopf.GH = abs(real(hp.nf.b)) < 1e5 ? real(hp.nf.b) : state.eventValue[2][2]
+	
 		return probhopf.BT, probhopf.GH
 	end
 
