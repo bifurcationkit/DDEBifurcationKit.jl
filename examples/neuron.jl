@@ -34,9 +34,11 @@ br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = 
 
 plot(br)
 ################################################################################
-pthopf = newton(br, 3,; lens2 = (@lens _.τs),
-         startWithEigen = true)
-
+prob2 = DDEBK.ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21))
+br2 = BK.continuation(prob2, PALC(), opts; verbosity = 1, plot = true, bothside = true)
+BK.getNormalForm(br2, 3)
+#L1 ≈ −0.0601.
+################################################################################
 brhopf = continuation(br, 3, (@lens _.a21),
          setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.04, maxSteps = 230, pMax = 15., pMin = -1.,ds = 0.02);
          verbosity = 2, plot = true,
