@@ -61,7 +61,7 @@ hopfpt = BK.getNormalForm(br, 2)
 ```
 
 ## Continuation of Hopf points
-We follow the Hopf points in the parameter plane $(arc)$. We tell the solver to consider br.specialpoint[3] and continue it.
+We follow the Hopf points in the parameter plane $(a,c)$. We tell the solver to consider br.specialpoint[1] and continue it.
 
 ```@example TUTneuron2
 # continuation of the first Hopf point
@@ -85,7 +85,7 @@ scene
 ```
 
 ## Continuation of Fold points
-We follow the Fold points in the parameter plane $(a, c)$. We tell the solver to consider br.specialpoint[3] and continue it.
+We follow the Fold points in the parameter plane $(a, c)$. We tell the solver to consider br2.specialpoint[3] and continue it.
 
 ```@example TUTneuron2
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@lens _.c))

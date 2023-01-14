@@ -8,7 +8,7 @@ It builds upon [BifurcationKit.jl]() with version > 0.2 to perform continuation 
 
 Assuming that you already have Julia correctly installed, it suffices to import DDEBifurcationKit.jl in the standard way:
 
-`] import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")`
+`import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")`
 
 ## Citing this work
 If you use this package for your work, we ask that you **cite** the following paper!! Open source development strongly depends on this. It is referenced on HAL-Inria as follows:
@@ -30,9 +30,9 @@ If you use this package for your work, we ask that you **cite** the following pa
 
 ## Other softwares
 
-There are many good softwares already available.
+There are several good softwares already available.
 
-- For continuation in small dimension, most softwares are listed on [DSWeb](https://ddebiftool.sourceforge.net). One can mention the widely used [DDE-BIFTOOL](http://www.math.pitt.edu/~bard/xpp/xpp.html), [Knut](https://rs1909.github.io/knut/). All these are very reliable and some address high codimensional bifurcations.
+- For continuation in small dimension, most softwares are listed on [DSWeb](https://ddebiftool.sourceforge.net). One can mention the widely used [DDE-BIFTOOL](http://www.math.pitt.edu/~bard/xpp/xpp.html), [Knut](https://rs1909.github.io/knut/). All these are very reliable and some address high codimension bifurcations.
 
 - For large scale problems, there is very little.
 

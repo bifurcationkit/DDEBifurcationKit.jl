@@ -46,7 +46,6 @@ br1Bottom = continuation(br, 1, setproperties(opts_br; ds = -opts_br.ds, maxStep
 scene = plot(br, br1Top, br1Bottom; branchlabel = ["br", "br1Top", "br1Bottom"], legend = :topleft)
 ```
 
-
 ## Branch switching from non simple branch point to equilibria
 
 We provide an automatic branch switching method in this case. The method is to first compute the reduced equation (see [Non-simple branch point](@ref)) and use it to compute the nearby solutions. These solutions are seeded as initial guess for [`continuation`](@ref). Hence, you can perform automatic branch switching by calling `continuation` with the following options:

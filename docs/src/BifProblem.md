@@ -7,7 +7,7 @@ Consider the system of delay differential equations with constant delays (DDEs)
 
 $$\frac{\mathrm{d}}{\mathrm{d} t} x(t)=\mathbf F\left(x(t), x\left(t-\tau_1\right), \ldots, x\left(t-\tau_m\right); p\right)$$
 
-where the delays $\tau_i>0$ are constant and $p$ is a set of parameters. In order to specify this, we need to specify the vector field and the delays. The delays are given using a delay function which must return an `AbstractVecor`
+where the delays $\tau_i>0$ are constant and $p$ is a set of parameters. In order to specify this, we need to provide the vector field and the delays. The delays are provided using a delay function which must return an `AbstractVecor`
 
 ```julia
 function mydelays(pars)

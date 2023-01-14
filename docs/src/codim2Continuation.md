@@ -27,7 +27,7 @@ You can detect the following codim 2 bifurcation points by using the option `det
 
 ## Hopf continuation
 
-The continuation of Fold bifurcation points is based on a solving for $(u^*, v, \omega)$
+The continuation of Fold bifurcation points is based on solving the extended system for $(u^*, v, \omega)$
 
 $$\begin{aligned}
 & 0=\mathbf F\left(u^*, u^*; p\right) \\

@@ -1,6 +1,6 @@
 # Eigen solvers (Eig)
 
-See also [Eigen solvers](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/eigensolver/) for more information, for example to implement your own.
+See also [Eigen solvers](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/eigensolver/) for more information, for example on how to implement your own.
 
 
 
