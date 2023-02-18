@@ -18,11 +18,9 @@ x0 = [0.]
 prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 9., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 4, nInversion = 12 )
+opts = ContinuationPar(pMax = 9., pMin = -1., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 6, nInversion = 12 )
 br = continuation(prob, PALC(), opts)
-
-BifurcationKit.getNormalForm(br, 1)
-
+# hopf bifurcations
 function NFcoeff(N)
    # Faria 2006
    ωN = pi/2 + N*pi
@@ -39,3 +37,11 @@ h1 = BifurcationKit.getNormalForm(br, 1)
 h2 = BifurcationKit.getNormalForm(br, 2)
 @test isapprox(real(h2.nf.a), NFcoeff(2).a; rtol = 1e-5)
 @test isapprox(real(h2.nf.b), NFcoeff(2).b; rtol = 1e-5)
+
+# static bifurcations
+pars = (a=-0.1,b=0.)
+prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a))
+optn = NewtonPar(eigsolver = DDE_DefaultEig(γ = .01))
+opts = ContinuationPar(pMax = 9., pMin = -1., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 7, nInversion = 4 )
+br = continuation(prob, PALC(), opts; verbosity = 0)
+BifurcationKit.getNormalForm(br, 1)

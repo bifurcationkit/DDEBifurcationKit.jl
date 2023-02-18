@@ -23,7 +23,7 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose
 
 	ζ = pt.ζ
 	cζ = conj.(pt.ζ)
-	ζstar = copy(pt.ζstar)
+	ζstar = copy(pt.ζ★)
 	ζstar ./= conj(dot(ζstar, Δ(Val(:der), L, ζ, λ0)))
 	# test the normalisation
 	if ~isapprox(dot(ζstar, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-2)
@@ -75,14 +75,14 @@ function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose
 	else
 		pt.type = :Singular
 	end
-	verbose && printstyled(color = :red,"--> Hopf bifurcation point is: ", pt.type, "\n")
+	verbose && printstyled(color = :red, "--> Hopf bifurcation point is: ", pt.type, "\n")
 	return pt
 end
 
 function BK.hopfNormalForm(prob::SDDDEBifProblem, pt::BK.Hopf, ls; verbose::Bool = false)
 	@error "Normal form for SD-DDE is not implemented"
-	a = Complex(1, 0.)
-	b = Complex(1, 0.)
+	a = Complex{eltype(prob)}(1, 0)
+	b = Complex{eltype(prob)}(1, 0)
 	pt.nf = (a = a, b = b)
 	if real(a) * real(b) < 0
 		pt.type = :SuperCritical
