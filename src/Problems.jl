@@ -114,7 +114,7 @@ function BK.residual(prob::ConstantDDEBifProblem, x, p)
 end
 
 function jacobianFD(prob::ConstantDDEBifProblem, x, p)
-	xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
+	xd = VectorOfArray([copy(x) for _ in eachindex(prob.delays0)])
 	J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
 	Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd[ii] = z), p), x) for ii in eachindex(prob.delays0)]

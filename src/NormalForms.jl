@@ -7,7 +7,6 @@ function BK.getNormalForm1d(prob::ConstantDDEBifProblem, br::ContResult, ind_bif
 	BK.getNormalForm1d(prob_ode, br_ode, ind_bif; kwargs_nf...)
 end
 
-
 function BK.hopfNormalForm(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose::Bool = false)
 	x0 = pt.x0
 	p = pt.p
