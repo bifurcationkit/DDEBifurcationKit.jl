@@ -51,7 +51,8 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 	prob_vf = BK.reMake(br.prob, params = BK.setParam(br, pred.p))
 
 	# build the variable to hold the functional for computing PO based on finite differences
-	probPO, orbitguess = reMake(probPO, prob_vf, hopfpt, ζr, orbitguess_a, abs(2pi/pred.ω); orbit = pred.orbit)
+	probPO, orbitguess = reMake(probPO, prob_vf, hopfpt, ζr, orbitguess_a, abs(2pi/pred.ω); orbit = pred.orbit, ϕ = ϕ)
+
 	# ADDED
 	probPO.xπ .= orbitguess[1:end-1]
 

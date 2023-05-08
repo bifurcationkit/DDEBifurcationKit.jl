@@ -21,16 +21,16 @@ delaysF(par) = [par.τ1, par.τ2, par.τs]
 pars = (κ = 0.5, β = -1, a12 = 1, a21 = 0.5, τ1 = 0.2, τ2 = 0.2, τs = 1.5)
 x0 = [0.01, 0.001]
 
-prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs))
+prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs); recordFromSolution = (x,p)->(x1 = x[1], x2 = x[2]))
 
-optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true, normC = norminf)
+optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
+opts = ContinuationPar(pMax = 5., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
+br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
 
 plot(br)
 ################################################################################
-prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21))
-br2 = BK.continuation(prob2, PALC(), setproperties(opts, ds = 0.1, pMax = 3., nInversion=8); verbosity = 3, plot = true, bothside = false, normC = norminf)
+prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21); recordFromSolution = prob.recordFromSolution)
+br2 = BK.continuation(prob2, PALC(), setproperties(opts, ds = 0.1, pMax = 4., nInversion=8); verbosity = 0, plot = true, normC = norminf)
 
 # @set! br2.contparams.newtonOptions.eigsolver.σ = 1e-5
 BK.getNormalForm(br2, 2)
@@ -58,10 +58,8 @@ plot(brhopf, brhopf2, legend = :top)
 
 ################################################################################
 # computation periodic orbit
-
-# continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, pMax = 10., pMin=-5., maxSteps = 130,
-	nev = 3, tolStability = 1e-8, detectBifurcation = 0, plotEveryStep = 2, saveSolEveryStep=1)
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, pMax = 10., pMin=-5., maxSteps = 20,
+	nev = 3, tolStability = 1e-8, detectBifurcation = 0, plotEveryStep = 2, saveSolEveryStep=1, detectFold = true)
 	@set! opts_po_cont.newtonOptions.tol = 1e-8
 	@set! opts_po_cont.newtonOptions.verbose = true
 

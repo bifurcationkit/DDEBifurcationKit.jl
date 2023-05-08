@@ -108,7 +108,6 @@ function BK.newtonHopf(br::BK.AbstractBranchResult, ind_hopf::Int;
 	return newtonHopf(prob, hopfpointguess, getParams(br), ζ, ζad, options; normN = normN, kwargs...)
 end
 
-
 function BK.continuationHopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.AbstractContinuationAlgorithm,
 				hopfpointguess::ArrayPartition, par,
 				lens1::Lens, lens2::Lens,
@@ -121,7 +120,7 @@ function BK.continuationHopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Abs
 				computeEigenElements = false,
 				usehessian = true,
 				massmatrix = LinearAlgebra.I,
-				kwargs...) where {Tb, vectype}
+				kwargs...)
 	@assert lens1 != lens2 "Please choose 2 different parameters. You only passed $lens1"
 	@assert lens1 == BK.getLens(prob_vf)
 
@@ -488,52 +487,52 @@ function BK.continuationHopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Abs
 	return correctBifurcation(br)
 end
 
-function BK.continuationHopf(prob::AbstractDDEBifurcationProblem,
-						br::BK.AbstractBranchResult, ind_hopf::Int64,
-						lens2::Lens,
-						options_cont::ContinuationPar = br.contparams;
-						alg = br.alg,
-						startWithEigen = false,
-						normC = norm,
-						kwargs...)
-	hopfpointguess = HopfPoint(br, ind_hopf)
-	ω = hopfpointguess.p[2]
-	bifpt = br.specialpoint[ind_hopf]
+# function BK.continuationHopf(prob::AbstractDDEBifurcationProblem,
+# 						br::BK.AbstractBranchResult, ind_hopf::Int64,
+# 						lens2::Lens,
+# 						options_cont::ContinuationPar = br.contparams;
+# 						alg = br.alg,
+# 						startWithEigen = false,
+# 						normC = norm,
+# 						kwargs...)
+# 	hopfpointguess = HopfPoint(br, ind_hopf)
+# 	ω = hopfpointguess.p[2]
+# 	bifpt = br.specialpoint[ind_hopf]
 
-	@assert ~isnothing(br.eig) "The branch contains no eigen elements. This is strange because a Hopf point was detected. Please open an issue on the website."
+# 	@assert ~isnothing(br.eig) "The branch contains no eigen elements. This is strange because a Hopf point was detected. Please open an issue on the website."
 
-	@assert ~isnothing(br.eig[1].eigenvecs) "The branch contains no eigenvectors for the Hopf point. Please provide one."
+# 	@assert ~isnothing(br.eig[1].eigenvecs) "The branch contains no eigenvectors for the Hopf point. Please provide one."
 
-	ζ = geteigenvector(br.contparams.newtonOptions.eigsolver, br.eig[bifpt.idx].eigenvecs, bifpt.ind_ev)
-	ζ ./= normC(ζ)
-	ζad = conj.(ζ)
+# 	ζ = geteigenvector(br.contparams.newtonOptions.eigsolver, br.eig[bifpt.idx].eigenvecs, bifpt.ind_ev)
+# 	ζ ./= normC(ζ)
+# 	ζad = conj.(ζ)
 
-	p = bifpt.param
-	parbif = BK.setParam(br, p)
+# 	p = bifpt.param
+# 	parbif = BK.setParam(br, p)
 
-	hopfpointguess = ArrayPartition(hopfpointguess.u, real(ζ), imag(ζ), hopfpointguess.p)
+# 	hopfpointguess = ArrayPartition(hopfpointguess.u, real(ζ), imag(ζ), hopfpointguess.p)
 
-	if startWithEigen
-		# computation of adjoint eigenvalue
-		λ = Complex(0, ω)
-		# jacobian at bifurcation point
-		L = BK.jacobian(prob, bifpt.x, parbif)
+# 	if startWithEigen
+# 		# computation of adjoint eigenvalue
+# 		λ = Complex(0, ω)
+# 		# jacobian at bifurcation point
+# 		L = BK.jacobian(prob, bifpt.x, parbif)
 
-		# jacobian adjoint at bifurcation point
-		_Jt = ~BK.hasAdjoint(prob) ? adjoint(L) : jad(prob, bifpt.x, parbif)
+# 		# jacobian adjoint at bifurcation point
+# 		_Jt = ~BK.hasAdjoint(prob) ? adjoint(L) : jad(prob, bifpt.x, parbif)
 
-		ζstar, λstar = BK.getAdjointBasis(_Jt, conj(λ), br.contparams.newtonOptions.eigsolver; nev = br.contparams.nev, verbose = false)
-		ζad .= ζstar ./ dot(ζstar, ζ)
-	end
+# 		ζstar, λstar = BK.getAdjointBasis(_Jt, conj(λ), br.contparams.newtonOptions.eigsolver; nev = br.contparams.nev, verbose = false)
+# 		ζad .= ζstar ./ dot(ζstar, ζ)
+# 	end
 
-	return BK.continuationHopf(br.prob, alg,
-					hopfpointguess, parbif,
-					BK.getLens(br), lens2,
-					ζ, ζad,
-					options_cont ;
-					normC = normC,
-					kwargs...)
-end
+# 	return BK.continuationHopf(br.prob, alg,
+# 					hopfpointguess, parbif,
+# 					BK.getLens(br), lens2,
+# 					ζ, ζad,
+# 					options_cont ;
+# 					normC = normC,
+# 					kwargs...)
+# end
 
 
 # structure to compute the eigenvalues along the Hopf branch

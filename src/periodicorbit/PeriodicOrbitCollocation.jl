@@ -28,7 +28,7 @@ end
 	uj  = zeros(Ty, n, m+1)
 
 	# get interpolator which allows to get result(t)
-	interp = BK.POOCollSolution(pb, result)
+	interp = BK.POSolution(pb, result)
 	delays = pb.prob_vf.delays(pars)
 
 	# get the mesh of the OCollProblem
@@ -75,7 +75,7 @@ end
 	uj  = zeros(Ty, n, m+1)
 
 	# get interpolator which allows to get result(t)
-	interp = BK.POOCollSolution(pb, result)
+	interp = BK.POSolution(pb, result)
 
 	if period <= 0
 		out .= 1e9

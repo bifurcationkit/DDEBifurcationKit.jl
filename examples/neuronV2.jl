@@ -2,11 +2,12 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, Parameters, Setfield, Plots
+using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
 g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
+norminf(x) = norm(x, Inf)
 function neuron2VF(x, xd, p)
    @unpack a,b,c,d = p
    [
@@ -58,7 +59,6 @@ plot(br2)
 # change tolerance for avoiding error computation of the EV
 opts_fold = br.contparams
 @set! opts_fold.newtonOptions.eigsolver.σ = 1e-7
-
 
 brfold = continuation(br2, 3, (@lens _.a),
          setproperties(opts_fold; detectBifurcation = 1, dsmax = 0.01, maxSteps = 100, pMax = 0.6, pMin = -0.6,ds = -0.01, nInversion = 2, tolStability = 1e-6);

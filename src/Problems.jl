@@ -202,7 +202,7 @@ end
 
 function (l::BK.MatrixBLS)(J::JacobianDDE, dR,
 						dzu, dzp::T, R::AbstractVecOrMat, n::T,
-						ξu::T = T(1), ξp::T = T(1) ; kwargs...) where {T <: Number, Tξ}
+						ξu::T = T(1), ξp::T = T(1) ; kwargs...) where {T <: Number}
 	l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
 end
 
