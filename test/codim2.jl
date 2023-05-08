@@ -42,6 +42,12 @@ brhopf = continuation(br, 1, (@lens _.c),
 			bothside = true,
 			startWithEigen = true)
 
+BK.isInplace(brhopf.prob)
+BK.isSymmetric(brhopf.prob)
+BK.hasAdjoint(brhopf.prob.prob)
+BK.hasAdjointMF(brhopf.prob.prob)
+BK.getLens(brhopf.prob.prob)
+
 brhopf2 = continuation(br, 2, (@lens _.c),
 			setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, maxSteps = 100, pMax = 1.1, pMin = -0.1,ds = -0.01);
 			verbosity = 0, plot = false,

@@ -44,10 +44,10 @@ for op in (:HopfDDEProblem,)
 			massmatrix::Tmass
 		end
 
-		@inline hasHessian(pb::$op) = hasHessian(pb.prob_vf)
+		@inline BK.hasHessian(pb::$op) = BK.hasHessian(pb.prob_vf)
 		@inline BK.isSymmetric(pb::$op) = false
-		@inline hasAdjoint(pb::$op) = hasAdjoint(pb.prob_vf)
-		@inline hasAdjointMF(pb::$op) = hasAdjointMF(pb.prob_vf)
+		@inline BK.hasAdjoint(pb::$op) = BK.hasAdjoint(pb.prob_vf)
+		@inline BK.hasAdjointMF(pb::$op) = BK.hasAdjointMF(pb.prob_vf)
 		@inline BK.isInplace(pb::$op) = BK.isInplace(pb.prob_vf)
 		@inline BK.getLens(pb::$op) = BK.getLens(pb.prob_vf)
 		jad(pb::$op, args...) = jad(pb.prob_vf, args...)

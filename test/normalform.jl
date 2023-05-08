@@ -51,6 +51,8 @@ BK.isInplace(prob)
 BK.isSymmetric(prob)
 BK.getVectorType(prob)
 show(prob)
+
+DDEBifurcationKit.newtonHopf(br, 2)
 ##########################################################################################
 # SDDE, test dummy Hopf normal form
 function humpriesVF(x, xd, p)

@@ -51,6 +51,7 @@ BK.isSymmetric(::ConstantDDEBifProblem) = false
 BK.getVectorType(prob::ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
 BK.getLens(prob::ConstantDDEBifProblem) = prob.lens
 BK.hasAdjoint(prob::ConstantDDEBifProblem) = true
+BK.hasAdjointMF(prob::ConstantDDEBifProblem) = false
 BK.getDelta(prob::ConstantDDEBifProblem) = prob.δ
 BK.d2F(prob::ConstantDDEBifProblem, x, p, dx1, dx2) = BK.d2F(prob.VF, x, p, dx1, dx2)
 BK.d3F(prob::ConstantDDEBifProblem, x, p, dx1, dx2, dx3) = BK.d3F(prob.VF, x, p, dx1, dx2, dx3)
