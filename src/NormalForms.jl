@@ -81,8 +81,8 @@ end
 
 function BK.hopfNormalForm(prob::SDDDEBifProblem, pt::BK.Hopf, ls; verbose::Bool = false)
 	@error "Normal form for SD-DDE is not implemented"
-	a = Complex{eltype(prob)}(1, 0)
-	b = Complex{eltype(prob)}(1, 0)
+	a = Complex{eltype(pt.x0)}(1, 0)
+	b = Complex{eltype(pt.x0)}(1, 0)
 	pt.nf = (a = a, b = b)
 	if real(a) * real(b) < 0
 		pt.type = :SuperCritical

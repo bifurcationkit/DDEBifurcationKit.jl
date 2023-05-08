@@ -65,29 +65,40 @@ opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, pMax = 10.
 
 	# arguments for periodic orbits
 	args_po = (	recordFromSolution = (x, p) -> begin
-			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			_par = BK.getParams(p.prob)
+			xtt = BK.getPeriodicOrbit(p.prob, x, @set _par.a21=p.p)
 			return (max = maximum(xtt[1,:]),
 					min = minimum(xtt[1,:]),
-					period = getPeriod(p.prob, x, nothing))
+					period = getPeriod(p.prob, x, @set _par.a21=p.p))
 		end,
 		plotSolution = (x, p; k...) -> begin
-			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			_par = BK.getParams(p.prob)
+			xtt = BK.getPeriodicOrbit(p.prob, x, @set _par.a21=p.p)
 			plot!(xtt.t, xtt[1,:]; label = "V1", k...)
 			plot!(xtt.t, xtt[2,:]; label = "V2", k...)
 			plot!(br2; subplot = 1, putspecialptlegend = false)
 			end,
 		normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(60, 4; N = 2)
-	# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
+probpo = PeriodicOrbitOCollProblem(50, 3; N = 2)
+	# probpo = PeriodicOrbitTrapProblem(M = 150, N = 2; jacobian = :DenseAD)
 	br_pocoll = @time continuation(
 		br2, 1, opts_po_cont,
 		probpo;
+		alg = PALC(tangent = Bordered()),
 		verbosity = 2,	plot = true,
 		args_po...,
-		# ampfactor = 1/0.3593 * 0.0610*2.2,
+		# eigsolver = BK.FloquetCollGEV(DefaultEig(), length(probpo), probpo.N),
 		δp = 0.001,
 		normC = norminf,
+		callbackN = (state; k...) -> begin
+			xtt = BK.getPeriodicOrbit(probpo,state.x,nothing)
+			# plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
+			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+			# @show state.x[end]
+			# @show state.f[end]
+			state.it < 6
+		end
 		)
 
 plot(br2, br_pocoll)
@@ -96,7 +107,7 @@ plot(br_pocoll, vars = (:param, :period))
 # plot the periodic orbit
 plot(layout = 2)
 	for ii = 1:10:110
-		solpo = BK.getPeriodicOrbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, nothing)
+		solpo = BK.getPeriodicOrbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, 1)
 		plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
 	end
 	xlabel!("t / period", subplot = 1)

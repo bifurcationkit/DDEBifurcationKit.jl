@@ -96,7 +96,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, pMax = 10
 			end,
 		normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(140, 3; N = 2)
+probpo = PeriodicOrbitOCollProblem(100, 3; N = 2)
 	# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
 	br_pocoll = @time continuation(
 		br, 1, opts_po_cont,
@@ -108,6 +108,14 @@ probpo = PeriodicOrbitOCollProblem(140, 3; N = 2)
 		ampfactor = 1.42,
 		δp = 0.001,
 		normC = norminf,
+		callbackN = (state; k...) -> begin
+			xtt = BK.getPeriodicOrbit(probpo,state.x,nothing)
+			# plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
+			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+			# @show state.x[end]
+			# @show state.f[end]
+			state.it < 16
+		end
 		)
 ################################################################################
 using  DifferentialEquations
