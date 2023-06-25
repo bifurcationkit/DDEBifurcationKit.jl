@@ -65,6 +65,6 @@ probpo = PeriodicOrbitOCollProblem(100, 3; N = 2)
 			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
 			# @show state.x[end]
 			# @show state.f[end]
-			state.it < 16
+			state.step < 16
 		end
 		)

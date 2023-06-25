@@ -5,7 +5,7 @@
 	resultc = BK.getTimeSlices(prob, result)
 	functionalColl!(prob, resultc, uc, T, BK.getLs(prob.mesh_cache), pars, u)
 	# add the phase condition
-	result[end] = BK.phaseCondition(prob, (u, uc), BK.getLs(prob.mesh_cache))
+	result[end] = BK.phaseCondition(prob, (u, uc), BK.getLs(prob.mesh_cache), T)
 	return result
 end
 

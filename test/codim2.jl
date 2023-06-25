@@ -73,7 +73,8 @@ opts_fold = br.contparams
 brfold = continuation(br2, 3, (@lens _.a),
 			setproperties(opts_fold; detectBifurcation = 1, dsmax = 0.01, maxSteps = 100, pMax = 0.6, pMin = -0.6,ds = -0.01, nInversion = 2, tolStability = 1e-6);
 			verbosity = 0, plot = false,
-			detectCodim2Bifurcation = 2,
+			detectCodim2Bifurcation = 1,
+			jacobian_ma = :autodiff,
 			bothside = false,
 			startWithEigen = true)
 

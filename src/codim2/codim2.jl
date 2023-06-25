@@ -51,6 +51,7 @@ for op in (:HopfDDEProblem,)
 		@inline BK.isInplace(pb::$op) = BK.isInplace(pb.prob_vf)
 		@inline BK.getLens(pb::$op) = BK.getLens(pb.prob_vf)
 		jad(pb::$op, args...) = jad(pb.prob_vf, args...)
+		@inline BK.getDelta(pb::$op) = BK.getDelta(pb.prob_vf)
 
 		# constructor
 		function $op(prob::AbstractDDEBifurcationProblem, a, b, linsolve::BK.AbstractLinearSolver, linbdsolver = BK.MatrixBLS(); usehessian = true, massmatrix = LinearAlgebra.I)

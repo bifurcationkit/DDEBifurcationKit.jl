@@ -34,6 +34,7 @@ prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 3, )
+
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
 
 plot(br)
@@ -88,7 +89,7 @@ probpo = PeriodicOrbitOCollProblem(200, 2; N = 1)
 		printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
 		printstyled(color=:green, "T = ", (state.x[end]),"\n")
 		@show state.x[end]
-		state.it < 15 && BK.cbMaxNorm(10.0)(state; k...)
+		state.step < 15 && BK.cbMaxNorm(10.0)(state; k...)
 	end
 	)
 

@@ -142,7 +142,7 @@ function BK.hopfNormalForm(prob::AbstractDDEBifurcationProblem,
 	ζstar ./= dot(ζ, ζstar)
 	@assert dot(ζ, ζstar) ≈ 1
 
-	hopfpt = BK.Hopf(bifpt.x, bifpt.param,
+	hopfpt = BK.Hopf(bifpt.x, bifpt.τ, bifpt.param,
 		ω,
 		parbif, lens,
 		ζ, ζstar,

@@ -47,7 +47,7 @@ plot(brhopf, vars = (:a21, :τs))
 plot(brhopf, vars = (:τs, :ω))
 
 brhopf2 = continuation(br, 2, (@lens _.a21),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.1, maxSteps = 56, pMax = 15., pMin = -1.,ds = -0.01, nInversion = 4);
+         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.1, maxSteps = 56, pMax = 1.5, pMin = -1.,ds = -0.01, nInversion = 4);
          verbosity = 2, plot = true,
          detectCodim2Bifurcation = 2,
          startWithEigen = true,
@@ -97,7 +97,7 @@ probpo = PeriodicOrbitOCollProblem(50, 3; N = 2)
 			printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
 			# @show state.x[end]
 			# @show state.f[end]
-			state.it < 6
+			state.step < 6
 		end
 		)
 

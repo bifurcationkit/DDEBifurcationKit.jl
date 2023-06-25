@@ -75,6 +75,6 @@ probpo = PeriodicOrbitOCollProblem(200, 2; N = 1)
 		printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
 		printstyled(color=:green, "T = ", (state.x[end]),"\n")
 		@show state.x[end]
-		state.it < 15 && BK.cbMaxNorm(10.0)(state; k...)
+		state.step < 15 && BK.cbMaxNorm(10.0)(state; k...)
 	end
 	)
