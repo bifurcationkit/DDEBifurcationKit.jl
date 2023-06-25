@@ -92,7 +92,7 @@ probpo = PeriodicOrbitOCollProblem(200, 2; N = 1)
 	end
 	)
 
-plot(br, br_pocoll)
+plot(br);plot!(br_pocoll, plotfold=false, ylabel = "amplitude")
 ################################################################################
 using  DifferentialEquations
 

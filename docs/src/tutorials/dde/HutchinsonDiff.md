@@ -46,7 +46,7 @@ X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
 
 # boundary condition
 Q = Neumann0BC(X[2]-X[1])
-Dxx = sparse(CenteredDifference(2, 2, X[2]-X[1], Nx) * Q)[1]
+Δ = sparse(CenteredDifference(2, 2, X[2]-X[1], Nx) * Q)[1]
 nothing #hide
 ```
 
@@ -54,7 +54,7 @@ We are now ready to compute the bifurcation of the trivial (constant in space) s
 
 ```@example TUTHut
 # bifurcation problem
-pars = (a = 0.5, d = 1, τ = 1.0, Δ = Dxx, N = Nx)
+pars = (a = 0.5, d = 1, τ = 1.0, Δ = Δ, N = Nx)
 x0 = zeros(Nx)
 
 prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a))

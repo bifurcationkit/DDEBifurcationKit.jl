@@ -26,9 +26,9 @@ X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
 
 # boundary condition
 Q = Dirichlet0BC(X[2]-X[1]|>typeof)
-Dxx = sparse(CenteredDifference(2, 2, X[2]-X[1], Nx) * Q)[1]
+Δ = sparse(CenteredDifference(2, 2, X[2]-X[1], Nx) * Q)[1]
 
-pars = (a = 0.5, τ = 1.0, Δ = Dxx, N = Nx)
+pars = (a = 0.5, τ = 1.0, Δ = Δ, N = Nx)
 x0 = zeros(Nx)
 
 prob = ConstantDDEBifProblem(TW, delaysF, x0, pars, (@lens _.a))
