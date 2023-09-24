@@ -18,14 +18,9 @@ where $a>0,d>0$.
 We start by discretizing the above PDE based on finite differences.
 
 ```@example TUTHut
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots, SparseArrays
+using Revise, DDEBifurcationKit, Parameters, LinearAlgebra, Plots, SparseArrays
 using BifurcationKit
 const BK = BifurcationKit
-
-# sup norm
-norminf(x) = norm(x, Inf)
-
-using DiffEqOperators
 
 function Hutchinson(u, ud, p)
    @unpack a,d,Δ = p
@@ -44,9 +39,15 @@ We can now instantiate the model
 Nx = 200; Lx = pi/2;
 X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
 
-# boundary condition
-Q = Neumann0BC(X[2]-X[1])
-Δ = sparse(CenteredDifference(2, 2, X[2]-X[1], Nx) * Q)[1]
+function DiffOp(N, lx; order = 2)
+	hx = 2lx/N
+	Δ = spdiagm(0 => -2ones(N), 1 => ones(N-1), -1 => ones(N-1) )
+	Δ[1,1]=-1; Δ[end,end]=-1
+	Δ = Δ / hx^2
+	return Δ
+end
+
+Δ = DiffOp(Nx, Lx)
 nothing #hide
 ```
 
@@ -60,7 +61,7 @@ x0 = zeros(Nx)
 prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = false, normC = norminf)
 br
 ```
@@ -91,7 +92,7 @@ end
 prob2 = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a); J = JacHutchinson)
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 br
 ```

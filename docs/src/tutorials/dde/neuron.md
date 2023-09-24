@@ -17,12 +17,9 @@ $$\left\{\begin{array}{l}
 We first instantiate the model
 
 ```@example TUTneuron
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots
+using Revise, DDEBifurcationKit, Parameters, LinearAlgebra, Plots
 using BifurcationKit
 const BK = BifurcationKit
-
-# sup norm
-norminf(x) = norm(x, Inf)
 
 function neuronVF(x, xd, p)
    @unpack κ, β, a12, a21, τs, τ1, τ2 = p
@@ -40,7 +37,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 13., p_min = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true, normC = norminf)
 ```
 
@@ -55,7 +52,7 @@ scene = plot(br)
 As in [BifurcationKit.jl](https://github.com/rveltz/BifurcationKit.jl), it is straightforward to compute the normal forms.
 
 ```@example TUTneuron
-hopfpt = BK.getNormalForm(br, 2)
+hopfpt = BK.get_normal_form(br, 2)
 ```
 
 ## Continuation of Hopf points
@@ -64,18 +61,16 @@ We follow the Hopf points in the parameter plane $(a_{21},\tau_s)$. We tell the 
 ```@example TUTneuron
 # continuation of the first Hopf point
 brhopf = continuation(br, 3, (@lens _.a21),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
-         verbosity = 2, plot = true,
-         detectCodim2Bifurcation = 2,
+         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
+         detect_codim2_bifurcation = 2,
          # bothside = true,
-         startWithEigen = true)
+         start_with_eigen = true)
 
 # continuation of the second Hopf point
 brhopf2 = continuation(br, 2, (@lens _.a21),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
-         verbosity = 2, plot = true,
-         detectCodim2Bifurcation = 2,
-         startWithEigen = true,
+         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
+         detect_codim2_bifurcation = 2,
+         start_with_eigen = true,
          bothside=true)
 
 scene = plot(brhopf, brhopf2, legend = :top)
@@ -94,12 +89,12 @@ We then compute the branch of periodic orbits from the Hopf bifurcation points u
 
 ```@example TUTneuron
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-0., max_steps = 120, detectBifurcation = 0, save_sol_every_step=1)
-@set! opts_po_cont.newtonOptions.tol = 1e-8
-@set! opts_po_cont.newtonOptions.verbose = false
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-0., max_steps = 120, detect_bifurcation = 0, save_sol_every_step=1)
+@set! opts_po_cont.newton_options.tol = 1e-8
+@set! opts_po_cont.newton_options.verbose = false
 
 # arguments for periodic orbits
-args_po = (	recordFromSolution = (x, p) -> begin
+args_po = (	record_from_solution = (x, p) -> begin
 			xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 			return (max = maximum(xtt[1,:]),
 					min = minimum(xtt[1,:]),
@@ -113,16 +108,16 @@ args_po = (	recordFromSolution = (x, p) -> begin
 			end,
 		normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(60, 4; N = 2)
-	br_pocoll = @time continuation(
-		br2, 1, opts_po_cont,
-		probpo;
-		verbosity = 0,	plot = false,
-		args_po...,
-		δp = 0.001,
-		normC = norminf,
-		)
-scene = plot(br2, br_pocoll)		
+probpo = PeriodicOrbitOCollProblem(60, 4; N = 2, jacobian = BK.AutoDiffDense())
+br_pocoll = @time continuation(
+	br2, 1, opts_po_cont,
+	probpo;
+	verbosity = 0,	plot = false,
+	args_po...,
+	δp = 0.001,
+	normC = norminf,
+	)
+scene = plot(br2, br_pocoll)
 ```
 
 We can plot the periodic orbit as they approach the homoclinic point.

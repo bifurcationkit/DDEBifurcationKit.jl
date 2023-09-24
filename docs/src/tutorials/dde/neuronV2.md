@@ -19,7 +19,7 @@ where $g(z)=[\tanh (z-1)+\tanh (1)] \cosh (1)^2$.
 We first instantiate the model
 
 ```@example TUTneuron2
-using Revise, DDEBifurcationKit, Parameters, Setfield, Plots
+using Revise, DDEBifurcationKit, Parameters, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
@@ -42,7 +42,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig(maxit=100))
-opts = ContinuationPar(p_max = 1., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 1., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(tangent=Bordered()), opts)
 ```
 
@@ -57,7 +57,7 @@ scene = plot(br)
 As in [BifurcationKit.jl](https://github.com/rveltz/BifurcationKit.jl), it is straightforward to compute the normal forms.
 
 ```@example TUTneuron2
-hopfpt = BK.getNormalForm(br, 2)
+hopfpt = BK.get_normal_form(br, 2)
 ```
 
 ## Continuation of Hopf points
@@ -66,18 +66,18 @@ We follow the Hopf points in the parameter plane $(a,c)$. We tell the solver to 
 ```@example TUTneuron2
 # continuation of the first Hopf point
 brhopf = continuation(br, 1, (@lens _.c),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
+         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 0,
-         detectCodim2Bifurcation = 2,
+         detect_codim2_bifurcation = 2,
          bothside = true,
-         startWithEigen = true)
+         start_with_eigen = true)
 
 brhopf2 = continuation(br, 2, (@lens _.c),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
+         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 0,
-         detectCodim2Bifurcation = 2,
+         detect_codim2_bifurcation = 2,
          bothside = true,
-         startWithEigen = true)
+         start_with_eigen = true)
 
 scene = plot(brhopf, vars = (:a, :c), xlims = (0,0.7), ylims = (0,1))
 plot!(scene, brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1,1))
@@ -94,14 +94,15 @@ br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22);)
 
 # change tolerance for avoiding error computation of the EV
 opts_fold = br.contparams
-@set! opts_fold.newtonOptions.eigsolver.σ = 1e-7
+@set! opts_fold.newton_options.eigsolver.σ = 1e-7
 
 brfold = continuation(br2, 3, (@lens _.a),
-         setproperties(opts_fold; detectBifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
+         setproperties(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
-         detectCodim2Bifurcation = 2,
+         detect_codim2_bifurcation = 2,
+         update_minaug_every_step = 1,
          bothside = false,
-         startWithEigen = true)
+         start_with_eigen = true)
 
 scene = plot(brfold, vars = (:a, :c), branchlabel = "Fold")
 plot!(scene, brhopf, vars = (:a, :c), branchlabel = "Hopf")
