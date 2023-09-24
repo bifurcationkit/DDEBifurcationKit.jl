@@ -19,12 +19,11 @@ julia = "1.7"
 BifurcationKit = "0.3"
 DocStringExtensions = "0.9"
 ForwardDiff = "0.10.36"
-Interpolations = "0.14.7"
 NonlinearEigenproblems = "1.1.1"
 Parameters = "0.12.3"
 RecursiveArrayTools = "2.38.10"
 SciMLBase = "1.98.1"
-Setfield = "1.1.1"
+Setfield = "^1.1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
