@@ -38,10 +38,10 @@ opts_br = ContinuationPar(dsmax = 0.05, ds = 0.01, detectBifurcation = 3, nev = 
 br = continuation(prob, PALC(), opts_br)
 	
 # perform branch switching on one side of the bifurcation point
-br1Top = continuation(br, 1, setproperties(opts_br; maxSteps = 14) )
+br1Top = continuation(br, 1, setproperties(opts_br; max_steps = 14) )
 
 # on the other side
-br1Bottom = continuation(br, 1, setproperties(opts_br; ds = -opts_br.ds, maxSteps = 14))
+br1Bottom = continuation(br, 1, setproperties(opts_br; ds = -opts_br.ds, max_steps = 14))
 
 scene = plot(br, br1Top, br1Bottom; branchlabel = ["br", "br1Top", "br1Bottom"], legend = :topleft)
 ```

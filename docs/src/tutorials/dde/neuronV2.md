@@ -42,7 +42,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig(maxit=100))
-opts = ContinuationPar(pMax = 1., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 9, dsmax = 0.2, nInversion = 4)
+opts = ContinuationPar(p_max = 1., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(tangent=Bordered()), opts)
 ```
 
@@ -66,14 +66,14 @@ We follow the Hopf points in the parameter plane $(a,c)$. We tell the solver to 
 ```@example TUTneuron2
 # continuation of the first Hopf point
 brhopf = continuation(br, 1, (@lens _.c),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, maxSteps = 100, pMax = 1.1, pMin = -0.1,ds = 0.01, nInversion = 2);
+         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 0,
          detectCodim2Bifurcation = 2,
          bothside = true,
          startWithEigen = true)
 
 brhopf2 = continuation(br, 2, (@lens _.c),
-         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, maxSteps = 100, pMax = 1.1, pMin = -0.1,ds = -0.01);
+         setproperties(br.contparams, detectBifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 0,
          detectCodim2Bifurcation = 2,
          bothside = true,
@@ -89,7 +89,7 @@ We follow the Fold points in the parameter plane $(a, c)$. We tell the solver to
 
 ```@example TUTneuron2
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@lens _.c))
-br2 = continuation(prob2, PALC(), setproperties(opts, pMax = 1.22);)
+br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22);)
 
 
 # change tolerance for avoiding error computation of the EV
@@ -97,7 +97,7 @@ opts_fold = br.contparams
 @set! opts_fold.newtonOptions.eigsolver.σ = 1e-7
 
 brfold = continuation(br2, 3, (@lens _.a),
-         setproperties(opts_fold; detectBifurcation = 1, dsmax = 0.01, maxSteps = 100, pMax = 0.6, pMin = -0.6,ds = -0.01, nInversion = 2, tolStability = 1e-6);
+         setproperties(opts_fold; detectBifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
          detectCodim2Bifurcation = 2,
          bothside = false,

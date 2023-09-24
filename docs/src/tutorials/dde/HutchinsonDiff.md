@@ -60,12 +60,12 @@ x0 = zeros(Nx)
 prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 10., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
+opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = false, normC = norminf)
 br
 ```
 
-We note that the first Hopf point is close to the theoretical value $a=\frac\pi 2$. This can be improved by increasing `opts.nInversion`.
+We note that the first Hopf point is close to the theoretical value $a=\frac\pi 2$. This can be improved by increasing `opts.n_inversion`.
 
 We can now plot the branch
 
@@ -91,7 +91,7 @@ end
 prob2 = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a); J = JacHutchinson)
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 10., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
+opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 br
 ```

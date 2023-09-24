@@ -12,9 +12,9 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 	verbose = get(kwargs, :verbosity, 0) > 1 ? true : false
 	verbose && (println("--> Considering bifurcation point:"); BK._show(stdout, br.specialpoint[ind_bif], ind_bif))
 
-	cb = get(kwargs, :callbackN, BK.cbDefault)
+	cb = get(kwargs, :callback_newton, BK.cb_default)
 
-	hopfpt = BK.hopfNormalForm(br.prob, br, ind_bif; nev = nev, verbose = verbose)
+	hopfpt = BK.hopf_normal_form(br.prob, br, ind_bif; nev = nev, verbose = verbose)
 	# @error "Careful here"
 	# @set! hopfpt.nf.a = 1.
 
@@ -42,22 +42,26 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 	ϕ = atan(dot(ζr, ζr), dot(ζi, ζr))
 	verbose && printstyled(color = :green, "├─── phase ϕ        = ", ϕ / pi, "⋅π\n")
 
-	M = BK.getMeshSize(probPO)
+	M = BK.get_mesh_size(probPO)
 	orbitguess_a = [pred.orbit(t - ϕ) for t in LinRange(0, 2pi, M + 1)[1:M]]
 	# TODO THIS HAS BEEN ADDED FOR BETTER INITIAL GUESS
 	orbitguess_a[M] .= orbitguess_a[1]
 
 	# extract the vector field and use it possibly to affect the PO functional
-	prob_vf = BK.reMake(br.prob, params = BK.setParam(br, pred.p))
+	prob_vf = BK.re_make(br.prob, params = BK.setparam(br, pred.p))
 
 	# build the variable to hold the functional for computing PO based on finite differences
-	probPO, orbitguess = reMake(probPO, prob_vf, hopfpt, ζr, orbitguess_a, abs(2pi/pred.ω); orbit = pred.orbit, ϕ = ϕ)
+	probPO, orbitguess = re_make(probPO, prob_vf, hopfpt, ζr, orbitguess_a, abs(2pi/pred.ω); orbit = pred.orbit, ϕ = ϕ)
 
+	####
 	# ADDED
-	probPO.xπ .= orbitguess[1:end-1]
+	if probPO isa PeriodicOrbitOCollProblem
+		probPO.xπ .= orbitguess[1:end-1]
+	end
 
-	if _contParams.newtonOptions.linsolver isa GMRESIterativeSolvers
-		_contParams = @set _contParams.newtonOptions.linsolver.N = length(orbitguess)
+
+	if _contParams.newton_options.linsolver isa GMRESIterativeSolvers
+		_contParams = @set _contParams.newton_options.linsolver.N = length(orbitguess)
 	end
 
 	# perform continuation

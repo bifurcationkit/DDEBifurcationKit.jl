@@ -45,11 +45,11 @@ continuation(br::BifurcationKit.AbstractBranchResult, ind_bif::Int, _contParams:
 ## Utils for periodic orbits
 
 ```@docs
-getPeriod
+getperiod
 ```
 
 ```@docs
-getAmplitude
+getamplitude
 ```
 
 ```@docs
@@ -58,9 +58,9 @@ getMaximum
 
 ## Misc.
 ```@docs
-guessFromHopf(br, ind_hopf, eigsolver::AbstractEigenSolver, M, amplitude; phase = 0)
+guess_from_hopf(br, ind_hopf, eigsolver::AbstractEigenSolver, M, amplitude; phase = 0)
 ```
 
 ```@docs
-getNormalForm
+get_normal_form
 ```

@@ -19,7 +19,7 @@ The continuation of Fold bifurcation points is based on a **Minimally Augmented*
 
 ### Detection of codim 2 bifurcation points
 
-You can detect the following codim 2 bifurcation points by using the option `detectCodim2Bifurcation` in the method `continuation`.
+You can detect the following codim 2 bifurcation points by using the option `detect_codim2_bifurcation` in the method `continuation`.
 
 - the detection of Cusp (Cusp) is done by the detection of Fold bifurcation points along the curve of Folds by monitoring the parameter component of the tangent.
 - the detection of Bogdanov-Takens (BT) is performed using the test function[^Bindel] $\psi_{BT}(p) = \langle w(p),v(p)\rangle$
@@ -39,7 +39,7 @@ where $\Delta(\lambda)\cdot v := \lambda v - d_1\mathbf F(u^*,u^*; p)\cdot v-d_2
 
 ### Detection of codim 2 bifurcation points
 
-You can detect the following codim 2 bifurcation points by using the option `detectCodim2Bifurcation` in the method `continuation`.
+You can detect the following codim 2 bifurcation points by using the option `detect_codim2_bifurcation` in the method `continuation`.
 
 - the detection of Bogdanov-Takens (BT) is performed using the test function $\psi_{BT}(p) = 	\omega$
 - the detection of Bautin (GH) is based on the test function $\psi_{GH}(p) = \Re(l_1(p))$ where $l_1$ is the Lyapunov coefficient defined in [Simple Hopf point](@ref).

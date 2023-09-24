@@ -43,7 +43,7 @@ We then compute the branch
 
 ```@example TUTHumphries
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 3, )
+opts = ContinuationPar(p_max = 13., p_min = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 3, )
 br = continuation(prob, PALC(), opts; verbosity = 0, bothside = true)
 ```
 
@@ -60,7 +60,7 @@ We tell the solver to consider br.specialpoint[2] and continue it.
 
 ```@example TUTHumphries
 brhopf = continuation(br, 2, (@lens _.κ2),
-         setproperties(br.contparams, detectBifurcation = 2, dsmax = 0.04, maxSteps = 230, pMax = 5., pMin = -1.,ds = -0.02);
+         setproperties(br.contparams, detectBifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
          verbosity = 0, plot = false,
          # we disable detection of Bautin bifurcation as the
          # Hopf normal form is not implemented for SD-DDE
@@ -77,21 +77,21 @@ We compute the branch of periodic orbits from the Hopf bifurcation points using 
 
 ```julia
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, pMax = 12., pMin=-5., maxSteps = 3000,
-	nev = 3, tolStability = 1e-8, detectBifurcation = 0, plotEveryStep = 20, saveSolEveryStep=1)
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
+	nev = 3, tol_stability = 1e-8, detectBifurcation = 0, plot_every_step = 20, save_sol_every_step=1)
 	@set! opts_po_cont.newtonOptions.tol = 1e-9
 	@set! opts_po_cont.newtonOptions.verbose = true
 
 	# arguments for periodic orbits
 	args_po = (	recordFromSolution = (x, p) -> begin
-			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+			xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 			_max = maximum(xtt[1,:])
 			_min = minimum(xtt[1,:])
 			return (amp = _max - _min,
-					period = getPeriod(p.prob, x, nothing))
+					period = getperiod(p.prob, x, nothing))
 		end,
-		plotSolution = (x, p; k...) -> begin
-			xtt = BK.getPeriodicOrbit(p.prob, x, nothing)
+		plot_solution = (x, p; k...) -> begin
+			xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 			plot!(xtt.t, xtt[1,:]; label = "x", k...)
 			plot!(br; subplot = 1, putspecialptlegend = false)
 			end,
@@ -107,7 +107,7 @@ br_pocoll = continuation(
 	args_po...,
 	ampfactor = 1/0.467829783456199 * 0.1,
 	δp = 0.01,
-	callbackN = BK.cbMaxNorm(10.0)
+	callback_newton = BK.cbMaxNorm(10.0)
 	end
 	)	
 ```

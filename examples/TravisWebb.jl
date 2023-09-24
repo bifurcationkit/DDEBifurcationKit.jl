@@ -8,8 +8,6 @@ using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
-# sup norm
-norminf(x) = norm(x, Inf)
 
 using DiffEqOperators
 
@@ -21,7 +19,7 @@ end
 delaysF(par) = [1.]
 
 # discretisation
-Nx = 200; Lx = pi/2;
+Nx = 500; Lx = pi/2;
 X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
 
 # boundary condition
@@ -34,12 +32,12 @@ x0 = zeros(Nx)
 prob = ConstantDDEBifProblem(TW, delaysF, x0, pars, (@lens _.a))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 10., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
+opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 
 plot(br)
 ################################################################################
-hopfpt = BK.getNormalForm(br, 1)
+hopfpt = BK.get_normal_form(br, 1)
 plot(hopfpt.ζ |> real)
 ################################################################################
 # case where we specify the jacobian
@@ -54,7 +52,7 @@ end
 prob2 = ConstantDDEBifProblem(TW, delaysF, x0, pars, (@lens _.a); J = JacTW)
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(pMax = 10., pMin = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, nInversion = 4)
+opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 6)
 br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 ################################################################################
 using  DifferentialEquations
