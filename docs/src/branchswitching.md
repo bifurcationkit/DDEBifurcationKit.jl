@@ -31,10 +31,10 @@ F(x, p) = [x[1] * (p.μ - x[1])]
 par = (μ = -0.2, )
 
 # problem (automatic differentiation)
-prob = BifurcationProblem(F, [0.1], par, (@lens _.μ); recordFromSolution = (x, p) -> x[1])
+prob = BifurcationProblem(F, [0.1], par, (@lens _.μ); record_from_solution = (x, p) -> x[1])
 
 # compute branch of trivial equilibria (=0) and detect a bifurcation point
-opts_br = ContinuationPar(dsmax = 0.05, ds = 0.01, detectBifurcation = 3, nev = 2)
+opts_br = ContinuationPar(dsmax = 0.05, ds = 0.01, detect_bifurcation = 3, nev = 2)
 br = continuation(prob, PALC(), opts_br)
 	
 # perform branch switching on one side of the bifurcation point
@@ -51,8 +51,7 @@ scene = plot(br, br1Top, br1Bottom; branchlabel = ["br", "br1Top", "br1Bottom"],
 We provide an automatic branch switching method in this case. The method is to first compute the reduced equation (see [Non-simple branch point](@ref)) and use it to compute the nearby solutions. These solutions are seeded as initial guess for [`continuation`](@ref). Hence, you can perform automatic branch switching by calling `continuation` with the following options:
 
 ```julia
-continuation(br::ContResult, ind_bif::Int, optionsCont::ContinuationPar;
-	kwargs...)
+continuation(br::ContResult, ind_bif::Int, optionsCont::ContinuationPar; kwargs...)
 ```
 
 An example of use is provided in [2d generalized Bratu–Gelfand problem](@ref).

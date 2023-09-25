@@ -53,7 +53,7 @@ getamplitude
 ```
 
 ```@docs
-getMaximum
+getmaximum
 ```
 
 ## Misc.
