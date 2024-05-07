@@ -4,12 +4,10 @@ cd("..")
 # pkg"activate ."
 
 # https://ddebiftool.sourceforge.net/demos/neuron/html/demo1_stst.html
-using Revise, DDEBifurcationKit, Parameters, Setfield, RecursiveArrayTools
+using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
-
-using Plots
 
 function humpriesVF(x, xd, p)
    @unpack κ1,κ2,γ,a1,a2,c = p
@@ -31,7 +29,82 @@ x0 = zeros(1)
 
 prob = DDEBK.SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
 
-optn = NewtonPar(verbose = true, eigsolver = DDEBK.DDE_NLEVEigSolver(maxit=100))
-opts = ContinuationPar(pMax = 13., pMin = 0., newtonOptions = optn, ds = -0.01, detectBifurcation = 3, nev = 3, )
-br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
+optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
+
+br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true)
+
 plot(br)
+################################################################################
+brhopf = continuation(br, 2, (@lens _.κ2),
+         setproperties(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
+         verbosity = 2, plot = true,
+         detect_codim2_bifurcation = 0,
+         bothside = true,
+         start_with_eigen = true)
+
+plot(brhopf, vars = (:κ1, :κ2))
+################################################################################
+# computation periodic orbit
+
+# continuation parameters
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
+nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20, save_sol_every_step=1)
+@set! opts_po_cont.newton_options.tol = 1e-9
+@set! opts_po_cont.newton_options.verbose = true
+
+# arguments for periodic orbits
+args_po = (    record_from_solution = (x, p) -> begin
+        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+        _max = maximum(xtt[1,:])
+        _min = minimum(xtt[1,:])
+        return (amp = _max - _min,
+                max = _max,
+                min = _min,
+                period = getperiod(p.prob, x, nothing))
+    end,
+    plot_solution = (x, p; k...) -> begin
+        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+        plot!(xtt.t, xtt[1,:]; label = "x", k...)
+        plot!(br; subplot = 1, putspecialptlegend = false)
+        end,
+    normC = norminf)
+
+probpo = PeriodicOrbitOCollProblem(200, 2; N = 1, jacobian = BK.AutoDiffDense())
+br_pocoll = @time continuation(
+    br, 2, opts_po_cont,
+    probpo;
+    alg = PALC(tangent = Bordered()),
+    # regular continuation options
+    verbosity = 2,    plot = true,
+    args_po...,
+    ampfactor = 1/0.467829783456199 * 0.1,
+    δp = 0.01,
+    callback_newton = (state; k...) -> begin
+        xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
+        # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
+        printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+        printstyled(color=:green, "T = ", (state.x[end]),"\n")
+        @show state.x[end]
+        state.step < 15 && BK.cbMaxNorm(10.0)(state; k...)
+    end
+    )
+
+plot(br);plot!(br_pocoll, plotfold=false, ylabel = "amplitude")
+################################################################################
+using  DifferentialEquations
+
+function humpriesVF_DE2(x,h,p,t)
+    @unpack κ1,κ2,γ,a1,a2,c = p
+   -γ * x - κ1 * h(p, t-(a1 + c * x)) - κ2 * h(p, t-(a2 + c * x))
+end
+
+function h0(p, t)
+     t ≤ 0 || error("history function is only implemented for t ≤ 0")
+     0 .+ 0.03sin(t)
+ end
+prob_de = DDEProblem(humpriesVF_DE2,h0,(0.,10200.),setproperties(pars, κ1 = br.specialpoint[2].param + 0.01); dependent_lags=((x,par,t)->par.a1 + par.c * x, (x,par,t)->par.a2 + par.c * x))
+alg = MethodOfSteps(Rosenbrock23())
+sol = solve(prob_de,alg)
+plot(plot(sol, xlims = (sol.t[end]-30,sol.t[end])), plot(sol))
+

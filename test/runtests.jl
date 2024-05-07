@@ -2,5 +2,8 @@ using DDEBifurcationKit
 using Test
 
 @testset "DDEBifurcationKit.jl" begin
-    # Write your tests here.
+    include("normalform.jl")
+    include("codim2.jl")
+    include("pocoll.jl")
+    include("pocoll-sdde.jl")
 end
