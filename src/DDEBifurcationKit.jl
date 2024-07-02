@@ -5,7 +5,6 @@ module DDEBifurcationKit
 	using NonlinearEigenproblems
 	const BK = BifurcationKit
 
-	abstract type AbstractDDEBifurcationProblem <: BK.AbstractBifurcationProblem end
 
 	include("Problems.jl")
 	include("NormalForms.jl")

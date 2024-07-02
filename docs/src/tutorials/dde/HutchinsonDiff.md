@@ -11,20 +11,20 @@ $$\begin{aligned}
 & \frac{\partial u(t, x)}{\partial x}=0, x=0, \pi
 \end{aligned}$$
 
-where $a>0,d>0$. 
+where $a>0, d>0$. 
 
 ## Problem discretization
 
 We start by discretizing the above PDE based on finite differences.
 
 ```@example TUTHut
-using Revise, DDEBifurcationKit, Parameters, LinearAlgebra, Plots, SparseArrays
+using Revise, DDEBifurcationKit, Plots, SparseArrays
 using BifurcationKit
 const BK = BifurcationKit
 
 function Hutchinson(u, ud, p)
-   @unpack a,d,Δ = p
-   d .* (Δ*u) .- a .* ud[1] .* (1 .+ u)
+   (; a, d, Δ) = p
+   d .* (Δ * u) .- a .* ud[1] .* (1 .+ u)
 end
 
 delaysF(par) = [1.]
@@ -38,16 +38,8 @@ We can now instantiate the model
 # discretisation
 Nx = 200; Lx = pi/2;
 X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
-
-function DiffOp(N, lx; order = 2)
-	hx = 2lx/N
-	Δ = spdiagm(0 => -2ones(N), 1 => ones(N-1), -1 => ones(N-1) )
-	Δ[1,1]=-1; Δ[end,end]=-1
-	Δ = Δ / hx^2
-	return Δ
-end
-
-Δ = DiffOp(Nx, Lx)
+h = 2Lx/Nx
+Δ = spdiagm(0 => -2ones(Nx), 1 => ones(Nx-1), -1 => ones(Nx-1) ) / h^2; Δ[1,1]=Δ[end,end]=-1/h^2
 nothing #hide
 ```
 
@@ -82,7 +74,7 @@ We show how to specify the jacobian and speed up the code a lot.
 ```@example TUTHut
 # analytical jacobian
 function JacHutchinson(u, p)
-   @unpack a,d,Δ = p
+   (;a, d, Δ) = p
    # we compute the jacobian at the steady state
    J0 = d * Δ .- a .* Diagonal(u)
    J1 = -a .* Diagonal(1 .+ u)
@@ -96,8 +88,6 @@ opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01
 br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 br
 ```
-
-
 
 
 ## References

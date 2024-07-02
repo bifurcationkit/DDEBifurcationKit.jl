@@ -14,16 +14,16 @@ RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 
+
 [compat]
-julia = "1.7"
-BifurcationKit = "0.3"
-DocStringExtensions = "0.9"
-ForwardDiff = "0.10.36"
-NonlinearEigenproblems = "1.1.1"
+BifurcationKit = "^0.3.5"
+DocStringExtensions = "^0.9"
+ForwardDiff = "^0.10"
+NonlinearEigenproblems = "^1.0.1"
 Parameters = "0.12.3"
-RecursiveArrayTools = "2.38.10"
-SciMLBase = "1.98.1"
-Setfield = "^1.1"
+RecursiveArrayTools = "^2.3, ^2.4, ^2.8, ^2.9, ^3"
+SciMLBase = "^1, ^2"
+julia = "1.9"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

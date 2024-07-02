@@ -14,12 +14,12 @@ $$x^{\prime}(t)=-\gamma x(t)-\kappa_1 x\left(t-a_1-c x(t)\right)-\kappa_2 x\left
 We first instantiate the model
 
 ```@example TUTHumphries
-using Revise, DDEBifurcationKit, Parameters, Plots
+using Revise, DDEBifurcationKit, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
 function humpriesVF(x, xd, p)
-   @unpack κ1,κ2,γ,a1,a2,c = p
+   (;κ1,κ2,γ,a1,a2,c) = p
    [
       -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
    ]
@@ -60,7 +60,7 @@ We tell the solver to consider br.specialpoint[2] and continue it.
 
 ```@example TUTHumphries
 brhopf = continuation(br, 2, (@lens _.κ2),
-         setproperties(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
+         ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
          verbosity = 0, plot = false,
          # we disable detection of Bautin bifurcation as the
          # Hopf normal form is not implemented for SD-DDE

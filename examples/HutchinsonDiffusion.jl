@@ -3,18 +3,15 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots, SparseArrays
+using Revise, DDEBifurcationKit, LinearAlgebra, Plots, SparseArrays
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
-# sup norm
-norminf(x) = norm(x, Inf)
-
 using DiffEqOperators
 
 function Hutchinson(u, ud, p)
-   @unpack a,d,Δ = p
+   (;a,d,Δ) = p
    d .* (Δ*u) .- a .* ud[1] .* (1 .+ u)
 end
 
@@ -42,7 +39,7 @@ hopfpt = BK.getNormalForm(br, 1)
 ################################################################################
 # case where we specify the jacobian
 function JacHutchinson(u, p)
-   @unpack a,d,Δ = p
+	(;a,d,Δ) = p
    # we compute the jacobian at the steady state
    J0 = d * Δ .- a .* Diagonal(u)
    J1 = -a .* Diagonal(1 .+ u)

@@ -17,12 +17,12 @@ $$\left\{\begin{array}{l}
 We first instantiate the model
 
 ```@example TUTneuron
-using Revise, DDEBifurcationKit, Parameters, LinearAlgebra, Plots
+using Revise, DDEBifurcationKit, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
 function neuronVF(x, xd, p)
-   @unpack κ, β, a12, a21, τs, τ1, τ2 = p
+   (; κ, β, a12, a21, τs, τ1, τ2) = p
    [
       -κ * x[1] + β * tanh(xd[3][1]) + a12 * tanh(xd[2][2]),
       -κ * x[2] + β * tanh(xd[3][2]) + a21 * tanh(xd[1][1])
@@ -61,14 +61,14 @@ We follow the Hopf points in the parameter plane $(a_{21},\tau_s)$. We tell the 
 ```@example TUTneuron
 # continuation of the first Hopf point
 brhopf = continuation(br, 3, (@lens _.a21),
-         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
          detect_codim2_bifurcation = 2,
          # bothside = true,
          start_with_eigen = true)
 
 # continuation of the second Hopf point
 brhopf2 = continuation(br, 2, (@lens _.a21),
-         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
          detect_codim2_bifurcation = 2,
          start_with_eigen = true,
          bothside=true)
@@ -82,7 +82,7 @@ We change the continuation parameter and study the bifurcations as function of $
 
 ```@example TUTneuron
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21))
-br2 = BK.continuation(prob2, PALC(), setproperties(opts, ds = 0.1, p_max = 3., n_inversion=8); verbosity = 0, plot = false, normC = norminf)
+br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 3., n_inversion=8); verbosity = 0, plot = false, normC = norminf)
 ```
 
 We then compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation.

@@ -2,7 +2,7 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra
+using Revise, DDEBifurcationKit, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -10,7 +10,7 @@ const DDEBK = DDEBifurcationKit
 using Plots
 
 function delayedlogVF(x, xd, p)
-   @unpack λ = p
+   (;λ) = p
    y = xd[1][1]
    [
       (λ - y) * x[1]
@@ -54,6 +54,7 @@ args_po = (    record_from_solution = (x, p) -> begin
 		plot!(xtt.t, xtt[1,:]; label = "V1", k...)
 		plot!(br; subplot = 1, putspecialptlegend = false)
 		end,
+	normC = norminf)
 
 probpo = PeriodicOrbitOCollProblem(40, 4; N = 1)
 	# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)

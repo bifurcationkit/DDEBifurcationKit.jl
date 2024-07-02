@@ -27,12 +27,12 @@ br = continuation(prob, PALC(), opts, bothside = false)
 #######################################################
 # hopf aBS
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 5, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step = 1)
-    @set! opts_po_cont.newton_options.tol = 1e-9
-    @set! opts_po_cont.newton_options.verbose = true
-    @set! opts_po_cont.newton_options.max_iterations = 8
+@set! opts_po_cont.newton_options.tol = 1e-9
+@set! opts_po_cont.newton_options.verbose = true
+@set! opts_po_cont.newton_options.max_iterations = 8
 
-    # arguments for periodic orbits
-    args_po = (    record_from_solution = (x, p) -> begin
+# arguments for periodic orbits
+args_po = (    record_from_solution = (x, p) -> begin
             xtt = BK.get_periodic_orbit(p.prob, x, nothing)
             return (max = maximum(xtt[1,:]),
                     min = minimum(xtt[1,:]),

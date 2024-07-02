@@ -25,7 +25,7 @@ $(TYPEDFIELDS)
 - `ConstantDDEBifProblem(F, delays, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
-struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: AbstractDDEBifurcationProblem
+struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
     "Vector field, typically a [`BifFunction`](@ref)"
     VF::Tvf
     "function delays. It takes the parameters and return the non-zero delays in an `AsbtractVector` form. Example: `delays = par -> [1.]`"
@@ -42,23 +42,26 @@ struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ}
     plotSolution::Tplot
     "`record_from_solution = (x, p) -> norm(x)` function used record a few indicators about the solution. It could be `norm` or `(x, p) -> x[1]`. This is also useful when saving several huge vectors is not possible for memory reasons (for example on GPU...). This function can return pretty much everything but you should keep it small. For example, you can do `(x, p) -> (x1 = x[1], x2 = x[2], nrm = norm(x))` or simply `(x, p) -> (sum(x), 1)`. This will be stored in `contres.branch` (see below). Finally, the first component is used to plot in the continuation curve."
     recordFromSolution::Trec
+    "function to save the full solution on the branch. Some problem are mutable (like periodic orbit functional with adaptive mesh) and this function allows to save the state of the problem along with the solution itself. Signature `save_solution(x, p)`"
+    save_solution::Tgets
     "delta for Finite differences"
     δ::Tδ
 end
 
 BK.isinplace(::ConstantDDEBifProblem) = false
 BK.is_symmetric(::ConstantDDEBifProblem) = false
-BK.getvectortype(prob::ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
+BK._getvectortype(prob::ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
 BK.getlens(prob::ConstantDDEBifProblem) = prob.lens
 BK.has_adjoint(prob::ConstantDDEBifProblem) = true
 BK.has_adjoint_MF(prob::ConstantDDEBifProblem) = false
 BK.getdelta(prob::ConstantDDEBifProblem) = prob.δ
 BK.d2F(prob::ConstantDDEBifProblem, x, p, dx1, dx2) = BK.d2F(prob.VF, x, p, dx1, dx2)
 BK.d3F(prob::ConstantDDEBifProblem, x, p, dx1, dx2, dx3) = BK.d3F(prob.VF, x, p, dx1, dx2, dx3)
+BK.save_solution(prob::ConstantDDEBifProblem, x, p) = prob.save_solution(x, p)
 
 function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
     print(io, prefix * "┌─ Constant Delays Bifurcation Problem with uType ")
-    printstyled(io, BK.getvectortype(prob), color=:cyan, bold = true)
+    printstyled(io, BK._getvectortype(prob), color=:cyan, bold = true)
     print(io, prefix * "\n├─ Inplace:  ")
     printstyled(io, BK.isinplace(prob), color=:cyan, bold = true)
     print(io, "\n" * prefix * "└─ Parameter: ")
@@ -66,6 +69,8 @@ function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
 end
 
 function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
+                F! = nothing,
+                J! = nothing,
                 dF = nothing,
                 dFad = nothing,
                 J = nothing,
@@ -75,6 +80,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
                 issymmetric::Bool = false,
                 record_from_solution = BifurcationKit.record_sol_default,
                 plot_solution = BifurcationKit.plot_default,
+                save_solution = BifurcationKit.save_solution_default,
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8)
                 )
@@ -98,7 +104,8 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
 
     d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
     VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
-    return ConstantDDEBifProblem(VF, delayF, u0, delayF(parms), parms, lens, plot_solution, record_from_solution, δ)
+    # VF = BifFunction(F, F!, dF, dFad, J, Jᵗ, J!, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
+    return ConstantDDEBifProblem(VF, delayF, u0, delayF(parms), parms, lens, plot_solution, record_from_solution, save_solution, δ)
 end
 
 struct JacobianDDE{Tp,T1,T2,T3,Td}
@@ -232,7 +239,7 @@ $(TYPEDFIELDS)
 - `SDDDEBifProblem(F, delays, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
-struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: AbstractDDEBifurcationProblem
+struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
     "Vector field, typically a [`BifFunction`](@ref)"
     VF::Tvf
     "function delays. It takes the parameters and the state and return the non-zero delays in an `AsbtractVector` form. Example: `delays = (par, u) -> [1. + u[1]^2]`"
@@ -249,27 +256,33 @@ struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tδ} <: Ab
     plotSolution::Tplot
     "`record_from_solution = (x, p) -> norm(x)` function used record a few indicators about the solution. It could be `norm` or `(x, p) -> x[1]`. This is also useful when saving several huge vectors is not possible for memory reasons (for example on GPU...). This function can return pretty much everything but you should keep it small. For example, you can do `(x, p) -> (x1 = x[1], x2 = x[2], nrm = norm(x))` or simply `(x, p) -> (sum(x), 1)`. This will be stored in `contres.branch` (see below). Finally, the first component is used to plot in the continuation curve."
     recordFromSolution::Trec
+    "function to save the full solution on the branch. Some problem are mutable (like periodic orbit functional with adaptive mesh) and this function allows to save the state of the problem along with the solution itself. Signature `save_solution(x, p)`"
+    save_solution::Tgets
     "delta for Finite differences"
     δ::Tδ
 end
 
 BK.isinplace(::SDDDEBifProblem) = false
 BK.is_symmetric(::SDDDEBifProblem) = false
-BK.getvectortype(prob::SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
+BK._getvectortype(prob::SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
 BK.getlens(prob::SDDDEBifProblem) = prob.lens
 BK.has_adjoint(prob::SDDDEBifProblem) = true
 BK.getdelta(prob::SDDDEBifProblem) = prob.δ
+BK.save_solution(prob::SDDDEBifProblem, x, p) = prob.save_solution(x, p)
 
 function SDDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
+                F! = nothing,
                 dF = nothing,
                 dFad = nothing,
                 J = nothing,
                 Jᵗ = nothing,
+                J! = nothing,
                 d2F = nothing,
                 d3F = nothing,
                 issymmetric::Bool = false,
                 record_from_solution = BifurcationKit.record_sol_default,
                 plot_solution = BifurcationKit.plot_default,
+                save_solution = BifurcationKit.save_solution_default,
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8)
                 )
@@ -290,13 +303,14 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
     end
 
     d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
+    # VF = BifFunction(F, F!, dF, dFad, J, Jᵗ, J!, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
     VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
-    return SDDDEBifProblem(VF, delayF, u0, delayF(u0, parms), parms, lens, plot_solution, record_from_solution, δ)
+    return SDDDEBifProblem(VF, delayF, u0, delayF(u0, parms), parms, lens, plot_solution, record_from_solution, save_solution, δ)
 end
 
 function Base.show(io::IO, prob::SDDDEBifProblem; prefix = "")
     print(io, prefix * "┌─ State-dependent delays Bifurcation Problem with uType ")
-    printstyled(io, BK.getvectortype(prob), color=:cyan, bold = true)
+    printstyled(io, BK._getvectortype(prob), color=:cyan, bold = true)
     print(io, prefix * "\n├─ Inplace:  ")
     printstyled(io, BK.isinplace(prob), color=:cyan, bold = true)
     # printstyled(io, isSymmetric(prob), color=:cyan, bold = true)

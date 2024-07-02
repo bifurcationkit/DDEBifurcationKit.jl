@@ -1,4 +1,5 @@
 # using Revise
+
 using DDEBifurcationKit, Parameters, Setfield, BifurcationKit
 using Test
 const BK = BifurcationKit
@@ -21,6 +22,7 @@ prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a))
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 9., p_min = -1., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 6, n_inversion = 12 )
 br = continuation(prob, PALC(), opts)
+
 # hopf bifurcations
 function NFcoeff(N)
     # Faria 2006
@@ -49,7 +51,7 @@ BifurcationKit.get_normal_form(br, 1)
 
 BK.isinplace(prob)
 BK.is_symmetric(prob)
-BK.getvectortype(prob)
+BK._getvectortype(prob)
 show(prob)
 
 DDEBifurcationKit.newton_hopf(br, 2)
@@ -69,7 +71,6 @@ function delaysF(x, par)
 ]
 end
 
-
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
 prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
@@ -80,7 +81,7 @@ BifurcationKit.get_normal_form(br, 2)
 
 BK.isinplace(prob)
 BK.is_symmetric(prob)
-BK.getvectortype(prob)
+BK._getvectortype(prob)
 BK.getlens(prob)
 BK.has_adjoint(prob)
 BK.getdelta(prob)

@@ -1,15 +1,21 @@
 using Pkg
+cd(@__DIR__)
+pkg" activate ."
 
-using Documenter, DDEBifurcationKit, Setfield, BifurcationKit
+pkg"dev DDEBifurcationKit BifurcationKit"
 # using DocThemeIndigo
 ENV["GKSwstype"] = "100"
+
+using Documenter, DDEBifurcationKit, BifurcationKit
 
 # to display progress
 # ENV["JULIA_DEBUG"] = Documenter
 
-makedocs(doctest = false,
+makedocs(
+	modules = [DDEBifurcationKit],
+	doctest = false,
 	sitename = "Bifurcation Analysis of DDEs in Julia",
-	format = Documenter.HTML(collapselevel = 1,assets = ["assets/indigo.css"]),
+	format = Documenter.HTML(collapselevel = 1, assets = ["assets/indigo.css"]),
 	# format = DocumenterLaTeX.LaTeX(),
 	authors = "Romain Veltz",
 	pages = Any[
@@ -51,5 +57,6 @@ makedocs(doctest = false,
 
 deploydocs(
 	repo = "github.com/bifurcationkit/DDEBifurcationKit.jl.git",
+	push_preview = true,
 	devbranch = "main"
 )

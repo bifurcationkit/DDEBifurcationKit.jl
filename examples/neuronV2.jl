@@ -2,13 +2,13 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots
+using Revise, DDEBifurcationKit, LinearAlgebra, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
 g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
 function neuron2VF(x, xd, p)
-   @unpack a,b,c,d = p
+   (; a,b,c,d) = p
    [
       -x[1] - a * g(b*xd[1][1]) + c * g(d*xd[2][2]),
       -x[2] - a * g(b*xd[1][2]) + c * g(d*xd[2][1])
@@ -33,14 +33,14 @@ plot(br)
 hpnf = BK.get_normal_form(br, 1)
 ################################################################################
 brhopf = continuation(br, 1, (@lens _.c),
-         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 0, plot = true,
          detect_codim2_bifurcation = 2,
          bothside = true,
          start_with_eigen = true)
 
 brhopf2 = continuation(br, 2, (@lens _.c),
-         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 2, plot = true,
          detect_codim2_bifurcation = 2,
          bothside = true,
@@ -51,7 +51,7 @@ plot!(brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1,1))
 
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@lens _.c))
-br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = false)
+br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = false)
 
 plot(br2)
 
@@ -60,7 +60,7 @@ opts_fold = br.contparams
 @set! opts_fold.newton_options.eigsolver.σ = 1e-7
 
 brfold = continuation(br2, 3, (@lens _.a),
-         setproperties(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.5,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
+         ContinuationPar(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.5,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
          detect_codim2_bifurcation = 2,
          bothside = false,
@@ -120,7 +120,7 @@ br_pocoll = @time continuation(
 using  DifferentialEquations
 
 function neuronV2_DE(du,x,h,p,t)
-    @unpack a,b,c,d,τ1,τ2 = p
+    (; a,b,c,d,τ1,τ2) = p
    du[1] = -x[1] - a * g(b*h(p, t-τ1)[1]) + c * g(d*h(p, t-τ2)[2])
    du[2] = -x[2] - a * g(b*h(p, t-τ1)[2]) + c * g(d*h(p, t-τ2)[1])
 end
@@ -128,7 +128,7 @@ end
 u0 = -2ones(2)
     h(p, t) = -0*ones(2) .+ 0.01cos(t/4)
     # h(p,t) = br_pocoll.orbit(t)
-    prob_de = DDEProblem(neuronV2_DE,h(pars,0),h,(0.,54240.),setproperties(pars, a = br.specialpoint[1].param + 0.001); constant_lags=delaysF(pars))
+    prob_de = DDEProblem(neuronV2_DE,h(pars,0),h,(0.,54240.),ContinuationPar(pars, a = br.specialpoint[1].param + 0.001); constant_lags=delaysF(pars))
     alg = MethodOfSteps(Rosenbrock23())
     sol = solve(prob_de,alg)
     plot(plot(sol, xlims = (sol.t[end]-100,sol.t[end])), plot(sol))

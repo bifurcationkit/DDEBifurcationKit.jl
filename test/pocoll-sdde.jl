@@ -39,9 +39,9 @@ opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12
 @set! opts_po_cont.newton_options.tol = 1e-9
 @set! opts_po_cont.newton_options.verbose = true
 
-    # arguments for periodic orbits
-    args_po = (    record_from_solution = (x, p) -> begin
-            xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+# arguments for periodic orbits
+args_po = (    record_from_solution = (x, p) -> begin
+        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
             _max = maximum(xtt[1,:])
             _min = minimum(xtt[1,:])
             return (amp = _max - _min,

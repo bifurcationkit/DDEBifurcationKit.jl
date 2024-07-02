@@ -26,18 +26,19 @@ prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@lens _.a))
 show(prob)
 BK.isinplace(prob)
 BK.is_symmetric(prob)
-BK.getvectortype(prob)
+BK._getvectortype(prob)
 #####
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts, bothside = false)
 
-hpnf = BK.get_normal_form(br, 1)
+hpnf = BK.get_normal_form(br, 2)
 ################################################################################
 brhopf = continuation(br, 1, (@lens _.c),
             setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
             verbosity = 0, plot = false,
+            # update_minaug_every_step = 1,
             detect_codim2_bifurcation = 2,
             bothside = true,
             start_with_eigen = true)
@@ -104,5 +105,5 @@ prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
 show(prob)
 BK.isinplace(prob)
 BK.is_symmetric(prob)
-BK.getvectortype(prob)
+BK._getvectortype(prob)
 #####

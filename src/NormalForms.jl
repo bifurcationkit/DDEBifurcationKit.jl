@@ -1,13 +1,18 @@
-function BK.get_normal_form1d(prob::ConstantDDEBifProblem, br::ContResult, ind_bif::Int; kwargs_nf...)
+function BK.get_normal_form1d(prob::ConstantDDEBifProblem, 
+                                br::ContResult, 
+                                ind_bif::Int; 
+                                kwargs_nf...)
     @warn "Computation of normal form based on a little hack ;)"
-
-    Fode = (x,p) -> prob.VF.F(x,VectorOfArray([x for _ in eachindex(prob.delays0)]),p)
+    Fode = (x,p) -> prob.VF.F(x, VectorOfArray([x for _ in eachindex(prob.delays0)]),p)
     prob_ode = BK.BifurcationProblem(Fode, prob.u0, prob.params, prob.lens; record_from_solution = prob.recordFromSolution)
     br_ode = @set br.contparams.newton_options.eigsolver = BK.DefaultEig()
     BK.get_normal_form1d(prob_ode, br_ode, ind_bif; kwargs_nf...)
 end
 
-function BK.hopf_normal_form(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbose::Bool = false)
+function hopf_normal_form(prob::ConstantDDEBifProblem, 
+                            pt::BK.Hopf, 
+                            ls; 
+                            verbose::Bool = false)
     x0 = pt.x0
     p = pt.p
     lens = pt.lens
@@ -67,7 +72,16 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbo
 
     # return coefficients of the normal form
     verbose && println((a = a, b = b))
-    pt.nf = (a = a, b = b)
+
+    # we set this type of normal form coefficients because the second order
+    # hopf predictor does not work otherwise.
+    @set! pt.nf = (;a, b, 
+                    Ψ110_dde = Ψ110,
+                    Ψ001_dde = Ψ001,
+                    Ψ200_dde = Ψ200,
+                    Ψ110 = zero(x0),
+                    Ψ001 = zero(x0),
+                    Ψ200 = zero(x0))
     if real(a) * real(b) < 0
         pt.type = :SuperCritical
     elseif real(a) * real(b) > 0
@@ -79,11 +93,18 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem, pt::BK.Hopf, ls; verbo
     return pt
 end
 
-function BK.hopf_normal_form(prob::SDDDEBifProblem, pt::BK.Hopf, ls; verbose::Bool = false)
-    @error "Normal form for SD-DDE is not implemented"
+function hopf_normal_form(prob::SDDDEBifProblem, 
+                        pt::BK.Hopf, 
+                        ls; 
+                        verbose::Bool = false)
+    @error "Hopf normal form computation for SD-DDE is not implemented"
     a = Complex{eltype(pt.x0)}(1, 0)
     b = Complex{eltype(pt.x0)}(1, 0)
-    pt.nf = (a = a, b = b)
+    x0 = pt.x0
+    @set! pt.nf = (a = a, b = b,
+                    Ψ110 = zero(x0),
+                    Ψ001 = zero(x0),
+                    Ψ200 = zero(x0))
     if real(a) * real(b) < 0
         pt.type = :SuperCritical
     elseif real(a) * real(b) > 0
@@ -96,12 +117,15 @@ function BK.hopf_normal_form(prob::SDDDEBifProblem, pt::BK.Hopf, ls; verbose::Bo
 end
 
 function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
-                    br::BK.AbstractBranchResult, ind_hopf::Int;
+                    br::BK.AbstractBranchResult, 
+                    ind_hopf::Int;
                     nev = length(BK.eigenvalsfrombif(br, id_bif)),
                     verbose::Bool = false,
                     lens = BK.getlens(br),
-                    Teigvec = BK.getvectortype(br),
-                    scaleζ = norm)
+                    Teigvec = BK._getvectortype(br),
+                    scaleζ = norm,
+                    detailed = false)
+    # the kwargs detailed is only here to allow to extend BK.hopf_normal_form
     @assert br.specialpoint[ind_hopf].type == :hopf "The provided index does not refer to a Hopf Point"
     verbose && println("#"^53*"\n--> Hopf Normal form computation")
 
@@ -149,5 +173,5 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
         (a = zero(Complex{eltype(bifpt.x)}), b = zero(Complex{eltype(bifpt.x)}) ),
         :SuperCritical
     )
-    return BK.hopf_normal_form(prob, hopfpt, options.linsolver ; verbose = verbose)
+    return hopf_normal_form(prob, hopfpt, options.linsolver ; verbose)
 end

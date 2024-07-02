@@ -1,16 +1,16 @@
 cd(@__DIR__)
-cd("..")
-# using Pkg, LinearAlgebra, Test
-# pkg"activate ."
+# cd("..")
+using Pkg, LinearAlgebra, Test
+pkg"activate ."
 
 # https://ddebiftool.sourceforge.net/demos/neuron/html/demo1_stst.html
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra, Plots
+using Revise, DDEBifurcationKit, LinearAlgebra, Plots
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
 function humpriesVF(x, xd, p)
-   @unpack κ1,κ2,γ,a1,a2,c = p
+   (; κ1, κ2, γ, a1, a2, c) = p
    [
       -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
    ]
@@ -24,10 +24,11 @@ function delaysF(x, par)
 end
 
 
-pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
+pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 x0 = zeros(1)
 
 prob = DDEBK.SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
+
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
@@ -37,7 +38,7 @@ br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = tru
 plot(br)
 ################################################################################
 brhopf = continuation(br, 2, (@lens _.κ2),
-         setproperties(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
+         ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
          verbosity = 2, plot = true,
          detect_codim2_bifurcation = 0,
          bothside = true,
@@ -103,7 +104,7 @@ function h0(p, t)
      t ≤ 0 || error("history function is only implemented for t ≤ 0")
      0 .+ 0.03sin(t)
  end
-prob_de = DDEProblem(humpriesVF_DE2,h0,(0.,10200.),setproperties(pars, κ1 = br.specialpoint[2].param + 0.01); dependent_lags=((x,par,t)->par.a1 + par.c * x, (x,par,t)->par.a2 + par.c * x))
+prob_de = DDEProblem(humpriesVF_DE2,h0,(0.,10200.),ContinuationPar(pars, κ1 = br.specialpoint[2].param + 0.01); dependent_lags=((x,par,t)->par.a1 + par.c * x, (x,par,t)->par.a2 + par.c * x))
 alg = MethodOfSteps(Rosenbrock23())
 sol = solve(prob_de,alg)
 plot(plot(sol, xlims = (sol.t[end]-30,sol.t[end])), plot(sol))

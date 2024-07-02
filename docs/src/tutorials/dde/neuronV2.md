@@ -19,13 +19,13 @@ where $g(z)=[\tanh (z-1)+\tanh (1)] \cosh (1)^2$.
 We first instantiate the model
 
 ```@example TUTneuron2
-using Revise, DDEBifurcationKit, Parameters, Plots
+using Revise, DDEBifurcationKit, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
 g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
 function neuron2VF(x, xd, p)
-   @unpack a,b,c,d = p
+   (; a,b,c,d) = p
    [
       -x[1] - a * g(b*xd[1][1]) + c * g(d*xd[2][2]),
       -x[2] - a * g(b*xd[1][2]) + c * g(d*xd[2][1])
@@ -66,14 +66,14 @@ We follow the Hopf points in the parameter plane $(a,c)$. We tell the solver to 
 ```@example TUTneuron2
 # continuation of the first Hopf point
 brhopf = continuation(br, 1, (@lens _.c),
-         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 0,
          detect_codim2_bifurcation = 2,
          bothside = true,
          start_with_eigen = true)
 
 brhopf2 = continuation(br, 2, (@lens _.c),
-         setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 0,
          detect_codim2_bifurcation = 2,
          bothside = true,
@@ -89,7 +89,7 @@ We follow the Fold points in the parameter plane $(a, c)$. We tell the solver to
 
 ```@example TUTneuron2
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@lens _.c))
-br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22);)
+br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22);)
 
 
 # change tolerance for avoiding error computation of the EV
@@ -97,7 +97,7 @@ opts_fold = br.contparams
 @set! opts_fold.newton_options.eigsolver.σ = 1e-7
 
 brfold = continuation(br2, 3, (@lens _.a),
-         setproperties(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
+         ContinuationPar(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
          detect_codim2_bifurcation = 2,
          update_minaug_every_step = 1,

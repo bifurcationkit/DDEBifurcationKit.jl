@@ -129,14 +129,14 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
     threshBT = 100options_newton.tol
 
     hopfPb = HopfDDEProblem(
-        prob_vf,
-        BK._copy(eigenvec_ad),    # this is a ≈ null space of (J - iω I)^*
-        BK._copy(eigenvec),     # this is b ≈ null space of  J - iω I
-        options_newton.linsolver,
-        # do not change linear solver if user provides it
-        @set bdlinsolver.solver = (isnothing(bdlinsolver.solver) ? options_newton.linsolver : bdlinsolver.solver);
-        usehessian = usehessian,
-        massmatrix = massmatrix)
+            prob_vf,
+            BK._copy(eigenvec_ad),    # this is a ≈ null space of (J - iω I)^*
+            BK._copy(eigenvec),       # this is b ≈ null space of  J - iω I
+            options_newton.linsolver,
+            # do not change linear solver if user provides it
+            @set bdlinsolver.solver = (isnothing(bdlinsolver.solver) ? options_newton.linsolver : bdlinsolver.solver);
+            usehessian = usehessian,
+            massmatrix = massmatrix)
 
     # Jacobian for the Hopf problem
     if jacobian_ma == :autodiff
@@ -168,7 +168,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         # we first check that the continuation step was successful
         # if not, we do not update the problem with bad information!
         success = get(kUP, :state, nothing).converged
-        (~modCounter(step, update_minaug_every_step) || success == false) && return true
+        (~BK.mod_counter(step, update_minaug_every_step) || success == false) && return true
         x = getVec(z.u, hopfPb)    # hopf point
         p1, ω = getP(z.u, hopfPb)
         p2 = z.p        # second parameter
@@ -216,15 +216,16 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         # JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
 
         JAd_at_xp = BK.has_adjoint(probhopf.prob_vf) ? BK.jad(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
-        ζstar, λstar = BK.get_adjoint_basis(JAd_at_xp, conj(λ), BK.getcontparams(iter).newton_options.eigsolver.eigsolver)
-        # ζstar = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
+        ζ★, _ = BK.get_adjoint_basis(JAd_at_xp, conj(λ), BK.getcontparams(iter).newton_options.eigsolver.eigsolver)
+        # ζ★ = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
+
         # test function for Bogdanov-Takens
         probhopf.BT = ω
-        # BT2 = real( dot(ζstar ./ normC(ζstar), ζ) )
-        # ζstar ./= dot(ζ, ζstar)
+        # BT2 = real( dot(ζ★ ./ normC(ζ★), ζ) )
+        # ζ★ ./= dot(ζ, ζ★)
 
-        hp = BK.Hopf(x, nothing, p1, ω, newpar, lens1, ζ, ζstar, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
-        BK.hopf_normal_form(probhopf.prob_vf, hp, options_newton.linsolver, verbose = false)
+        hp0 = BK.Hopf(x, nothing, p1, ω, newpar, lens1, ζ, ζ★, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
+        hp = hopf_normal_form(probhopf.prob_vf, hp0, options_newton.linsolver, verbose = false)
 
         # lyapunov coefficient
         probhopf.l1 = hp.nf.b
