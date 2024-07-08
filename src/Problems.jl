@@ -26,7 +26,7 @@ $(TYPEDFIELDS)
 
 """
 struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
-    "Vector field, typically a [`BifFunction`](@ref)"
+    "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem"
     VF::Tvf
     "function delays. It takes the parameters and return the non-zero delays in an `AsbtractVector` form. Example: `delays = par -> [1.]`"
     delays::Tdf
@@ -85,7 +85,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
                 δ = convert(eltype(u0), 1e-8)
                 )
 
-    Fc = (xd, p) -> F(xd[1], xd[2:end], p)
+    Fc = (xd, p) -> F(xd.u[1], xd.u[2:end], p)
     # J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
     dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
     d1Fad(x, p, dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
@@ -134,7 +134,7 @@ function jacobian_forwarddiff(prob::ConstantDDEBifProblem, x, p)
     xd = VectorOfArray([copy(x) for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
-    Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd[ii] = z), p), x) for ii in eachindex(prob.delays0)]
+    Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), x) for ii in eachindex(prob.delays0)]
     return J0, Jd
 end
 
@@ -249,7 +249,7 @@ $(TYPEDFIELDS)
 
 """
 struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
-    "Vector field, typically a [`BifFunction`](@ref)"
+    "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem"
     VF::Tvf
     "function delays. It takes the parameters and the state and return the non-zero delays in an `AsbtractVector` form. Example: `delays = (par, u) -> [1. + u[1]^2]`"
     delays::Tdf
@@ -346,7 +346,7 @@ function BK.jacobian(prob::SDDDEBifProblem, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
-    Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd[ii] = z), p), x) for ii in eachindex(prob.delays0)]
+    Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), x) for ii in eachindex(prob.delays0)]
     return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
 end
 

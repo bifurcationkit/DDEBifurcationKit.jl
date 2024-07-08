@@ -7,6 +7,7 @@ module DDEBifurcationKit
 
 
 	include("Problems.jl")
+	include("Utils.jl")
 	include("NormalForms.jl")
 	include("EigSolver.jl")
 	include("codim2/codim2.jl")
@@ -18,7 +19,4 @@ module DDEBifurcationKit
 
 	export ConstantDDEBifProblem, SDDDEBifProblem
 	export DDE_DefaultEig
-
-
-
 end

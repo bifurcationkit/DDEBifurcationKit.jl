@@ -45,7 +45,8 @@ function hopf_normal_form(prob::ConstantDDEBifProblem,
     R3 = BK.TrilinearMap((dx1, dx2, dx3) -> BK.d3F(prob, x0c, parbif, dx1, dx2, dx3) ./6 )
 
     # −LΨ001 = R01
-    R01 = (BK.residual(prob, x0, set(parbif, lens, p + δ)) .- BK.residual(prob, x0, set(parbif, lens, p - δ))) ./ (2δ)
+    R01 = (BK.residual(prob, x0, set(parbif, lens, p + δ)) .- 
+           BK.residual(prob, x0, set(parbif, lens, p - δ))) ./ (2δ)
     Ψ001 = Complex.(expθ(L, ls(Δ0, -R01)[1], 0))
 
     # (2iω−L)Ψ200 = R20(ζ,ζ)
@@ -117,14 +118,14 @@ function hopf_normal_form(prob::SDDDEBifProblem,
 end
 
 function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
-                    br::BK.AbstractBranchResult, 
-                    ind_hopf::Int;
-                    nev = length(BK.eigenvalsfrombif(br, id_bif)),
-                    verbose::Bool = false,
-                    lens = BK.getlens(br),
-                    Teigvec = BK._getvectortype(br),
-                    scaleζ = norm,
-                    detailed = false)
+                             br::BK.AbstractBranchResult, 
+                             ind_hopf::Int;
+                             nev = length(BK.eigenvalsfrombif(br, id_bif)),
+                             verbose::Bool = false,
+                             lens = BK.getlens(br),
+                             Teigvec = BK._getvectortype(br),
+                             scaleζ = norm,
+                             detailed = false)
     # the kwargs detailed is only here to allow to extend BK.hopf_normal_form
     @assert br.specialpoint[ind_hopf].type == :hopf "The provided index does not refer to a Hopf Point"
     verbose && println("#"^53*"\n--> Hopf Normal form computation")

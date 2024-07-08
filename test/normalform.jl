@@ -1,11 +1,11 @@
 # using Revise
 
-using DDEBifurcationKit, Parameters, Setfield, BifurcationKit
+using DDEBifurcationKit, Setfield, BifurcationKit
 using Test
 const BK = BifurcationKit
 
 function wrightVF(x, xd, p)
-    @unpack a = p
+    (;a) = p
     y = xd[1][1]
     [
         -a * y * (1 + x[1])
@@ -14,7 +14,7 @@ end
 
 delaysF(par) = [1.0]
 
-pars = (a=0.1,b=0.)
+pars = (a=0.1, b=0.)
 x0 = [0.]
 
 prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a))
@@ -58,7 +58,7 @@ DDEBifurcationKit.newton_hopf(br, 2)
 ##########################################################################################
 # SDDE, test dummy Hopf normal form
 function humpriesVF(x, xd, p)
-    @unpack κ1,κ2,γ,a1,a2,c = p
+    (;κ1,κ2,γ,a1,a2,c) = p
     [
        -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
     ]

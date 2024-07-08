@@ -1,12 +1,12 @@
 # using Revise
 using Test, DDEBifurcationKit
-using Parameters, Setfield
+using Setfield
 using BifurcationKit
 const BK = BifurcationKit
 
 g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
 function neuron2VF(x, xd, p)
-    @unpack a,b,c,d = p
+    (;a,b,c,d) = p
     [
         -x[1] - a * g(b*xd[1][1]) + c * g(d*xd[2][2]),
         -x[2] - a * g(b*xd[1][2]) + c * g(d*xd[2][1])
@@ -83,7 +83,7 @@ brfold = continuation(br2, 3, (@lens _.a),
 @test brfold.specialpoint[3].type == :zh
 ################################################################################
 function humpriesVF(x, xd, p)
-    @unpack κ1,κ2,γ,a1,a2,c = p
+    (;κ1,κ2,γ,a1,a2,c) = p
     [
         -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
     ]

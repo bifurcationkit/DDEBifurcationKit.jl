@@ -111,12 +111,12 @@ plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
 
 # plot the periodic orbit
 plot(layout = 2)
-    for ii = 1:10:110
-        solpo = BK.get_periodic_orbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, 1)
-        plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
-    end
-    xlabel!("t / period", subplot = 1)
-    plot!(br_pocoll, vars = (:param, :period), subplot = 2, xlims=(2.2,2.4))
+for ii = 1:10:110
+    solpo = BK.get_periodic_orbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, 1)
+    plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
+end
+xlabel!("t / period", subplot = 1)
+plot!(br_pocoll, vars = (:param, :period), subplot = 2, xlims=(2.2,2.4))
 
 plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
 ############

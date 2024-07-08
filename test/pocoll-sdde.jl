@@ -1,11 +1,11 @@
 # using Revise, Plots
-using DDEBifurcationKit, Parameters, Setfield, LinearAlgebra
+using DDEBifurcationKit, Setfield, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
 function humpriesVF(x, xd, p)
-   @unpack κ1,κ2,γ,a1,a2,c = p
+   (;κ1,κ2,γ,a1,a2,c) = p
    [
       -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
    ]
