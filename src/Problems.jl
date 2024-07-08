@@ -88,16 +88,16 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
     Fc = (xd, p) -> F(xd[1], xd[2:end], p)
     # J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
     dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
-    d1Fad(x,p,dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
+    d1Fad(x, p, dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
     if isnothing(d2F)
-        d2F = (x,p,dx1,dx2) -> ForwardDiff.derivative(t -> d1Fad(x .+ t .* dx2, p, dx1), 0.)
-        d2Fc = (x,p,dx1,dx2) -> BilinearMap((_dx1, _dx2) -> d2F(x,p,_dx1,_dx2))(dx1,dx2)
+        d2F = (x, p, dx1, dx2) -> ForwardDiff.derivative(t -> d1Fad(x .+ t .* dx2, p, dx1), 0.)
+        d2Fc = (x, p, dx1, dx2) -> BilinearMap((_dx1, _dx2) -> d2F(x,p,_dx1,_dx2))(dx1,dx2)
     else
         d2Fc = d2F
     end
     if isnothing(d3F)
-        d3F  = (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.)
-        d3Fc = (x,p,dx1,dx2,dx3) -> TrilinearMap((_dx1, _dx2, _dx3) -> d3F(x,p,_dx1,_dx2,_dx3))(dx1,dx2,dx3)
+        d3F  = (x, p, dx1, dx2, dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.)
+        d3Fc = (x, p, dx1, dx2, dx3) -> TrilinearMap((_dx1, _dx2, _dx3) -> d3F(x,p,_dx1,_dx2,_dx3))(dx1, dx2, dx3)
     else
         d3Fc = d3F
     end
@@ -105,7 +105,16 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
     d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
     VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
     # VF = BifFunction(F, F!, dF, dFad, J, Jᵗ, J!, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
-    return ConstantDDEBifProblem(VF, delayF, u0, delayF(parms), parms, lens, plot_solution, record_from_solution, save_solution, δ)
+    return ConstantDDEBifProblem(VF,
+                                 delayF,
+                                 u0,
+                                 delayF(parms),
+                                 parms,
+                                 lens,
+                                 plot_solution,
+                                 record_from_solution,
+                                 save_solution,
+                                 δ)
 end
 
 struct JacobianDDE{Tp,T1,T2,T3,Td}
@@ -121,7 +130,7 @@ function BK.residual(prob::ConstantDDEBifProblem, x, p)
     prob.VF.F(x,xd,p)
 end
 
-function jacobianFD(prob::ConstantDDEBifProblem, x, p)
+function jacobian_forwarddiff(prob::ConstantDDEBifProblem, x, p)
     xd = VectorOfArray([copy(x) for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
 
@@ -131,7 +140,7 @@ end
 
 function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
     if isnothing(prob.VF.J)
-        J0, Jd = jacobianFD(prob, x, p)
+        J0, Jd = jacobian_forwarddiff(prob, x, p)
     else
         J0, Jd = prob.VF.J(x, p)
     end
@@ -149,9 +158,9 @@ function BK.jad(prob::ConstantDDEBifProblem, x, p)
 end
 
 function expθ(J::JacobianDDE, x, λ::T) where T
-    buffer = [one(T)*x]
+    buffer = [one(T) * x]
     for τ in J.delays
-        push!(buffer, copy(x) * exp(λ*(-τ)))
+        push!(buffer, copy(x) * exp(λ * (-τ)))
     end
     VectorOfArray(buffer)
 end
@@ -305,7 +314,17 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
     d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
     # VF = BifFunction(F, F!, dF, dFad, J, Jᵗ, J!, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
     VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
-    return SDDDEBifProblem(VF, delayF, u0, delayF(u0, parms), parms, lens, plot_solution, record_from_solution, save_solution, δ)
+    return SDDDEBifProblem(VF,
+                           delayF,
+                           u0,
+                           delayF(u0,
+                           parms),
+                           parms,
+                           lens,
+                           plot_solution,
+                           record_from_solution,
+                           save_solution,
+                           δ)
 end
 
 function Base.show(io::IO, prob::SDDDEBifProblem; prefix = "")
