@@ -1,7 +1,7 @@
 name = "DDEBifurcationKit"
 uuid = "954e4062-bdb8-4e3f-9eee-d47105dd3e65"
 authors = ["Romain Veltz <romain.veltz@inria.fr>"]
-version = "0.0.1"
+version = "0.0.2"
 
 [deps]
 BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
