@@ -2,7 +2,7 @@
 
 This Julia package aims at performing **automatic bifurcation analysis** of possibly large dimensional equations delay differential equations (DDE) by taking advantage of iterative methods, dense / sparse formulation and specific hardwares (*e.g.* GPU).
 
-It builds upon [BifurcationKit.jl]() with version > 0.2 to perform continuation and numerical bifurcation analysis.
+It builds upon [BifurcationKit.jl](https://bifurcationkit.github.io/BifurcationKitDocs.jl) with version > 0.2 to perform continuation and numerical bifurcation analysis.
 
 ## Installation
 
