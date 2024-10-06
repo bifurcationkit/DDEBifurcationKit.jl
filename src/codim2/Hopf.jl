@@ -37,19 +37,19 @@ end
 
 (l::BK.DefaultLS)(J::JacobianCodim2DDE, args...; kw...) = l(J.J, args...; kw...)
 
-BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
+BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
 #
 # jacobian(hopfpb::HopfMAProblem{Tprob, FiniteDifferences, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = dx -> (hopfpb.prob(x .+ 1e-8 .* dx, p) .- hopfpb.prob(x .- 1e-8 .* dx, p)) / (2e-8)
 ################################################################################################### Newton / Continuation functions
 function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
-            hopfpointguess::ArrayPartition,
-            par,
-            eigenvec, eigenvec_ad,
-            options::NewtonPar;
-            normN = norm,
-            bdlinsolver::BK.AbstractBorderedLinearSolver = MatrixBLS(),
-            usehessian = true,
-            kwargs...)
+                        hopfpointguess::ArrayPartition,
+                        par,
+                        eigenvec, eigenvec_ad,
+                        options::NewtonPar;
+                        normN = norm,
+                        bdlinsolver::BK.AbstractBorderedLinearSolver = MatrixBLS(),
+                        usehessian = true,
+                        kwargs...)
     # we first need to update d2F and d3F for them to accept complex arguments
 
     hopfproblem = HopfDDEProblem(
@@ -71,13 +71,13 @@ function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
 end
 
 function BK.newton_hopf(br::BK.AbstractBranchResult, ind_hopf::Int;
-            prob::AbstractDDEBifurcationProblem = br.prob,
-            normN = norm,
-            options = br.contparams.newton_options,
-            verbose = true,
-            nev = br.contparams.nev,
-            start_with_eigen = false,
-            kwargs...)
+                        prob::AbstractDDEBifurcationProblem = br.prob,
+                        normN = norm,
+                        options = br.contparams.newton_options,
+                        verbose = true,
+                        nev = br.contparams.nev,
+                        start_with_eigen = false,
+                        kwargs...)
     hopfpointguess = HopfPoint(br, ind_hopf)
     ω = hopfpointguess.p[2]
     bifpt = br.specialpoint[ind_hopf]
@@ -109,18 +109,18 @@ function BK.newton_hopf(br::BK.AbstractBranchResult, ind_hopf::Int;
 end
 
 function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.AbstractContinuationAlgorithm,
-                hopfpointguess::ArrayPartition, par,
-                lens1::Lens, lens2::Lens,
-                eigenvec, eigenvec_ad,
-                options_cont::ContinuationPar ;
-                update_minaug_every_step = 0,
-                normC = norm,
-                bdlinsolver::BK.AbstractBorderedLinearSolver = MatrixBLS(),
-                jacobian_ma::Symbol = :autodiff,
-                compute_eigen_elements = false,
-                usehessian = true,
-                massmatrix = LinearAlgebra.I,
-                kwargs...)
+                            hopfpointguess::ArrayPartition, par,
+                            lens1::BK.AllOpticTypes, lens2::BK.AllOpticTypes,
+                            eigenvec, eigenvec_ad,
+                            options_cont::ContinuationPar ;
+                            update_minaug_every_step = 0,
+                            normC = norm,
+                            bdlinsolver::BK.AbstractBorderedLinearSolver = MatrixBLS(),
+                            jacobian_ma::Symbol = :autodiff,
+                            compute_eigen_elements = false,
+                            usehessian = true,
+                            massmatrix = LinearAlgebra.I,
+                            kwargs...)
     @assert lens1 != lens2 "Please choose 2 different parameters. You only passed $lens1"
     @assert lens1 == BK.getlens(prob_vf)
 
@@ -252,7 +252,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         event = BK.PairOfEvents(BK.ContinuousEvent(2, testBT_GH, compute_eigen_elements, ("bt", "gh"), threshBT), BifDetectEvent)
         # careful here, we need to adjust the tolerance for stability to avoid
         # spurious ZH or HH bifurcations
-        @set! opt_hopf_cont.tol_stability = 10opt_hopf_cont.newton_options.tol
+        @reset opt_hopf_cont.tol_stability = 10opt_hopf_cont.newton_options.tol
     else
         event = BK.ContinuousEvent(2, testBT_GH, false, ("bt", "gh"), threshBT)
     end
@@ -276,7 +276,7 @@ end
 
 function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
                         br::BK.AbstractBranchResult, ind_hopf::Int64,
-                        lens2::Lens,
+                        lens2::BK.AllOpticTypes,
                         options_cont::ContinuationPar = br.contparams;
                         alg = br.alg,
                         start_with_eigen = false,

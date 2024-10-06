@@ -1,6 +1,6 @@
 module DDEBifurcationKit
 
-	using BifurcationKit, Setfield, DocStringExtensions, RecursiveArrayTools
+	using BifurcationKit, DocStringExtensions, RecursiveArrayTools
 	using ForwardDiff, Parameters, LinearAlgebra
 	using NonlinearEigenproblems
 	const BK = BifurcationKit

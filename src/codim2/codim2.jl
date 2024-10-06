@@ -122,7 +122,7 @@ function correctBifurcation(contres::ContResult)
     end
     for (ind, bp) in pairs(contres.specialpoint)
         if bp.type in keys(conversion)
-            @set! contres.specialpoint[ind].type = conversion[bp.type]
+            @reset contres.specialpoint[ind].type = conversion[bp.type]
         end
     end
     return contres

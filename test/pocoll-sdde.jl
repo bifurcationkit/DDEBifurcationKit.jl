@@ -22,7 +22,7 @@ end
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
 
-prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
+prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
@@ -40,7 +40,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12
 @set! opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p) -> begin
+args_po = (    record_from_solution = (x, p; k...) -> begin
         xtt = BK.get_periodic_orbit(p.prob, x, nothing)
             _max = maximum(xtt[1,:])
             _min = minimum(xtt[1,:])

@@ -1,6 +1,6 @@
 # using Revise
 
-using DDEBifurcationKit, Setfield, BifurcationKit
+using DDEBifurcationKit, BifurcationKit
 using Test
 const BK = BifurcationKit
 
@@ -17,7 +17,7 @@ delaysF(par) = [1.0]
 pars = (a=0.1, b=0.)
 x0 = [0.]
 
-prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a))
+prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 9., p_min = -1., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 6, n_inversion = 12 )
@@ -42,8 +42,8 @@ h2 = BifurcationKit.get_normal_form(br, 2)
 @test isapprox(real(h2.nf.b), NFcoeff(2).b; rtol = 1e-5)
 
 # static bifurcations
-pars = (a=-0.1,b=0.)
-prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a))
+pars = (a = -0.1, b = 0.)
+prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@optic _.a))
 optn = NewtonPar(eigsolver = DDE_DefaultEig(γ = .01))
 opts = ContinuationPar(p_max = 9., p_min = -1., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 7, n_inversion = 4 )
 br = continuation(prob, PALC(), opts; verbosity = 0)
@@ -73,7 +73,7 @@ end
 
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
-prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
+prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
 br = continuation(prob, PALC(), opts; verbosity = 0, bothside = true)

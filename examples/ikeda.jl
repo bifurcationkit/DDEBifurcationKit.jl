@@ -23,7 +23,7 @@ delaysF(par) = [1.0]
 pars = (Λ=0.1,b=0.)
 x0 = [-sqrt(pi)]
 
-prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@lens _.Λ), record_from_solution=(x,p)-> (x=x[1], _x=1))
+prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@optic _.Λ), record_from_solution=(x,p;k...)-> (x=x[1], _x=1))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
@@ -37,11 +37,11 @@ BK.get_normal_form(br, 1) # l1= -0.0591623057, b = 0.09293196762669392
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40,
     nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 1, save_sol_every_step=1)
-@set! opts_po_cont.newton_options.tol = 1e-7
-@set! opts_po_cont.newton_options.verbose = true
+@reset opts_po_cont.newton_options.tol = 1e-7
+@reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p) -> begin
+args_po = (    record_from_solution = (x, p; k...) -> begin
 		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 		return (max = maximum(xtt[1,:]),
 				min = minimum(xtt[1,:]),
@@ -79,7 +79,7 @@ plot(br, br_pocoll)
 plot(br_pocoll, vars = (:param, :period))
 
 ################################################################################
-using  DifferentialEquations
+using DifferentialEquations
 
 function ikedaVF_DE(du,u,h,p,t)
     (; Λ) = p
@@ -87,10 +87,10 @@ function ikedaVF_DE(du,u,h,p,t)
 end
 
 u0 = -2ones(1)
-    h(p, t) = -2ones(1) .+ 0.001cos(t/4)
-    h(p,t) = br_pocoll.orbit(t)
-    prob_de = DDEProblem(ikedaVF_DE,u0,h,(0.,1240.),setproperties(pars, Λ = br.specialpoint[1].param + 0.01); constant_lags=delaysF(pars))
-    alg = MethodOfSteps(Rosenbrock23())
-    sol = solve(prob_de,alg)
-    plot(plot(sol, xlims = (1000,1020)), plot(sol))
+h(p, t) = -2ones(1) .+ 0.001cos(t/4)
+h(p,t) = br_pocoll.orbit(t)
+prob_de = DDEProblem(ikedaVF_DE,u0,h,(0.,1240.),setproperties(pars, Λ = br.specialpoint[1].param + 0.01); constant_lags=delaysF(pars))
+alg = MethodOfSteps(Rosenbrock23())
+sol = solve(prob_de,alg)
+plot(plot(sol, xlims = (1000,1020)), plot(sol))
 

@@ -25,7 +25,7 @@ $(TYPEDFIELDS)
 - `ConstantDDEBifProblem(F, delays, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
-struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
+struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Union{Nothing, BK.AllOpticTypes}, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
     "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem"
     VF::Tvf
     "function delays. It takes the parameters and return the non-zero delays in an `AsbtractVector` form. Example: `delays = par -> [1.]`"
@@ -50,7 +50,7 @@ end
 
 BK.isinplace(::ConstantDDEBifProblem) = false
 BK.is_symmetric(::ConstantDDEBifProblem) = false
-BK._getvectortype(prob::ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
+BK._getvectortype(prob::ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec} = Tu
 BK.getlens(prob::ConstantDDEBifProblem) = prob.lens
 BK.has_adjoint(prob::ConstantDDEBifProblem) = true
 BK.has_adjoint_MF(prob::ConstantDDEBifProblem) = false
@@ -68,7 +68,7 @@ function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
     printstyled(io, BK.get_lens_symbol(getlens(prob)), color=:cyan, bold = true)
 end
 
-function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
+function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
                 J! = nothing,
                 dF = nothing,
@@ -84,7 +84,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8)
                 )
-
+    @assert lens isa Int || lens isa BK.AllOpticTypes
     Fc = (xd, p) -> F(xd.u[1], xd.u[2:end], p)
     # J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
     dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
@@ -248,7 +248,7 @@ $(TYPEDFIELDS)
 - `SDDDEBifProblem(F, delays, u0, params, lens; J, Jᵗ, d2F, d3F, kwargs...)` and `kwargs` are the fields above.
 
 """
-struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
+struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Union{Nothing, BK.AllOpticTypes}, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
     "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem"
     VF::Tvf
     "function delays. It takes the parameters and the state and return the non-zero delays in an `AsbtractVector` form. Example: `delays = (par, u) -> [1. + u[1]^2]`"
@@ -273,13 +273,13 @@ end
 
 BK.isinplace(::SDDDEBifProblem) = false
 BK.is_symmetric(::SDDDEBifProblem) = false
-BK._getvectortype(prob::SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl <: Lens, Tplot, Trec} = Tu
+BK._getvectortype(prob::SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec}) where {Tvf, Tdf, Tu, Td, Tp, Tl, Tplot, Trec} = Tu
 BK.getlens(prob::SDDDEBifProblem) = prob.lens
 BK.has_adjoint(prob::SDDDEBifProblem) = true
 BK.getdelta(prob::SDDDEBifProblem) = prob.δ
 BK.save_solution(prob::SDDDEBifProblem, x, p) = prob.save_solution(x, p)
 
-function SDDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
+function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
                 dF = nothing,
                 dFad = nothing,
@@ -295,6 +295,7 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@lens _);
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8)
                 )
+    @assert lens isa Int || lens isa BK.AllOpticTypes
     J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
     dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> F(x .+ t .* dx, p), 0.) : dF
     d1Fad(x,p,dx1) = ForwardDiff.derivative(t -> F(x .+ t .* dx1, p), 0.)

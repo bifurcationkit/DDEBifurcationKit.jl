@@ -76,7 +76,7 @@ function hopf_normal_form(prob::ConstantDDEBifProblem,
 
     # we set this type of normal form coefficients because the second order
     # hopf predictor does not work otherwise.
-    @set! pt.nf = (;a, b, 
+    @reset pt.nf = (;a, b, 
                     Ψ110_dde = Ψ110,
                     Ψ001_dde = Ψ001,
                     Ψ200_dde = Ψ200,
@@ -102,7 +102,7 @@ function hopf_normal_form(prob::SDDDEBifProblem,
     a = Complex{eltype(pt.x0)}(1, 0)
     b = Complex{eltype(pt.x0)}(1, 0)
     x0 = pt.x0
-    @set! pt.nf = (a = a, b = b,
+    @reset pt.nf = (a = a, b = b,
                     Ψ110 = zero(x0),
                     Ψ001 = zero(x0),
                     Ψ200 = zero(x0))

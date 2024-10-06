@@ -16,14 +16,14 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 
 	hopfpt = BK.hopf_normal_form(br.prob, br, ind_bif; nev = nev, verbose = verbose)
 	# @error "Careful here"
-	# @set! hopfpt.nf.a = 1.
+	# @reset hopfpt.nf.a = 1.
 
 	# compute predictor for point on new branch
 	ds = isnothing(δp) ? _contParams.ds : δp
 	Ty = typeof(ds)
 	pred = predictor(hopfpt, ds; verbose = verbose, ampfactor = Ty(ampfactor))
 	@error "Careful here"
-	@set! pred.p = br.specialpoint[ind_bif].param + δp
+	@reset pred.p = br.specialpoint[ind_bif].param + δp
 
 	verbose && printstyled(color = :green, "#"^61*
 			"\n┌─ Start branching from Hopf bif. point to periodic orbits.",

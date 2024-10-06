@@ -28,7 +28,7 @@ Q = Neumann0BC(X[2]-X[1])
 pars = (a = 0.5, d = 1, τ = 1.0, Δ = Δ, N = Nx)
 x0 = zeros(Nx)
 
-prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a))
+prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
@@ -46,7 +46,7 @@ function JacHutchinson(u, p)
    return J0, [J1]
 end
 
-prob2 = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@lens _.a); J = JacHutchinson)
+prob2 = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a); J = JacHutchinson)
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)

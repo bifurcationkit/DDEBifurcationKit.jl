@@ -27,7 +27,7 @@ end
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 x0 = zeros(1)
 
-prob = DDEBK.SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
+prob = DDEBK.SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
@@ -36,7 +36,7 @@ br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = tru
 
 plot(br)
 ################################################################################
-brhopf = continuation(br, 2, (@lens _.κ2),
+brhopf = continuation(br, 2, (@optic _.κ2),
          ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
          verbosity = 2, plot = true,
          detect_codim2_bifurcation = 0,
@@ -50,11 +50,11 @@ plot(brhopf, vars = (:κ1, :κ2))
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
 nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20, save_sol_every_step=1)
-@set! opts_po_cont.newton_options.tol = 1e-9
-@set! opts_po_cont.newton_options.verbose = true
+@reset opts_po_cont.newton_options.tol = 1e-9
+@reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p) -> begin
+args_po = (    record_from_solution = (x, p; k...) -> begin
         xtt = BK.get_periodic_orbit(p.prob, x, nothing)
         _max = maximum(xtt[1,:])
         _min = minimum(xtt[1,:])

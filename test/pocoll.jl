@@ -19,7 +19,7 @@ end
 pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
 
-prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@lens _.a))
+prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts, bothside = false)
@@ -32,7 +32,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 1
 @set! opts_po_cont.newton_options.max_iterations = 8
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p) -> begin
+args_po = (    record_from_solution = (x, p; k...) -> begin
             xtt = BK.get_periodic_orbit(p.prob, x, nothing)
             return (max = maximum(xtt[1,:]),
                     min = minimum(xtt[1,:]),

@@ -3,7 +3,7 @@ cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
 
-using Revise, DDEBifurcationKit, Parameters, Setfield
+using Revise, DDEBifurcationKit
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -11,7 +11,7 @@ const DDEBK = DDEBifurcationKit
 using Plots
 
 function wrightVF(x, xd, p)
-   @unpack a = p
+   (;a) = p
    y = xd[1][1]
    [
       -a * y * (1 + x[1])
@@ -23,7 +23,7 @@ delaysF(par) = [1.0]
 pars = (a=0.1,b=0.)
 x0 = [0.]
 
-prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@lens _.a), record_from_solution=(x,p)-> (x=x[1], _x=1))
+prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@optic _.a), record_from_solution=(x,p;k...)-> (x=x[1], _x=1))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 9., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
