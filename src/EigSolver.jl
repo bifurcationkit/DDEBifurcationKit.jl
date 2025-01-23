@@ -26,13 +26,14 @@ end
 
 function (eig::DDE_DefaultEig)(J::JacobianDDE, nev; kwargs...)
     dep = NonlinearEigenproblems.DEP([J.J0, J.Jd...], [0, J.delays...])
-    λ,V = NonlinearEigenproblems.iar_chebyshev(dep;
+    λ, V = NonlinearEigenproblems.iar_chebyshev(dep;
                     maxit = eig.maxit,
                     neigs = nev + 2,
                     tol = eig.tol,
-                    v = isnothing(eig.v) ? rand(size(dep,1),1) : eig.v,
+                    v = isnothing(eig.v) ? rand(size(dep, 1), 1) : eig.v,
                     σ = eig.σ)
+    
     @assert length(λ) >= nev
     I = sortperm(λ, by = eig.which, rev = true)
-    return λ[I], V[:,I], true, 1
+    return λ[I], V[:, I], true, 1
 end

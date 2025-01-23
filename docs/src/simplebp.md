@@ -22,11 +22,11 @@ In the above scalar equation,
 The reduced equation (E) can be automatically computed as follows
 
 ```julia
-getNormalForm(br::ContResult, ind_bif::Int ;
+get_normal_form(br::ContResult, ind_bif::Int ;
 	verbose = false, ζs = nothing, lens = br.param_lens)
 ```
 
-where `prob` is the bifurcation problem. `br` is a branch computed after a call to [`continuation`](@ref) with detection of bifurcation points enabled and `ind_bif` is the index of the bifurcation point on the branch `br`. The above call returns a point with information needed to compute the bifurcated branch. For more information about the optional parameters, we refer to [`getNormalForm`](@ref). The result returns the following:
+where `prob` is the bifurcation problem. `br` is a branch computed after a call to [`continuation`](@ref) with detection of bifurcation points enabled and `ind_bif` is the index of the bifurcation point on the branch `br`. The above call returns a point with information needed to compute the bifurcated branch. For more information about the optional parameters, we refer to [`get_normal_form`](@ref). The result returns the following:
 
 ```julia
 mutable struct SimpleBranchPoint{Tv, T, Tevl, Tevr, Tnf} <: BranchPoint
@@ -51,4 +51,4 @@ end
 ```
 
 !!! info "Note"
-    You should not need to call `getNormalForm` except if you need the full information about the branch point.
+    You should not need to call `get_normal_form` except if you need the full information about the branch point.

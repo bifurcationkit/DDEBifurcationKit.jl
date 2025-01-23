@@ -36,7 +36,7 @@ end
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
 
-prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@lens _.κ1))
+prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 ```
 
 We then compute the branch
@@ -59,7 +59,7 @@ We follow the Hopf points in the parameter plane $(\kappa_1,\kappa_2)$.
 We tell the solver to consider br.specialpoint[2] and continue it.
 
 ```@example TUTHumphries
-brhopf = continuation(br, 2, (@lens _.κ2),
+brhopf = continuation(br, 2, (@optic _.κ2),
          ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
          verbosity = 0, plot = false,
          # we disable detection of Bautin bifurcation as the
@@ -83,7 +83,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12
 @set! opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
-args_po = (	record_from_solution = (x, p) -> begin
+args_po = (	record_from_solution = (x, p; k...) -> begin
 		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 		_max = maximum(xtt[1,:])
 		_min = minimum(xtt[1,:])
@@ -108,7 +108,7 @@ br_pocoll = continuation(
 	ampfactor = 1/0.467829783456199 * 0.1,
 	δp = 0.01,
 	callback_newton = BK.cbMaxNorm(10.0),
-	)	
+	)
 ```
 
 which gives

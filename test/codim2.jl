@@ -1,6 +1,5 @@
 # using Revise
 using Test, DDEBifurcationKit
-using Setfield
 using BifurcationKit
 const BK = BifurcationKit
 
@@ -69,7 +68,7 @@ br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22); verbosity =
 
 # change tolerance for avoiding error computation of the EV
 opts_fold = br.contparams
-@set! opts_fold.newton_options.eigsolver.σ = 1e-7
+@reset opts_fold.newton_options.eigsolver.σ = 1e-7
 
 brfold = continuation(br2, 3, (@optic _.a),
             setproperties(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);

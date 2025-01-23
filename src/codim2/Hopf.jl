@@ -67,17 +67,18 @@ function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
     opt_hopf = @set options.linsolver = BK.DefaultLS()
 
     # solve the hopf equations
-    return BK.newton(prob_h, opt_hopf, normN = normN, kwargs...)
+    return BK.solve(prob_h, Newton(), opt_hopf; normN, kwargs...)
 end
 
-function BK.newton_hopf(br::BK.AbstractBranchResult, ind_hopf::Int;
+function BK.newton_hopf(br::BK.AbstractResult{Tk, Tp}, 
+                        ind_hopf::Int;
                         prob::AbstractDDEBifurcationProblem = br.prob,
                         normN = norm,
                         options = br.contparams.newton_options,
                         verbose = true,
                         nev = br.contparams.nev,
                         start_with_eigen = false,
-                        kwargs...)
+                        kwargs...) where {Tk, Tp <: AbstractDDEBifurcationProblem}
     hopfpointguess = HopfPoint(br, ind_hopf)
     ω = hopfpointguess.p[2]
     bifpt = br.specialpoint[ind_hopf]
@@ -105,7 +106,7 @@ function BK.newton_hopf(br::BK.AbstractBranchResult, ind_hopf::Int;
 
     # solve the hopf equations
     hopfpointguess = ArrayPartition(hopfpointguess.u, real(ζ), imag(ζ), hopfpointguess.p)
-    return newton_hopf(prob, hopfpointguess, getparams(br), ζ, ζad, options; normN = normN, kwargs...)
+    return newton_hopf(prob, hopfpointguess, getparams(br), ζ, ζad, options; normN, kwargs...)
 end
 
 function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.AbstractContinuationAlgorithm,
@@ -148,7 +149,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         prob_h = FoldMAProblem(hopfPb, FiniteDifferences(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = options_cont.newton_options.linsolver
     else
-        prob_h = HopfMAProblem(hopfPb, nothing, hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = BK.HopfMAProblem(hopfPb, nothing, hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = HopfLinearSolverMinAug()
     end
 

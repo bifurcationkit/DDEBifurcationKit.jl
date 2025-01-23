@@ -16,7 +16,7 @@ Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 
 
 [compat]
-BifurcationKit = "^0.4.0"
+BifurcationKit = "^0.4.8"
 DocStringExtensions = "^0.9"
 ForwardDiff = "^0.10"
 NonlinearEigenproblems = "^1.0.1"

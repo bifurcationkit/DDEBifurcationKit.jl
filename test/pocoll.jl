@@ -1,5 +1,5 @@
 using Test, DDEBifurcationKit
-using Setfield, LinearAlgebra
+using LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 
@@ -20,16 +20,16 @@ pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
 
 prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
-optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
+optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit = 100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts, bothside = false)
 
 #######################################################
 # hopf aBS
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 5, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step = 1)
-@set! opts_po_cont.newton_options.tol = 1e-9
-@set! opts_po_cont.newton_options.verbose = true
-@set! opts_po_cont.newton_options.max_iterations = 8
+@reset opts_po_cont.newton_options.tol = 1e-9
+@reset opts_po_cont.newton_options.verbose = true
+@reset opts_po_cont.newton_options.max_iterations = 8
 
 # arguments for periodic orbits
 args_po = (    record_from_solution = (x, p; k...) -> begin

@@ -34,7 +34,7 @@ delaysF(par) = [par.τ1, par.τ2, par.τs]
 pars = (κ = 0.5, β = -1, a12 = 1, a21 = 0.5, τ1 = 0.2, τ2 = 0.2, τs = 1.5)
 x0 = [0.01, 0.001]
 
-prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.τs))
+prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
@@ -60,14 +60,14 @@ We follow the Hopf points in the parameter plane $(a_{21},\tau_s)$. We tell the 
 
 ```@example TUTneuron
 # continuation of the first Hopf point
-brhopf = continuation(br, 3, (@lens _.a21),
+brhopf = continuation(br, 3, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
          detect_codim2_bifurcation = 2,
          # bothside = true,
          start_with_eigen = true)
 
 # continuation of the second Hopf point
-brhopf2 = continuation(br, 2, (@lens _.a21),
+brhopf2 = continuation(br, 2, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
          detect_codim2_bifurcation = 2,
          start_with_eigen = true,
@@ -81,8 +81,8 @@ scene = plot(brhopf, brhopf2, legend = :top)
 We change the continuation parameter and study the bifurcations as function of $a_{21}$.
 
 ```@example TUTneuron
-prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@lens _.a21))
-br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 3., n_inversion=8); verbosity = 0, plot = false, normC = norminf)
+prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.a21))
+br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 3., n_inversion = 8); verbosity = 0, plot = false, normC = norminf)
 ```
 
 We then compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation.
@@ -90,11 +90,11 @@ We then compute the branch of periodic orbits from the Hopf bifurcation points u
 ```@example TUTneuron
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-0., max_steps = 120, detect_bifurcation = 0, save_sol_every_step=1)
-@set! opts_po_cont.newton_options.tol = 1e-8
-@set! opts_po_cont.newton_options.verbose = false
+@reset opts_po_cont.newton_options.tol = 1e-8
+@reset opts_po_cont.newton_options.verbose = false
 
 # arguments for periodic orbits
-args_po = (	record_from_solution = (x, p) -> begin
+args_po = (	record_from_solution = (x, p; k...) -> begin
 			xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 			return (max = maximum(xtt[1,:]),
 					min = minimum(xtt[1,:]),
@@ -114,7 +114,7 @@ br_pocoll = @time continuation(
 	probpo;
 	verbosity = 0,	plot = false,
 	args_po...,
-	δp = 0.001,
+	δp = 0.003,
 	normC = norminf,
 	)
 scene = plot(br2, br_pocoll)

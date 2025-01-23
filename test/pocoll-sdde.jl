@@ -1,5 +1,5 @@
 # using Revise, Plots
-using DDEBifurcationKit, Setfield, LinearAlgebra
+using DDEBifurcationKit, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -36,8 +36,8 @@ br = continuation(prob, alg, opts; verbosity = 0, plot = false, bothside = true)
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3,
     nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20, save_sol_every_step=1)
-@set! opts_po_cont.newton_options.tol = 1e-9
-@set! opts_po_cont.newton_options.verbose = true
+@reset opts_po_cont.newton_options.tol = 1e-9
+@reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
 args_po = (    record_from_solution = (x, p; k...) -> begin

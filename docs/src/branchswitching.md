@@ -22,7 +22,7 @@ where `br` is a branch computed after a call to `continuation` with detection of
 ### Simple example
 
 ```@example TUT1
-using BifurcationKit, Setfield, Plots
+using BifurcationKit, Plots
 
 # vector field of transcritical bifurcation
 F(x, p) = [x[1] * (p.μ - x[1])]
@@ -31,17 +31,17 @@ F(x, p) = [x[1] * (p.μ - x[1])]
 par = (μ = -0.2, )
 
 # problem (automatic differentiation)
-prob = BifurcationProblem(F, [0.1], par, (@lens _.μ); record_from_solution = (x, p) -> x[1])
+prob = BifurcationProblem(F, [0.1], par, (@optic _.μ); record_from_solution = (x, p) -> x[1])
 
 # compute branch of trivial equilibria (=0) and detect a bifurcation point
 opts_br = ContinuationPar(dsmax = 0.05, ds = 0.01, detect_bifurcation = 3, nev = 2)
 br = continuation(prob, PALC(), opts_br)
 	
 # perform branch switching on one side of the bifurcation point
-br1Top = continuation(br, 1, setproperties(opts_br; max_steps = 14) )
+br1Top = continuation(br, 1, ContinuationPar(opts_br; max_steps = 14) )
 
 # on the other side
-br1Bottom = continuation(br, 1, setproperties(opts_br; ds = -opts_br.ds, max_steps = 14))
+br1Bottom = continuation(br, 1, ContinuationPar(opts_br; ds = -opts_br.ds, max_steps = 14))
 
 scene = plot(br, br1Top, br1Bottom; branchlabel = ["br", "br1Top", "br1Bottom"], legend = :topleft)
 ```

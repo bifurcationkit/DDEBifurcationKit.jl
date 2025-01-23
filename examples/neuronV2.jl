@@ -109,7 +109,7 @@ br_pocoll = @time continuation(
     # eigsolver = BK.FloquetCollGEV(DefaultEig(), 602, 2),
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
-        # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
+        # plot(xtt.t, xtt[1,:], title = "it = 0") |> display
         printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
         # @show state.x[end]
         # @show state.f[end]

@@ -39,7 +39,7 @@ end
 pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
 
-prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@lens _.a))
+prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 1., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
@@ -65,14 +65,14 @@ We follow the Hopf points in the parameter plane $(a,c)$. We tell the solver to 
 
 ```@example TUTneuron2
 # continuation of the first Hopf point
-brhopf = continuation(br, 1, (@lens _.c),
+brhopf = continuation(br, 1, (@optic _.c),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 0,
          detect_codim2_bifurcation = 2,
          bothside = true,
          start_with_eigen = true)
 
-brhopf2 = continuation(br, 2, (@lens _.c),
+brhopf2 = continuation(br, 2, (@optic _.c),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 0,
          detect_codim2_bifurcation = 2,
@@ -88,15 +88,15 @@ scene
 We follow the Fold points in the parameter plane $(a, c)$. We tell the solver to consider br2.specialpoint[3] and continue it.
 
 ```@example TUTneuron2
-prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@lens _.c))
+prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (pars..., a = 0.12), (@optic _.c))
 br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22);)
 
 
 # change tolerance for avoiding error computation of the EV
 opts_fold = br.contparams
-@set! opts_fold.newton_options.eigsolver.σ = 1e-7
+@reset opts_fold.newton_options.eigsolver.σ = 1e-7
 
-brfold = continuation(br2, 3, (@lens _.a),
+brfold = continuation(br2, 3, (@optic _.a),
          ContinuationPar(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
          detect_codim2_bifurcation = 2,

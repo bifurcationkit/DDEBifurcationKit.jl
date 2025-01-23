@@ -92,7 +92,7 @@ br_pocoll = @time continuation(
 
 plot(br);plot!(br_pocoll, plotfold=false, ylabel = "amplitude")
 ################################################################################
-using  DifferentialEquations
+using DifferentialEquations
 
 function humpriesVF_DE2(x,h,p,t)
     @unpack κ1,κ2,γ,a1,a2,c = p
