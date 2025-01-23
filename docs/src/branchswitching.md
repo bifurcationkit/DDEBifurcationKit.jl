@@ -31,7 +31,7 @@ F(x, p) = [x[1] * (p.μ - x[1])]
 par = (μ = -0.2, )
 
 # problem (automatic differentiation)
-prob = BifurcationProblem(F, [0.1], par, (@optic _.μ); record_from_solution = (x, p) -> x[1])
+prob = BifurcationProblem(F, [0.1], par, (@optic _.μ); record_from_solution = (x, p; k...) -> x[1])
 
 # compute branch of trivial equilibria (=0) and detect a bifurcation point
 opts_br = ContinuationPar(dsmax = 0.05, ds = 0.01, detect_bifurcation = 3, nev = 2)
