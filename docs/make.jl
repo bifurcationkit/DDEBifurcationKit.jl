@@ -9,7 +9,7 @@ ENV["GKSwstype"] = "100"
 using Documenter, DDEBifurcationKit, BifurcationKit
 
 # to display progress
-# ENV["JULIA_DEBUG"] = Documenter
+ENV["JULIA_DEBUG"] = Documenter
 
 makedocs(
 	modules = [DDEBifurcationKit],
@@ -17,6 +17,8 @@ makedocs(
 	sitename = "Bifurcation Analysis of DDEs in Julia",
 	format = Documenter.HTML(collapselevel = 1, assets = ["assets/indigo.css"]),
 	# format = DocumenterLaTeX.LaTeX(),
+	warnonly = true,
+	draft = false,
 	authors = "Romain Veltz",
 	pages = Any[
 		"Home" => "index.md",
