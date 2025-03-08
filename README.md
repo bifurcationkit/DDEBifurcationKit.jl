@@ -24,22 +24,7 @@ import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")
 ```
 
 ## 📚 Support and citation
-If you use this package for your work, we ask that you cite the following paper. Open source development as part of academic research strongly depends on this. Please also consider starring this repository if you like our work, this will help us to secure funding in the future. It is referenced on HAL-Inria as follows:
-
-```
-@misc{veltz:hal-02902346,
-  TITLE = {{BifurcationKit.jl}},
-  AUTHOR = {Veltz, Romain},
-  URL = {https://hal.archives-ouvertes.fr/hal-02902346},
-  INSTITUTION = {{Inria Sophia-Antipolis}},
-  YEAR = {2020},
-  MONTH = Jul,
-  KEYWORDS = {pseudo-arclength-continuation ; periodic-orbits ; floquet ; gpu ; bifurcation-diagram ; deflation ; newton-krylov},
-  PDF = {https://hal.archives-ouvertes.fr/hal-02902346/file/354c9fb0d148262405609eed2cb7927818706f1f.tar.gz},
-  HAL_ID = {hal-02902346},
-  HAL_VERSION = {v1},
-}
-```
+If you use `BifurcationKit.jl` in your work, we ask that you cite the following paper on [HAL-Inria](https://hal.archives-ouvertes.fr/hal-02902346) with *bibtex* entry [CITATION.bib](https://github.com/bifurcationkit/BifurcationKit.jl/blob/master/CITATION.bib). Open source development as part of academic research strongly depends on this. Please also consider starring this repository if you like our work, this will help us to secure funding in the future.
 
 ## Main features
 
