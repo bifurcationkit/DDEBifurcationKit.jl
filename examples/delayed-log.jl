@@ -11,7 +11,7 @@ using Plots
 
 function delayedlogVF(x, xd, p)
    (;λ) = p
-   y = xd[1,1]
+   y = xd[1][1]
    [
       (λ - y) * x[1]
    ]
@@ -57,7 +57,7 @@ args_po = (    record_from_solution = (x, p;k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(40, 4; N = 1)
+probpo = PeriodicOrbitOCollProblem(100, 4; N = 1, jacobian = BK.AutoDiffDense())
 # probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
 br_pocoll = @time continuation(
 		br, 1, opts_po_cont,
@@ -65,8 +65,8 @@ br_pocoll = @time continuation(
 		probpo;
 		verbosity = 2,	plot = true,
 		args_po...,
-		ampfactor = 1/0.3593 * 0.0610*2.2,
-		δp = 0.001,
+		ampfactor = 2,
+		δp = 0.0051,
 		normC = norminf,
 		)
 

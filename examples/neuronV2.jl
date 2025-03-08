@@ -50,7 +50,7 @@ plot(brhopf, vars = (:a, :c), xlims = (0,0.7), ylims = (0,1))
 plot!(brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1,1))
 
 ################################################################################
-prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (Accessors.@set pars.a = 0.12), (@optic _.c))
+prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@optic _.c))
 br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = false)
 
 plot(br2)
@@ -109,8 +109,9 @@ br_pocoll = @time continuation(
     # eigsolver = BK.FloquetCollGEV(DefaultEig(), 602, 2),
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
+        m1,m2 = extrema(xtt[:,:])
         # plot(xtt.t, xtt[1,:], title = "it = 0") |> display
-        printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+        printstyled(color=:red, "amp = ", m2-m1,"\n")
         # @show state.x[end]
         # @show state.f[end]
         state.step < 16

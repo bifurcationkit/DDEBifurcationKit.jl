@@ -40,8 +40,8 @@ end
 
     # get the mesh of the OCollProblem
     mesh = BK.getmesh(pb)
-    # udj = [copy(uj[:,1]) for _ in delays]
     σ = LinRange(0, 2, m)
+    # udj = [copy(uj[:,1]) for _ in delays]
 
     # range for locating time slices
     rg = UnitRange(1, m+1)

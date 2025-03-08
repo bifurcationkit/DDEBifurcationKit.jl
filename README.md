@@ -14,7 +14,7 @@
 and usable on its own, users interested in using this
 functionality should check out [BifurcationKit.jl](https://github.com/bifurcationkit/BifurcationKit.jl).
 
-## Installation
+## 📦 Installation
 
 Assuming that you already have Julia correctly installed, it suffices to import
 `DDEBifurcationKit.jl` in the standard way:
@@ -23,7 +23,7 @@ Assuming that you already have Julia correctly installed, it suffices to import
 import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")
 ```
 
-## Support and citation
+## 📚 Support and citation
 If you use this package for your work, we ask that you cite the following paper. Open source development as part of academic research strongly depends on this. Please also consider starring this repository if you like our work, this will help us to secure funding in the future. It is referenced on HAL-Inria as follows:
 
 ```

@@ -83,7 +83,8 @@ br_pocoll = @time continuation(
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
         # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-        printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+        m1,m2 = extrema(xtt[:,:])
+        printstyled(color=:red, "amp = ", m2-m1,"\n")
         printstyled(color=:green, "T = ", (state.x[end]),"\n")
         @show state.x[end]
         state.step < 15 && BK.cbMaxNorm(10.0)(state; k...)
