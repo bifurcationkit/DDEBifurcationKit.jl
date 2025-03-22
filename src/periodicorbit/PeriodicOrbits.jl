@@ -6,6 +6,7 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
                     δp = nothing,
                     ampfactor = 1,
                     usedeflation = false,
+                    override = true,
                     use_normal_form = true,
                     nev = length(BK.eigenvalsfrombif(br, ind_bif)),
                     kwargs...) where {Tkind, Tprob <: AbstractDDEBifurcationProblem}

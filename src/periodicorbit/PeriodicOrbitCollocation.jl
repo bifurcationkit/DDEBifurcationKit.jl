@@ -59,7 +59,7 @@ end
             tσ = tj + dtj * σ[l]
             udj = [interp(mod(tσ * period - d, period)) for d in delays]
             # for (ind, d) in enumerate(delays)
-            #     udj[ind] .= interp(mod(tσ*period - d, period))
+                # udj[ind] .= interp(mod(tσ*period - d, period))
             # end
             _po_coll_bc!(pb, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dtj, out[:, end])
 

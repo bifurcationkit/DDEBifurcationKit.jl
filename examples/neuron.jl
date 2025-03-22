@@ -95,7 +95,7 @@ br_pocoll = @time continuation(
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
         # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-        printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
+        # printstyled(color=:red, "amp = ", maximum(xtt.u[:,:],1),"\n")
         # @show state.x[end]
         # @show state.f[end]
         state.step < 6
@@ -110,7 +110,7 @@ plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
 # plot the periodic orbit
 plot(layout = 2)
 for ii = 1:10:110
-    solpo = BK.get_periodic_orbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, 1)
+    solpo = BK.get_periodic_orbit(br_pocoll, ii)
     plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
 end
 xlabel!("t / period", subplot = 1)

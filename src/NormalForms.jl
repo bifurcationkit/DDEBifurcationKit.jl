@@ -12,6 +12,7 @@ end
 function hopf_normal_form(prob::ConstantDDEBifProblem, 
                             pt::BK.Hopf, 
                             ls; 
+                            autodiff = false,
                             verbose::Bool = false)
     x0 = pt.x0
     p = pt.p
@@ -125,6 +126,7 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
                              lens = BK.getlens(br),
                              Teigvec = BK._getvectortype(br),
                              scaleζ = norm,
+                             autodiff = false,
                              detailed = false)
     # the kwargs detailed is only here to allow to extend BK.hopf_normal_form
     @assert br.specialpoint[ind_hopf].type == :hopf "The provided index does not refer to a Hopf Point"
@@ -174,5 +176,5 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
         (a = zero(Complex{eltype(bifpt.x)}), b = zero(Complex{eltype(bifpt.x)}) ),
         :SuperCritical
     )
-    return hopf_normal_form(prob, hopfpt, options.linsolver ; verbose)
+    return hopf_normal_form(prob, hopfpt, options.linsolver ; verbose, autodiff)
 end
