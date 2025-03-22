@@ -36,9 +36,9 @@ x0 = [0.01, 0.001]
 
 prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs))
 
-optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
+optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = true, normC = norminf)
+br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
 ```
 
 We then plot the branch

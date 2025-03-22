@@ -34,7 +34,7 @@ end
     ∂gj = BK.get_tmp(pb.cache.∂gj, u) #zeros(𝒯, n, m)
     uj  = zeros(Ty, n, m+1)
 
-    # get interpolator which allows to get result(t)
+    # get P.O. interpolation which allows to get result(t)
     interp = BK.POSolution(pb, result)
     delays = pb.prob_vf.delays(pars)
 

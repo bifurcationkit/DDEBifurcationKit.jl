@@ -47,23 +47,16 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
         normC = norminf)
 
 probpo = PeriodicOrbitOCollProblem(100, 3; N = 2, jacobian = BK.AutoDiffDense())
-# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
 br_pocoll = @time continuation(
         br, 1, opts_po_cont,
         # PeriodicOrbitOCollProblem(100, 4);
         probpo;
         # verbosity = 2,    plot = true,
         args_po...,
-        # ampfactor = 1/0.24391300209895822 * 0.1,
         ampfactor = 1.42,
         δp = 0.001,
         normC = norminf,
         callback_newton = (state; k...) -> begin
-            xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
-            # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-            printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
-            # @show state.x[end]
-            # @show state.f[end]
             state.step < 16
         end
         )

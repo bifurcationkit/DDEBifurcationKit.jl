@@ -226,7 +226,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         # ζ★ ./= dot(ζ, ζ★)
 
         hp0 = BK.Hopf(x, nothing, p1, ω, newpar, lens1, ζ, ζ★, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
-        hp = hopf_normal_form(probhopf.prob_vf, hp0, options_newton.linsolver, verbose = false)
+        hp = BK.hopf_normal_form(probhopf.prob_vf, hp0, options_newton.linsolver; verbose = false) 
 
         # lyapunov coefficient
         probhopf.l1 = hp.nf.b

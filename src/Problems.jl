@@ -162,6 +162,11 @@ function BK.jad(prob::ConstantDDEBifProblem, x, p)
     J
 end
 
+"""
+$(SIGNATURES)
+
+Evaluate ∑ᵢ exp(-λᵢτᵢ)xᵢ
+"""
 function expθ(J::JacobianDDE, x, λ::T) where T
     buffer = [one(T) * x]
     for τ in J.delays
@@ -170,6 +175,12 @@ function expθ(J::JacobianDDE, x, λ::T) where T
     VectorOfArray(buffer)
 end
 
+"""
+$(SIGNATURES)
+
+Evaluate Δ(λ)⋅v where
+    Δ(λ) = λI - J₀ - exp(-λτ)J₁
+"""
 function Δ(prob::AbstractDDEBifurcationProblem, x, p, v, λ)
     J = BK.jacobian(prob, x, p)
     Δ(J, v, λ)
@@ -193,6 +204,11 @@ function A(J::JacobianDDE, v, λ)
     res
 end
 
+"""
+$(SIGNATURES)
+
+Evaluate Δ'(λ)⋅v
+"""
 function Δ(::Val{:der}, J::JacobianDDE, v, λ)
     res = Complex.(v)
     for (ind, A) in pairs(J.Jd)

@@ -9,10 +9,10 @@ function BK.get_normal_form1d(prob::ConstantDDEBifProblem,
     BK.get_normal_form1d(prob_ode, br_ode, ind_bif; kwargs_nf...)
 end
 
-function hopf_normal_form(prob::ConstantDDEBifProblem, 
+function BK.hopf_normal_form(prob::ConstantDDEBifProblem, 
                             pt::BK.Hopf, 
-                            ls; 
-                            autodiff = false,
+                            ls::BifurcationKit.AbstractLinearSolver; # for dispatch from BK 
+                            autodiff = true,
                             verbose::Bool = false)
     x0 = pt.x0
     p = pt.p
@@ -24,16 +24,16 @@ function hopf_normal_form(prob::ConstantDDEBifProblem,
 
     # jacobian at the bifurcation point
     L = BK.jacobian(prob, x0, parbif)
-    Δ0 = Δ(L, 0λ0)
+    Δ0  = Δ(L, 0λ0)
     Δ2ω = Δ(L, 2λ0)
 
     ζ = pt.ζ
     cζ = conj.(pt.ζ)
-    ζstar = copy(pt.ζ★)
-    ζstar ./= conj(dot(ζstar, Δ(Val(:der), L, ζ, λ0)))
+    ζ★ = copy(pt.ζ★)
+    ζ★ ./= conj(dot(ζ★, Δ(Val(:der), L, ζ, λ0)))
     # test the normalisation
-    if ~isapprox(dot(ζstar, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-2)
-        @warn "We found instead $(dot(ζstar, Δ(Val(:der), L, ζ, λ0)))"
+    if ~isapprox(dot(ζ★, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-3)
+        @warn "We found instead $(dot(ζ★, Δ(Val(:der), L, ζ, λ0)))"
     end
 
     x0c = VectorOfArray([copy(x0) for _ in 1:length(prob.delays0)+1])
@@ -46,33 +46,42 @@ function hopf_normal_form(prob::ConstantDDEBifProblem,
     R3 = BK.TrilinearMap((dx1, dx2, dx3) -> BK.d3F(prob, x0c, parbif, dx1, dx2, dx3) ./6 )
 
     # −LΨ001 = R01
-    R01 = (BK.residual(prob, x0, set(parbif, lens, p + δ)) .- 
-           BK.residual(prob, x0, set(parbif, lens, p - δ))) ./ (2δ)
-    Ψ001 = Complex.(expθ(L, ls(Δ0, -R01)[1], 0))
+    if autodiff
+        R01 = ForwardDiff.derivative(z -> BK.residual(prob, x0, set(parbif, lens, z)), p)
+    else
+        R01 = (BK.residual(prob, x0, set(parbif, lens, p + δ)) .- 
+               BK.residual(prob, x0, set(parbif, lens, p - δ))) ./ (2δ)
+    end
+    Ψ001, cv, it = ls(Δ0, -R01)
+    ~cv && @debug "[Hopf Ψ001] Linear solver for J did not converge. it = $it"
+    Ψ001θ = Complex.(expθ(L, Ψ001, 0))
 
     # (2iω−L)Ψ200 = R20(ζ,ζ)
     R20 = R2(ζθ, ζθ)
-    Ψ200 = expθ(L, ls(Δ2ω, R20)[1], 2λ0)
+    Ψ200, cv, it = ls(Δ2ω, R20)
+    ~cv && @debug "[Hopf Ψ200] Linear solver for J did not converge. it = $it"
+    Ψ200θ = expθ(L, Ψ200, 2λ0)
     # @assert Ψ200 ≈ (Complex(0, 2ω)*I - L) \ R20
 
-    # −LΨ110 = 2R20(ζ,cζ).
+    # −LΨ110 = 2R20(ζ,cζ)
     R20 = 2 .* R2(ζθ, ζθc)
-    Ψ110 = Complex.(expθ(L, ls(Δ0, -R20)[1], 0))
+    Ψ110, cv, it = ls(Δ0, R20)
+    ~cv && @debug "[Hopf Ψ110] Linear solver for J did not converge. it = $it"
+    Ψ110θ = Complex.(expθ(L, Ψ110, 0))
 
     # a = ⟨R11(ζ) + 2R20(ζ,Ψ001), ζ∗⟩
     _Jp = BK.jacobian(prob, x0, set(parbif, lens, p + δ))
     _Jm = BK.jacobian(prob, x0, set(parbif, lens, p - δ))
-    av = (A(_Jp, ζ, λ0) .- A(_Jm,  ζ, λ0)) ./ (2δ)
-    av .+= 2 .* R2(ζθ, Ψ001)
-    a = dot(ζstar, av)
+    av = (A(_Jp, ζ, λ0) .- A(_Jm, ζ, λ0)) ./ (2δ)
+    av .+= 2 .* R2(ζθ, Ψ001θ)
+    a = dot(ζ★, av)
 
     # b = ⟨2R20(ζ,Ψ110) + 2R20(cζ,Ψ200) + 3R30(ζ,ζ,cζ), ζ∗⟩)
-    bv = 2 .* R2(ζθ, Ψ110) .+ 2 .* R2(ζθc, Ψ200) .+ 3 .* R3(ζθ, ζθ, ζθc)
-    b = dot(ζstar, bv)
+    bv = 2 .* R2(ζθ, Ψ110θ) .+ 2 .* R2(ζθc, Ψ200θ) .+ 3 .* R3(ζθ, ζθ, ζθc)
+    b = dot(ζ★, bv)
 
-    # @info "info" b real(b)/ω/2 parbif δ Ψ110 Ψ200 2λ0
+    # @error "info" b real(b)/ω/2 parbif δ Ψ110 Ψ200 2λ0
 
-    # return coefficients of the normal form
     verbose && println((a = a, b = b))
 
     # we set this type of normal form coefficients because the second order
@@ -84,21 +93,21 @@ function hopf_normal_form(prob::ConstantDDEBifProblem,
                     Ψ110 = zero(x0),
                     Ψ001 = zero(x0),
                     Ψ200 = zero(x0))
-    if real(a) * real(b) < 0
+    if real(b) < 0
         pt.type = :SuperCritical
-    elseif real(a) * real(b) > 0
+    elseif real(b) > 0
         pt.type = :SubCritical
     else
         pt.type = :Singular
     end
-    verbose && printstyled(color = :red, "--> Hopf bifurcation point is: ", pt.type, "\n")
+    verbose && printstyled(color = :red, "──▶ Hopf bifurcation point is: ", pt.type, "\n")
     return pt
 end
 
-function hopf_normal_form(prob::SDDDEBifProblem, 
+function BK.hopf_normal_form(prob::SDDDEBifProblem, 
                         pt::BK.Hopf, 
-                        ls;
-                        autodiff = false,
+                        ls::BifurcationKit.AbstractLinearSolver; # for dispatch from BK
+                        autodiff = true,
                         verbose::Bool = false)
     @error "Hopf normal form computation for SD-DDE is not implemented"
     a = Complex{eltype(pt.x0)}(1, 0)
@@ -108,14 +117,14 @@ function hopf_normal_form(prob::SDDDEBifProblem,
                     Ψ110 = zero(x0),
                     Ψ001 = zero(x0),
                     Ψ200 = zero(x0))
-    if real(a) * real(b) < 0
+    if real(b) < 0
         pt.type = :SuperCritical
-    elseif real(a) * real(b) > 0
+    elseif real(b) > 0
         pt.type = :SubCritical
     else
         pt.type = :Singular
     end
-    verbose && printstyled(color = :red,"--> Hopf bifurcation point is: ", pt.type, "\n")
+    verbose && printstyled(color = :red,"──▶ Hopf bifurcation point is: ", pt.type, "\n")
     return pt
 end
 
@@ -127,11 +136,11 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
                              lens = BK.getlens(br),
                              Teigvec = BK._getvectortype(br),
                              scaleζ = norm,
-                             autodiff = false,
+                             autodiff = true,
                              detailed = false)
     # the kwargs detailed is only here to allow to extend BK.hopf_normal_form
     @assert br.specialpoint[ind_hopf].type == :hopf "The provided index does not refer to a Hopf Point"
-    verbose && println("#"^53*"\n--> Hopf Normal form computation")
+    verbose && println("#"^53*"\n──▶ Hopf Normal form computation")
 
     options = br.contparams.newton_options
 
@@ -142,6 +151,7 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
     # eigenvalue
     λ = eigRes[bifpt.idx].eigenvals[bifpt.ind_ev]
     ω = imag(λ)
+    λ0 = Complex(0, ω)
 
     # parameter for vector field
     p = bifpt.param
@@ -161,21 +171,21 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
 
     # left eigen-elements
     _Jt = BK.has_adjoint(prob) ? BK.jad(prob, convert(Teigvec, bifpt.x), parbif) : adjoint(L)
-    ζstar, λstar = BK.get_adjoint_basis(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = verbose)
+    ζ★, λ★ = BK.get_adjoint_basis(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = verbose)
 
-    # check that λstar ≈ conj(λ)
-    abs(λ + λstar) > 1e-2 && @warn "We did not find the left eigenvalue for the Hopf point to be very close to the imaginary part:\nλ ≈ $λ,\nλstar ≈ $λstar?\n You can perhaps increase the number of computed eigenvalues, the number is nev = $nev"
+    # check that λ★ ≈ conj(λ)
+    abs(λ + λ★) > 1e-2 && @warn "We did not find the left eigenvalue for the Hopf point to be very close to the imaginary part:\nλ ≈ $λ,\nλ★ ≈ $λ★?\n You can perhaps increase the number of computed eigenvalues, the number is nev = $nev"
 
     # normalise left eigenvector
-    ζstar ./= dot(ζ, ζstar)
-    @assert dot(ζ, ζstar) ≈ 1
+    ζ★ ./= dot(ζ, ζ★)
+    @assert dot(ζ, ζ★) ≈ 1
 
     hopfpt = BK.Hopf(bifpt.x, bifpt.τ, bifpt.param,
         ω,
         parbif, lens,
-        ζ, ζstar,
+        ζ, ζ★,
         (a = zero(Complex{eltype(bifpt.x)}), b = zero(Complex{eltype(bifpt.x)}) ),
         :SuperCritical
     )
-    return hopf_normal_form(prob, hopfpt, options.linsolver ; verbose, autodiff)
+    return BK.hopf_normal_form(prob, hopfpt, options.linsolver ; verbose, autodiff)
 end
