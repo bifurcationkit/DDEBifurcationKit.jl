@@ -97,7 +97,8 @@ end
 
 function hopf_normal_form(prob::SDDDEBifProblem, 
                         pt::BK.Hopf, 
-                        ls; 
+                        ls;
+                        autodiff = false,
                         verbose::Bool = false)
     @error "Hopf normal form computation for SD-DDE is not implemented"
     a = Complex{eltype(pt.x0)}(1, 0)
