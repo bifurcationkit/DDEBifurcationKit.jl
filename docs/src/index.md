@@ -4,31 +4,16 @@ This Julia package aims at performing **automatic bifurcation analysis** of poss
 
 It builds upon [BifurcationKit.jl](https://bifurcationkit.github.io/BifurcationKitDocs.jl) with version > 0.2 to perform continuation and numerical bifurcation analysis.
 
-## Installation
+## 📦 Installation
 
 Assuming that you already have Julia correctly installed, it suffices to import DDEBifurcationKit.jl in the standard way:
 
 `import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")`
 
-## Citing this work
-If you use this package for your work, we ask that you **cite** the following paper!! Open source development strongly depends on this. It is referenced on HAL-Inria as follows:
+## 📚 Citing this work
+If you use this package for your work, we ask that you **cite** the following paper!! Open source development strongly depends on this. It is referenced on [HAL-Inria](https://hal.archives-ouvertes.fr/hal-02902346) with *bibtex* entry [CITATION.bib](https://github.com/bifurcationkit/BifurcationKit.jl/blob/master/CITATION.bib).
 
-```
-@misc{veltz:hal-02902346,
-  TITLE = {{BifurcationKit.jl}},
-  AUTHOR = {Veltz, Romain},
-  URL = {https://hal.archives-ouvertes.fr/hal-02902346},
-  INSTITUTION = {{Inria Sophia-Antipolis}},
-  YEAR = {2020},
-  MONTH = Jul,
-  KEYWORDS = {pseudo-arclength-continuation ; periodic-orbits ; floquet ; gpu ; bifurcation-diagram ; deflation ; newton-krylov},
-  PDF = {https://hal.archives-ouvertes.fr/hal-02902346/file/354c9fb0d148262405609eed2cb7927818706f1f.tar.gz},
-  HAL_ID = {hal-02902346},
-  HAL_VERSION = {v1},
-}
-```
-
-## Other softwares
+## 🧑‍💻 Other softwares
 
 There are several good softwares already available.
 
@@ -40,7 +25,7 @@ In Julia, the present package seems to be the only one.
 
 ## A word on performance
 
-The examples which follow have not **all** been written with the goal of performance but rather simplicity.
+The examples which follow have not **all** been written with the goal of performance but rather simplicity (for now).
 
 ## Main features
 
