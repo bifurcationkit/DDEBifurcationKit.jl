@@ -20,10 +20,7 @@ delaysF(par) = [1.]
 # discretisation
 Nx = 200; Lx = pi/2;
 X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
-
-# boundary condition
-Q = Neumann0BC(X[2]-X[1])
-Δ = sparse(CenteredDifference(2, 2, X[2]-X[1], Nx) * Q)[1]
+Δ = spdiagm(0 => -2ones(Nx), 1 => ones(Nx-1), -1 => ones(Nx-1) ) / h^2; Δ[1,1]=Δ[1,end]
 
 pars = (a = 0.5, d = 1, τ = 1.0, Δ = Δ, N = Nx)
 x0 = zeros(Nx)
@@ -31,7 +28,7 @@ x0 = zeros(Nx)
 prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 10., p_min = 0., newtonOptions = optn, ds = 0.01, detectBifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 
 plot(br)

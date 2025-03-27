@@ -17,15 +17,11 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
     cb = get(kwargs, :callback_newton, BK.cb_default)
 
     hopfpt = BK.hopf_normal_form(br.prob, br, ind_bif; nev, verbose, detailed = use_normal_form)
-    # @error "Careful here"
-    # @reset hopfpt.nf.a = 1.
 
     # compute predictor for point on new branch
     ds = isnothing(δp) ? _contParams.ds : δp
-    Ty = typeof(ds)
-    pred = predictor(hopfpt, ds; verbose, ampfactor = Ty(ampfactor))
-    @error "Careful here"
-    @reset pred.p = br.specialpoint[ind_bif].param + δp
+    𝒯 = typeof(ds)
+    pred = predictor(hopfpt, ds; verbose, ampfactor = 𝒯(ampfactor))
 
     # we compute a phase so that the constraint equation
     # < u(0) − u_hopf, ψ > is satisfied, i.e. equal to zero.
@@ -40,12 +36,12 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
             "\n├─── Hopf param  p0 = ", br.specialpoint[ind_bif].param,
             "\n├─── new param    p = ", pred.p, ", p - p0 = ", pred.p - br.specialpoint[ind_bif].param,
             "\n├─── amplitude p.o. = ", pred.amp,
+            "\n├─── phase ϕ        = ", ϕ / pi, "⋅π",
             "\n├─── period       T = ", pred.period,
             "\n├─ Method = \n", probPO, "\n")
-    verbose && printstyled(color = :green, "├─── phase ϕ        = ", ϕ / pi, "⋅π\n")
 
     M = BK.get_mesh_size(probPO)
-    orbitguess_a = [pred.orbit(t - ϕ) for t in LinRange(0, 2pi, M + 1)[1:M]]
+    orbitguess_a = [pred.orbit(t - ϕ) for t in LinRange{𝒯, Int}(0, 2pi, M + 1)[1:M]]
     # TODO THIS HAS BEEN ADDED FOR BETTER INITIAL GUESS
     orbitguess_a[M] .= orbitguess_a[1]
 
