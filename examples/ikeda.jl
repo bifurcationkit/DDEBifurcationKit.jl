@@ -30,7 +30,7 @@ opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01,
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
 plot(br)
 
-BK.get_normal_form(br, 1) # l1= -0.0591623057, b = 0.09293196762669392
+BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 ################################################################################
 # computation periodic orbit
 
@@ -54,7 +54,6 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = PeriodicOrbitTrapProblem(M = 100, jacobian = :DenseAD, N = 1)
 probpo = PeriodicOrbitOCollProblem(90, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 1, opts_po_cont,

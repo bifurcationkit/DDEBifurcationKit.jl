@@ -76,13 +76,12 @@ br_pocoll = @time continuation(
     probpo;
     alg = PALC(tangent = Bordered()),
     # regular continuation options
-    verbosity = 2,    plot = true,
+    verbosity = 2, plot = true,
     args_po...,
-    ampfactor = 1/0.467829783456199 * 0.1,
+    ampfactor = 0.2,
     δp = 0.01,
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
-        # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
         m1,m2 = extrema(xtt[:,:])
         printstyled(color=:red, "amp = ", m2-m1,"\n")
         printstyled(color=:green, "T = ", (state.x[end]),"\n")

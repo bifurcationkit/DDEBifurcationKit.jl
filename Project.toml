@@ -1,7 +1,7 @@
 name = "DDEBifurcationKit"
 uuid = "954e4062-bdb8-4e3f-9eee-d47105dd3e65"
 authors = ["Romain Veltz <romain.veltz@inria.fr>"]
-version = "0.0.3"
+version = "0.0.4"
 
 [deps]
 BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
@@ -16,7 +16,7 @@ Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 
 
 [compat]
-BifurcationKit = "^0.4.8"
+BifurcationKit = "^0.4.10"
 DocStringExtensions = "^0.9"
 ForwardDiff = "^0.10"
 NonlinearEigenproblems = "^1.0.1"

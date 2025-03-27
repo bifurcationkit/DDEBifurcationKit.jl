@@ -20,18 +20,18 @@ x0 = [0.01, 0.001]
 
 prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs); record_from_solution = (x,p; k...) -> (x1 = x[1], x2 = x[2]))
 
-optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
+optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 5., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
 
 plot(br)
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.a21); record_from_solution = prob.recordFromSolution)
-br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 4., n_inversion=8); verbosity = 0, plot = true, normC = norminf)
+br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 4., n_inversion=6); verbosity = 0, plot = true, normC = norminf)
 
 # @reset br2.contparams.newton_options.eigsolver.σ = 1e-5
 BK.get_normal_form(br2, 1)
-#Hopf l1 ≈ −0.0601.
+#Hopf l1 ≈ −0.3
 BK.get_normal_form(br2, 2)
 
 opts_pitch = ContinuationPar(br2.contparams, ds = 0.005, dsmax = 0.03, n_inversion = 4)
@@ -59,7 +59,7 @@ brhopf2 = continuation(br, 2, (@optic _.a21),
 plot(brhopf, brhopf2, legend = :top)
 ################################################################################
 # computation periodic orbit
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 20,
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 50,
     nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step=1, detect_fold = true)
 @reset opts_po_cont.newton_options.tol = 1e-8
 @reset opts_po_cont.newton_options.verbose = true
@@ -77,14 +77,14 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
         xtt = BK.get_periodic_orbit(p.prob, x, p.p)
         plot!(xtt.t, xtt[1,:]; label = "V1", k...)
         plot!(xtt.t, xtt[2,:]; label = "V2", k...)
-        plot!(br2; subplot = 1, putspecialptlegend = false)
+        plot!(br; subplot = 1, putspecialptlegend = false)
         end,
     normC = norminf)
 
 probpo = PeriodicOrbitOCollProblem(50, 3; N = 2, jacobian = BK.AutoDiffDense())
 # probpo = PeriodicOrbitTrapProblem(M = 150, N = 2; jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
-    br2, 1, opts_po_cont,
+    br, 2, opts_po_cont,
     probpo;
     alg = PALC(tangent = Bordered()),
     verbosity = 2,    plot = true,

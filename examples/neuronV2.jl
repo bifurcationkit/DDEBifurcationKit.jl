@@ -103,8 +103,9 @@ br_pocoll = @time continuation(
     plot = true,
     args_po...,
     # ampfactor = 1/0.24391300209895822 * 0.1,
-    ampfactor = 1.42,
+    ampfactor = 20,
     δp = 0.001,
+    override = true,
     normC = norminf,
     # eigsolver = BK.FloquetCollGEV(DefaultEig(), 602, 2),
     callback_newton = (state; k...) -> begin
