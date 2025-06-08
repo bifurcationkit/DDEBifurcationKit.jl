@@ -116,6 +116,8 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                                  δ)
 end
 
+BK.update!(prob::ConstantDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
+
 struct JacobianDDE{Tp,T1,T2,T3,Td}
     prob::Tp
     Jall::T1
@@ -345,6 +347,8 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                            save_solution,
                            δ)
 end
+
+BK.update!(prob::SDDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
 
 function Base.show(io::IO, prob::SDDDEBifProblem; prefix = "")
     print(io, prefix * "┌─ State-dependent delays Bifurcation Problem with uType ")

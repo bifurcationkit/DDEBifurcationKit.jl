@@ -240,8 +240,8 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
     # the following allows to append information specific to the codim 2 continuation to the user data
     _printsol = get(kwargs, :record_from_solution, nothing)
     _printsol2 = isnothing(_printsol) ?
-        (u, p; kw...) -> (; zip(lenses, (getP(u, hopfPb)[1], p))..., ω = getP(u, hopfPb)[2], l1 = hopfPb.l1, BT = hopfPb.BT, GH = hopfPb.GH, BK.namedprintsol(BK.record_from_solution(prob_vf)(getVec(u, hopfPb), p; kw...))...) :
-        (u, p; kw...) -> (; BK.namedprintsol(_printsol(getVec(u, hopfPb), p; kw...))..., zip(lenses, (getP(u, hopfPb)[1], p))..., ω = getP(u, hopfPb)[2], l1 = hopfPb.l1, BT = hopfPb.BT, GH = hopfPb.GH)
+        (u, p; kw...) -> (; zip(lenses, (getP(u, hopfPb)[1], p))..., ω = getP(u, hopfPb)[2], l1 = hopfPb.l1, BT = hopfPb.BT, GH = hopfPb.GH, BK._namedrecordfromsol(BK.record_from_solution(prob_vf)(getVec(u, hopfPb), p; kw...))...) :
+        (u, p; kw...) -> (; BK._namedrecordfromsol(_printsol(getVec(u, hopfPb), p; kw...))..., zip(lenses, (getP(u, hopfPb)[1], p))..., ω = getP(u, hopfPb)[2], l1 = hopfPb.l1, BT = hopfPb.BT, GH = hopfPb.GH)
 
     prob_h = re_make(prob_h, record_from_solution = _printsol2)
 
@@ -283,7 +283,7 @@ function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
                         start_with_eigen = false,
                         normC = norm,
                         kwargs...)
-    hopfpointguess = HopfPoint(br, ind_hopf)
+    hopfpointguess = BK.hopf_point(br, ind_hopf)
     ω = hopfpointguess.p[2]
     bifpt = br.specialpoint[ind_hopf]
 
