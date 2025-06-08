@@ -74,7 +74,7 @@ brfold = continuation(br2, 3, (@optic _.a),
             setproperties(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.6,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
             verbosity = 0, plot = false,
             detect_codim2_bifurcation = 1,
-            jacobian_ma = :autodiff,
+            jacobian_ma = BK.AutoDiff(),
             bothside = false,
             start_with_eigen = true)
 

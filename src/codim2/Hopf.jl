@@ -79,7 +79,7 @@ function BK.newton_hopf(br::BK.AbstractResult{Tk, Tp},
                         nev = br.contparams.nev,
                         start_with_eigen = false,
                         kwargs...) where {Tk, Tp <: AbstractDDEBifurcationProblem}
-    hopfpointguess = HopfPoint(br, ind_hopf)
+    hopfpointguess = BK.hopf_point(br, ind_hopf)
     ω = hopfpointguess.p[2]
     bifpt = br.specialpoint[ind_hopf]
     options.verbose && println("--> Newton Hopf, the eigenvalue considered here is ", br.eig[bifpt.idx].eigenvals[bifpt.ind_ev])
