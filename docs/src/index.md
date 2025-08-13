@@ -6,7 +6,7 @@ It builds upon [BifurcationKit.jl](https://bifurcationkit.github.io/BifurcationK
 
 ## 📦 Installation
 
-Assuming that you already have Julia correctly installed, it suffices to import DDEBifurcationKit.jl in the standard way:
+Assuming that you already have Julia correctly installed, it suffices to import `DDEBifurcationKit.jl` in the standard way:
 
 `import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")`
 
@@ -17,7 +17,7 @@ If you use this package for your work, we ask that you **cite** the following pa
 
 There are several good softwares already available.
 
-- For continuation in small dimension, most softwares are listed on [DSWeb](https://ddebiftool.sourceforge.net). One can mention the widely used [DDE-BIFTOOL](http://www.math.pitt.edu/~bard/xpp/xpp.html), [Knut](https://rs1909.github.io/knut/). All these are very reliable and some address high codimension bifurcations.
+- For continuation in small dimension, most softwares are listed on [DSWeb](https://dsweb.siam.org/Software/PID/1956/SearchID/1964/cfs/True/cblcid_96_84/84). One can mention the widely used [DDE-BIFTOOL](https://github.com/DDE-BifTool/DDE-Biftool), [Knut](https://rs1909.github.io/knut/). All these are very reliable and some address high codimension bifurcations.
 
 - For large scale problems, there is very little.
 
@@ -36,15 +36,22 @@ The examples which follow have not **all** been written with the goal of perform
 - Continuation methods: PALC, Moore-Penrose, etc. See [methods](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/IntroContinuation/).
 - Bifurcation points are located using a bisection algorithm
 - detection of Branch, Fold, Hopf bifurcation point of stationary solutions and computation of their normal form.
-- <s>Automatic branch switching at branch points (whatever the dimension of the kernel)</s>
+```@raw html
+<ul> 
+<li><del>Automatic branch switching at branch points (whatever the dimension of the kernel)</del></li></ul>
+```
 - Automatic branch switching at simple Hopf points to periodic orbits
 - **Automatic bifurcation diagram computation of equilibria**
 - Fold / Hopf continuation.
-- detection all codim 2 bifurcations of equilibria and <s>computation of the normal forms of Bogdanov-Takens, Bautin and Cusp</s>
-- <s>Branching from Bogdanov-Takens points to Fold / Hopf curve</s>
-- Periodic orbit computation and continuation using <s>Shooting, Finite Differences or </s>Orthogonal Collocation.
-- <s>detection of Branch, Fold, Neimark-Sacker, Period Doubling bifurcation point of periodic orbits.</s>
-- <s>Continuation of Fold of periodic orbits</s>
+```@raw html
+<ul> 
+<li>detection all codim 2 bifurcations of equilibria and <del>computation of the normal forms of Bogdanov-Takens, Bautin and Cusp</del></li>
+<li><del>Branching from Bogdanov-Takens points to Fold / Hopf curve</del></li>
+<li>Periodic orbit computation and continuation using <del>Shooting, Finite Differences or </del>Orthogonal Collocation.</li>
+<li><del>detection of Branch, Fold, Neimark-Sacker, Period Doubling bifurcation point of periodic orbits.</del></li>
+<li><del>Continuation of Fold of periodic orbits</del></li>
+</ul>
+```
 
 Custom state means, we can use something else than `AbstractArray`, for example your own `struct`.
 

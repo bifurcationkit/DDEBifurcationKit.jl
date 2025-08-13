@@ -48,18 +48,7 @@ continuation(br::BifurcationKit.AbstractBranchResult, ind_bif::Int, _contParams:
 getperiod
 ```
 
-```@docs
-getamplitude
-```
-
-```@docs
-getmaximum
-```
-
 ## Misc.
-```@docs
-guess_from_hopf(br, ind_hopf, eigsolver::AbstractEigenSolver, M, amplitude; phase = 0)
-```
 
 ```@docs
 get_normal_form

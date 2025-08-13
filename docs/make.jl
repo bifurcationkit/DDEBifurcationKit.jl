@@ -12,7 +12,8 @@ using Documenter, DDEBifurcationKit, BifurcationKit
 ENV["JULIA_DEBUG"] = Documenter
 
 makedocs(
-	modules = [DDEBifurcationKit],
+	modules = [DDEBifurcationKit, BifurcationKit],
+	# pagesonly = true,
 	doctest = false,
 	sitename = "Bifurcation Analysis of DDEs in Julia",
 	format = Documenter.HTML(collapselevel = 1, assets = ["assets/indigo.css"]),
