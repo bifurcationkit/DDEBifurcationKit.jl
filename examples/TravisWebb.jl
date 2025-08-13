@@ -52,7 +52,7 @@ optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 6)
 br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 ################################################################################
-using  DifferentialEquations
+using DifferentialEquations
 
 function TW_DE(du,u,h,p,t)
 	@unpack a,Δ = p

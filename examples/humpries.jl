@@ -95,7 +95,7 @@ plot(br);plot!(br_pocoll, plotfold=false, ylabel = "amplitude")
 using DifferentialEquations
 
 function humpriesVF_DE2(x,h,p,t)
-    @unpack κ1,κ2,γ,a1,a2,c = p
+    (;κ1,κ2,γ,a1,a2,c) = p
    -γ * x - κ1 * h(p, t-(a1 + c * x)) - κ2 * h(p, t-(a2 + c * x))
 end
 

@@ -72,7 +72,7 @@ br_pocoll = @time continuation(
 
 #####
 ################################################################################
-using  DifferentialEquations
+using DifferentialEquations
 
 function delayedlog_DE(du,x,h,p,t)
     @unpack λ = p
