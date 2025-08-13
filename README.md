@@ -25,27 +25,3 @@ import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")
 
 ## 📚 Support and citation
 If you use `BifurcationKit.jl` in your work, we ask that you cite the following paper on [HAL-Inria](https://hal.archives-ouvertes.fr/hal-02902346) with *bibtex* entry [CITATION.bib](https://github.com/bifurcationkit/BifurcationKit.jl/blob/master/CITATION.bib). Open source development as part of academic research strongly depends on this. Please also consider starring this repository if you like our work, this will help us to secure funding in the future.
-
-## Main features
-
-Type of delay: Constant (C), state-dependent (SD), nested (N)
-
-|Features| delay type | Matrix Free|Custom state| [Tutorial](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/tutorials/tutorials/) | GPU |
-|---|---|---|---|---|---|
-| (Deflated) Krylov-Newton| C/SD |  Yes | Yes| | |
-| Continuation PALC (Natural, Secant, Tangent, Polynomial) | C/SD| | | | |
-| Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | |
-| Fold Point continuation |C/SD | Y |  |  |
-| Hopf Point continuation | C/SD |  | `AbstractArray` | | |
-| ~~Bogdanov-Takens Point newton~~ | C/SD | Y | `AbstractArray` | | |
-| Branch point / Fold / Hopf normal form | C/SD | Y|  | |  | |
-| Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  
-| <span style="color:red">**Automatic bifurcation diagram computation of equilibria**</span> | C/SD| Y| `AbstractArray` |  | |
-| ~~Periodic Orbit (Trapezoid) Newton / continuation~~ | | | `AbstractVector` |  | |
-| Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| ~~Periodic Orbit (Parallel Poincaré / Standard Shooting) Newton / continuation~~ | | | `AbstractArray` |   | |
-| ~~Fold, Neimark-Sacker, Period doubling detection~~ | | | `AbstractVector` |   | |
-| ~~Continuation of Fold of periodic orbits~~ | | | `AbstractVector` |  |  |
-| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD| Y|  |  |
-|~~Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf normal forms~~ | | Y|  |  |
-| ~~Branching from Bogdanov-Takens points to Fold / Hopf curve~~ |  | |  `AbstractVector` | |  |
