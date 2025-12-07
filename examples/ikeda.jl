@@ -20,7 +20,7 @@ end
 
 delaysF(par) = [1.0]
 
-pars = (Λ=0.1,b=0.)
+pars = (Λ = 0.1, b = 0.)
 x0 = [-sqrt(pi)]
 
 prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@optic _.Λ), record_from_solution=(x,p;k...)-> (x=x[1], _x=1))

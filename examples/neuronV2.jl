@@ -46,8 +46,8 @@ brhopf2 = continuation(br, 2, (@optic _.c),
          bothside = true,
          start_with_eigen = true)
 
-plot(brhopf,   vars = (:a, :c), xlims = (0, 0.7), ylims = (0,1))
-plot!(brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1,1))
+plot(brhopf,   vars = (:a, :c), xlims = (0, 0.7), ylims = (0, 1))
+plot!(brhopf2, vars = (:a, :c), xlims = (-0, 0.7), ylims = (-0.1, 1))
 
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@optic _.c))

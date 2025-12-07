@@ -47,8 +47,8 @@ end
     rg = UnitRange(1, m+1)
     for j in 1:Ntst
         uj .= u[:, rg]
-        mul!(gj, uj, L)
-        mul!(∂gj, uj, ∂L)
+        LA.mul!(gj, uj, L)
+        LA.mul!(∂gj, uj, ∂L)
 
         # get the delayed states
         tj = mesh[j]
@@ -106,8 +106,8 @@ end
     rg = UnitRange(1, m+1)
     for j in 1:Ntst
         uj .= u[:, rg]
-        mul!(gj, uj, L)
-        mul!(∂gj, uj, ∂L)
+        LA.mul!(gj, uj, L)
+        LA.mul!(∂gj, uj, ∂L)
 
         # get the delayed states
         tj = mesh[j]

@@ -1,6 +1,7 @@
 module DDEBifurcationKit
     using BifurcationKit, DocStringExtensions, RecursiveArrayTools
-    using ForwardDiff, Parameters, LinearAlgebra
+    using ForwardDiff, Parameters
+    import LinearAlgebra as LA
     using NonlinearEigenproblems
     const BK = BifurcationKit
 

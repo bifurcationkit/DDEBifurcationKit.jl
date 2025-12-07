@@ -80,8 +80,8 @@ function delayedlog_DE(du,x,h,p,t)
 end
 
 h(p, t) = -1*zeros(1) .+ 1. *cos(t/4)
-    prob_de = DDEProblem(delayedlog_DE,h(pars, 0),h,(0.,1320.),setproperties(pars, λ = pi/2 + .121); constant_lags=delaysF(pars))
-    alg = MethodOfSteps(BS3())
-    sol = solve(prob_de,alg; progress = true)
-    plot(plot(sol, xlims = (sol.t[end]-100,sol.t[end])), plot(sol),title = "p=$(sol.prob.p.λ)")
+prob_de = DDEProblem(delayedlog_DE,h(pars, 0),h,(0.,1320.),setproperties(pars, λ = pi/2 + .121); constant_lags=delaysF(pars))
+alg = MethodOfSteps(BS3())
+sol = solve(prob_de,alg; progress = true)
+plot(plot(sol, xlims = (sol.t[end]-100,sol.t[end])), plot(sol),title = "p=$(sol.prob.p.λ)")
 

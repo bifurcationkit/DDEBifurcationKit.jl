@@ -9,8 +9,8 @@ const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
 function TW(u, ud, p)
-   (;a,Δ) = p
-   (Δ*u) .+ u .- a .* ud[1] .* (1 .+ u)
+   (;a, Δ) = p
+   (Δ * u) .+ u .- a .* ud[1] .* (1 .+ u)
 end
 
 delaysF(par) = [1.]
@@ -21,7 +21,7 @@ X = -Lx .+ 2Lx/Nx*(0:Nx-1) |> collect
 
 # boundary condition
 h = 2Lx/Nx
-Δ = spdiagm(0 => -2ones(Nx), 1 => ones(Nx-1), -1 => ones(Nx-1) ) / h^2; Δ[1,1]=Δ
+Δ = spdiagm(0 => -2ones(Nx), 1 => ones(Nx-1), -1 => ones(Nx-1) ) / h^2; Δ[1,1] = Δ
 
 pars = (a = 0.5, τ = 1.0, Δ = Δ, N = Nx)
 x0 = zeros(Nx)

@@ -1,7 +1,23 @@
 function BK.get_normal_form1d(prob::ConstantDDEBifProblem, 
-                                br::ContResult, 
-                                ind_bif::Int; 
-                                kwargs_nf...)
+                                br::BK.AbstractBranchResult,
+                                ind_bif::Int,
+                                Teigvec::Type{𝒯eigvec} = BK._getvectortype(br);
+                                nev::Int = length(BK.eigenvalsfrombif(br, ind_bif)),
+                                verbose::Bool = false,
+                                lens = BK.getlens(br),
+                                tol_fold = 1e-3,
+                                scaleζ = LA.norm,
+
+                                ζ = nothing,
+                                ζ_ad = nothing,
+
+                                autodiff::Bool = true,
+                                detailed::Val{detailed_type} = Val(true),
+
+                                bls = BK.MatrixBLS(),
+                                ) where {𝒯eigvec, detailed_type}
+    # parameters for normal form
+    kwargs_nf = (;nev, verbose, lens, scaleζ)
     @warn "Computation of normal form based on a little hack ;)"
     Fode = (x,p) -> prob.VF.F(x, VectorOfArray([x for _ in eachindex(prob.delays0)]),p)
     prob_ode = BK.BifurcationProblem(Fode, prob.u0, prob.params, prob.lens; record_from_solution = prob.recordFromSolution)
@@ -11,7 +27,7 @@ end
 
 function BK.hopf_normal_form(prob::ConstantDDEBifProblem, 
                             pt::BK.Hopf, 
-                            ls::BifurcationKit.AbstractLinearSolver; # for dispatch from BK 
+                            ls::BK.AbstractLinearSolver; # for dispatch from BK 
                             autodiff = true,
                             verbose::Bool = false)
     x0 = pt.x0
@@ -30,9 +46,9 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     ζ = pt.ζ
     cζ = conj.(pt.ζ)
     ζ★ = copy(pt.ζ★)
-    ζ★ ./= conj(dot(ζ★, Δ(Val(:der), L, ζ, λ0)))
+    ζ★ ./= conj(LA.dot(ζ★, Δ(Val(:der), L, ζ, λ0)))
     # test the normalisation
-    if ~isapprox(dot(ζ★, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-3)
+    if ~isapprox(LA.dot(ζ★, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-3)
         @warn "We found instead $(dot(ζ★, Δ(Val(:der), L, ζ, λ0)))"
     end
 
@@ -74,11 +90,11 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     _Jm = BK.jacobian(prob, x0, set(parbif, lens, p - δ))
     av = (A(_Jp, ζ, λ0) .- A(_Jm, ζ, λ0)) ./ (2δ)
     av .+= 2 .* R2(ζθ, Ψ001θ)
-    a = dot(ζ★, av)
+    a = LA.dot(ζ★, av)
 
     # b = ⟨2R20(ζ,Ψ110) + 2R20(cζ,Ψ200) + 3R30(ζ,ζ,cζ), ζ∗⟩)
     bv = 2 .* R2(ζθ, Ψ110θ) .+ 2 .* R2(ζθc, Ψ200θ) .+ 3 .* R3(ζθ, ζθ, ζθc)
-    b = dot(ζ★, bv)
+    b = LA.dot(ζ★, bv)
 
     # @error "info" b real(b)/ω/2 parbif δ Ψ110 Ψ200 2λ0
 
@@ -106,7 +122,7 @@ end
 
 function BK.hopf_normal_form(prob::SDDDEBifProblem, 
                         pt::BK.Hopf, 
-                        ls::BifurcationKit.AbstractLinearSolver; # for dispatch from BK
+                        ls::BK.AbstractLinearSolver; # for dispatch from BK
                         autodiff = true,
                         verbose::Bool = false)
     @error "Hopf normal form computation for SD-DDE is not implemented"
@@ -130,14 +146,17 @@ end
 
 function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
                              br::BK.AbstractBranchResult, 
-                             ind_hopf::Int;
-                             nev = length(BK.eigenvalsfrombif(br, id_bif)),
+                             ind_hopf::Int,
+                             Teigvec::Type{𝒯eigvec} = BK._getvectortype(br);
+                             nev::Int = length(BK.eigenvalsfrombif(br, ind_hopf)),
                              verbose::Bool = false,
                              lens = BK.getlens(br),
-                             Teigvec = BK._getvectortype(br),
-                             scaleζ = norm,
                              autodiff = true,
-                             detailed = false)
+                             detailed::Val{detailed_type} = Val(true),
+                             start_with_eigen::Val{start_with_eigen_type} = Val(true),
+                             scaleζ = LA.norm,
+                             bls = BK.MatrixBLS(),
+                             bls_adjoint = bls) where {detailed_type, 𝒯eigvec, start_with_eigen_type}
     # the kwargs detailed is only here to allow to extend BK.hopf_normal_form
     @assert br.specialpoint[ind_hopf].type == :hopf "The provided index does not refer to a Hopf Point"
     verbose && println("#"^53*"\n──▶ Hopf Normal form computation")
@@ -170,15 +189,15 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
     ζ ./= scaleζ(ζ)
 
     # left eigen-elements
-    _Jt = BK.has_adjoint(prob) ? BK.jad(prob, convert(Teigvec, bifpt.x), parbif) : adjoint(L)
+    _Jt = BK.has_adjoint(prob) ? BK.jacobian_adjoint(prob, convert(Teigvec, bifpt.x), parbif) : adjoint(L)
     ζ★, λ★ = BK.get_adjoint_basis(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = verbose)
 
     # check that λ★ ≈ conj(λ)
     abs(λ + λ★) > 1e-2 && @warn "We did not find the left eigenvalue for the Hopf point to be very close to the imaginary part:\nλ ≈ $λ,\nλ★ ≈ $λ★?\n You can perhaps increase the number of computed eigenvalues, the number is nev = $nev"
 
     # normalise left eigenvector
-    ζ★ ./= dot(ζ, ζ★)
-    @assert dot(ζ, ζ★) ≈ 1
+    ζ★ ./= LA.dot(ζ, ζ★)
+    @assert LA.dot(ζ, ζ★) ≈ 1
 
     hopfpt = BK.Hopf(bifpt.x, bifpt.τ, bifpt.param,
         ω,

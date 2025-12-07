@@ -79,8 +79,8 @@ brhopf2 = continuation(br, 2, (@optic _.c),
          bothside = true,
          start_with_eigen = true)
 
-scene = plot(brhopf, vars = (:a, :c), xlims = (0,0.7), ylims = (0,1))
-plot!(scene, brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1,1))
+scene = plot(brhopf, vars = (:a, :c), xlims = (0,0.7), ylims = (0, 1))
+plot!(scene, brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1, 1))
 scene
 ```
 

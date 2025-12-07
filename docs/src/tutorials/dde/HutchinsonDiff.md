@@ -18,7 +18,7 @@ where $a>0, d>0$.
 We start by discretizing the above PDE based on finite differences.
 
 ```@example TUTHut
-using Revise, DDEBifurcationKit, Plots, SparseArrays
+using Revise, DDEBifurcationKit, Plots, SparseArrays, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 

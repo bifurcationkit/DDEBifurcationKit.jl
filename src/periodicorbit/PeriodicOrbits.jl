@@ -16,7 +16,7 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
 
     cb = get(kwargs, :callback_newton, BK.cb_default)
 
-    hopfpt = BK.hopf_normal_form(br.prob, br, ind_bif; nev, verbose, detailed = use_normal_form)
+    hopfpt = BK.hopf_normal_form(br.prob, br, ind_bif; nev, verbose, detailed = Val(use_normal_form))
 
     # compute predictor for point on new branch
     ds = isnothing(δp) ? _contParams.ds : δp
@@ -28,7 +28,7 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
     ζr = real.(hopfpt.ζ)
     ζi = imag.(hopfpt.ζ)
     # this phase is for POTrap problem constraint to be satisfied
-    ϕ = atan(dot(ζr, ζr), dot(ζi, ζr))
+    ϕ = atan(LA.dot(ζr, ζr), LA.dot(ζi, ζr))
 
     verbose && printstyled(color = :green, "#"^61*
             "\n┌─ Start branching from Hopf bif. point to periodic orbits.",

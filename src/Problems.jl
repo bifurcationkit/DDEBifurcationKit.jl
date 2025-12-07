@@ -73,7 +73,9 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 J = nothing,
                 Jᵗ = nothing,
                 d2F = nothing,
+                d2Fc = nothing,
                 d3F = nothing,
+                d3Fc = nothing,
                 issymmetric::Bool = false,
                 record_from_solution = BifurcationKit.record_sol_default,
                 plot_solution = BifurcationKit.plot_default,
@@ -85,7 +87,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
     @assert lens isa Int || lens isa BK.AllOpticTypes
     Fc = (xd, p) -> F(xd.u[1], xd.u[2:end], p)
     # J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
-    dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
+    dF = isnothing(dF) ? (x, p, dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
     d1Fad(x, p, dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
     if isnothing(d2F)
         d2F = (x, p, dx1, dx2) -> ForwardDiff.derivative(t -> d1Fad(x .+ t .* dx2, p, dx1), 0.)
@@ -116,6 +118,8 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                                  δ)
 end
 
+BK.dF(prob::ConstantDDEBifProblem, x,p, dx) = BK.dF(prob.VF, x, p, dx)
+
 BK.update!(prob::ConstantDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
 
 struct JacobianDDE{Tp,T1,T2,T3,Td}
@@ -133,7 +137,7 @@ end
 
 function BK.residual!(prob::ConstantDDEBifProblem, o, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
-    o .= prob.VF.F(x,xd,p)
+    o .= prob.VF.F(x, xd, p)
     o
 end
 
@@ -154,7 +158,7 @@ function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
     return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
 end
 
-function BK.jad(prob::ConstantDDEBifProblem, x, p)
+function BK.jacobian_adjoint(prob::ConstantDDEBifProblem, x, p)
     J = BK.jacobian(prob, x, p)
     J.Jall .= J.Jall'
     J.J0 .= J.J0'
@@ -190,18 +194,18 @@ end
 
 function Δ(J::JacobianDDE, v, λ)
     res = λ .* v
-    mul!(res, J.J0, v, -1, 1)
+    LA.mul!(res, J.J0, v, -1, 1)
     for (ind, A) in pairs(J.Jd)
-        mul!(res, A, v, -exp(-λ * J.delays[ind]), 1)
+        LA.mul!(res, A, v, -exp(-λ * J.delays[ind]), 1)
     end
     res
 end
 
 function A(J::JacobianDDE, v, λ)
     res = (0λ) .* v
-    mul!(res, J.J0, v, 1, 1)
+    LA.mul!(res, J.J0, v, 1, 1)
     for (ind, A) in pairs(J.Jd)
-        mul!(res, A, v, exp(-λ * J.delays[ind]), 1)
+        LA.mul!(res, A, v, exp(-λ * J.delays[ind]), 1)
     end
     res
 end
@@ -214,14 +218,14 @@ Evaluate Δ'(λ)⋅v
 function Δ(::Val{:der}, J::JacobianDDE, v, λ)
     res = Complex.(v)
     for (ind, A) in pairs(J.Jd)
-        mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
+        LA.mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
     end
     res
 end
 
 function Δ(J::JacobianDDE, λ)
     n = size(J.Jall, 1)
-    res = λ .* I(n) .- J.J0
+    res = λ .* LA.I(n) .- J.J0
     for (ind, A) in pairs(J.Jd)
         res .+= (-exp(-λ * J.delays[ind])) .* A
     end
@@ -379,7 +383,7 @@ function BK.jacobian(prob::SDDDEBifProblem, x, p)
     return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
 end
 
-function BK.jad(prob::SDDDEBifProblem, x, p)
+function BK.jacobian_adjoint(prob::SDDDEBifProblem, x, p)
     J = BK.jacobian(prob, x, p)
     J.Jall .= J.Jall'
     J.J0 .= J.J0'

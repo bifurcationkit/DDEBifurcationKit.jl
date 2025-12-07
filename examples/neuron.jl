@@ -1,4 +1,5 @@
-using Revise, DDEBifurcationKit, Parameters, Setfield, LinearAlgebra
+
+using Revise, DDEBifurcationKit
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -109,7 +110,7 @@ plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
 
 # plot the periodic orbit
 plot(layout = 2)
-for ii = 1:10:110
+for ii = 1:10:41
     solpo = BK.get_periodic_orbit(br_pocoll, ii)
     plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
 end

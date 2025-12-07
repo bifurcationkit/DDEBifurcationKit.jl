@@ -54,9 +54,9 @@ for op in (:HopfDDEProblem,)
         @inline BK.getdelta(pb::$op) = BK.getdelta(pb.prob_vf)
 
         # constructor
-        function $op(prob::AbstractDDEBifurcationProblem, a, b, linsolve::BK.AbstractLinearSolver, linbdsolver = BK.MatrixBLS(); usehessian = true, massmatrix = LinearAlgebra.I)
+        function $op(prob::AbstractDDEBifurcationProblem, a, b, linsolve::BK.AbstractLinearSolver, linbdsolver = BK.MatrixBLS(); usehessian = true, massmatrix = LA.I)
             # determine scalar type associated to vectors a and b
-            α = norm(a) # this is valid, see https://jutho.github.io/KrylovKit.jl/stable/#Package-features-and-alternatives-1
+            α = LA.norm(a) # this is valid, see https://jutho.github.io/KrylovKit.jl/stable/#Package-features-and-alternatives-1
             Ty = eltype(α)
             return $op(prob, a, b, 0*a,
                         complex(zero(Ty)),   # l1

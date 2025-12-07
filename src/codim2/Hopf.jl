@@ -12,7 +12,7 @@ function (hp::HopfDDEProblem)(x, vR, vI, p::T, ω::T, params) where T
     par = set(params, BK.getlens(hp), p)
     tmp = vR .+ 1im .* vI
     w = Δ(hp.prob_vf, x, par, tmp, Complex(zero(T), ω))
-    ps = dot(b, tmp)
+    ps = LA.dot(b, tmp)
     return BK.residual(hp.prob_vf, x, par), real(w), imag(w), [real(ps) - 1, imag(ps)]
 end
 
@@ -46,7 +46,7 @@ function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
                         par,
                         eigenvec, eigenvec_ad,
                         options::NewtonPar;
-                        normN = norm,
+                        normN = LA.norm,
                         bdlinsolver::BK.AbstractBorderedLinearSolver = MatrixBLS(),
                         usehessian = true,
                         kwargs...)
@@ -86,7 +86,7 @@ function BK.newton_hopf(br::BK.AbstractResult{Tk, Tp},
     @assert bifpt.idx == bifpt.step + 1 "Error, the bifurcation index does not refer to the correct step"
     ζ = geteigenvector(options.eigsolver, br.eig[bifpt.idx].eigenvecs, bifpt.ind_ev)
     ζ ./= normN(ζ)
-    ζad = LinearAlgebra.conj.(ζ)
+    ζad = LA.conj.(ζ)
 
     if start_with_eigen
         # computation of adjoint eigenvalue. Recall that b should be a null vector of J-iω
@@ -120,7 +120,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
                             jacobian_ma::Symbol = :autodiff,
                             compute_eigen_elements = false,
                             usehessian = true,
-                            massmatrix = LinearAlgebra.I,
+                            massmatrix = LA.I,
                             kwargs...)
     @assert lens1 != lens2 "Please choose 2 different parameters. You only passed $lens1"
     @assert lens1 == BK.getlens(prob_vf)
@@ -216,7 +216,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         # compute new ζstar
         # JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
 
-        JAd_at_xp = BK.has_adjoint(probhopf.prob_vf) ? BK.jad(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
+        JAd_at_xp = BK.has_adjoint(probhopf.prob_vf) ? BK.jacobian_adjoint(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
         ζ★, _ = BK.get_adjoint_basis(JAd_at_xp, conj(λ), BK.getcontparams(iter).newton_options.eigsolver.eigsolver)
         # ζ★ = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
 
@@ -281,7 +281,7 @@ function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
                         options_cont::ContinuationPar = br.contparams;
                         alg = br.alg,
                         start_with_eigen = false,
-                        normC = norm,
+                        normC = LA.norm,
                         kwargs...)
     hopfpointguess = BK.hopf_point(br, ind_hopf)
     ω = hopfpointguess.p[2]
@@ -307,10 +307,10 @@ function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
         L = BK.jacobian(prob, bifpt.x, parbif)
 
         # jacobian adjoint at bifurcation point
-        _Jt = ~BK.has_adjoint(prob) ? adjoint(L) : BK.jad(prob, bifpt.x, parbif)
+        _Jt = ~BK.has_adjoint(prob) ? adjoint(L) : BK.jacobian_adjoint(prob, bifpt.x, parbif)
 
         ζstar, λstar = BK.get_adjoint_basis(_Jt, conj(λ), br.contparams.newton_options.eigsolver; nev = br.contparams.nev, verbose = false)
-        ζad .= ζstar ./ dot(ζstar, ζ)
+        ζad .= ζstar ./ LA.dot(ζstar, ζ)
     end
 
     return BK.continuation_hopf(br.prob, alg,
