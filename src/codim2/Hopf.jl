@@ -73,7 +73,7 @@ end
 function BK.newton_hopf(br::BK.AbstractResult{Tk, Tp}, 
                         ind_hopf::Int;
                         prob::AbstractDDEBifurcationProblem = br.prob,
-                        normN = norm,
+                        normN = LA.norm,
                         options = br.contparams.newton_options,
                         verbose = true,
                         nev = br.contparams.nev,
