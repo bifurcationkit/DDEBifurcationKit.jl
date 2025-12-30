@@ -15,7 +15,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
                             wrapcoll,
                             u0,
                             par,
-                            nev = 2
+                            nev = 3
                         )
     coll = wrapcoll.prob
     n, m, Ntst = size(coll)
@@ -77,19 +77,21 @@ end
 
 function __floquet_coll(eig::FloquetColl,
                             wrapcoll,
-                            u0,
+                            u0::AbstractVector{𝒯},
                             par,
-                            nev = 2
-                        )
+                            nev = 3
+                        ) where {𝒯}
     coll = wrapcoll.prob
-    n, = size(coll)
+    n, m, Ntst = size(coll)
+    period = u0[end]
     # n = 0 # if we put this, we obtain the zero eigenvalue
     J = analytical_jacobian_dde_cst_floquetcoll(wrapcoll, u0, par)
+
     # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]
     Jdnz = vec(sum(isnonzero, J.Jd; dims = 1))
     a_left = findfirst(isnonzero, vec(Jdnz))
 
-    # remove the phase condition, periodicity condition and derivative wrt period
+    # remove the phase/periodicity condition and derivative wrt period
     B = @views J.J0[1:end-1-n, 1:end-1]
     A = @views J.Jd[1:end-1-n, a_left:end-1]
     @assert size(A, 1) == size(B, 1)
@@ -99,7 +101,7 @@ function __floquet_coll(eig::FloquetColl,
 
     if N <= Nₜ
         It = Itilde(N, Nₜ)
-        M = It * Mₜ
+        M = It * Mₜ # same as Mₜ[end-N+1:end, :]
     else
         It = Itilde(N - Nₜ, N)
         M = vcat(It, Mₜ)
@@ -107,7 +109,7 @@ function __floquet_coll(eig::FloquetColl,
 
     vals = LA.eigvals(M)
     logvals = log.(complex.(vals))
-    I = sortperm(logvals, by = real, rev = true)[1:nev]
+    I = sortperm(logvals, by = real, rev = true)[1:min(nev, length(logvals))]
     # floquet exponents
     σ = logvals[I]
     # remove the trivial multiplier

@@ -76,8 +76,6 @@ end
 end
 
 # analytical jacobian for constant DDE
-# there is a function specific to the computation of Floquet coefficients which is slightly different
-# and relies on the same code
 for (fname, floquet) in ((:analytical_jacobian_dde_cst, false), 
                          (:analytical_jacobian_dde_cst_floquetgev, true),
                          (:analytical_jacobian_dde_cst_floquetcoll, true),
@@ -125,6 +123,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             # arrays to store the jacobian of the delayed terms
             Jd = [zeros(𝒯, length(coll)+1, length(coll)+1) for _ in 1:length(delays)]
         elseif $(fname == :analytical_jacobian_dde_cst_floquetcoll)
+            # this part contains the times t - d/period which are negative
             Jd = zeros(𝒯, length(coll)+1, length(coll)+1)
         end
 
