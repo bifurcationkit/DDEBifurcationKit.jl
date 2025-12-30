@@ -5,7 +5,7 @@ $(TYPEDEF)
 
 Structure to hold the bifurcation problem. If don't have parameters, you can pass `nothing`.
 
-## Fields
+## Internal fields
 
 $(TYPEDFIELDS)
 
@@ -23,25 +23,25 @@ $(TYPEDFIELDS)
 
 """
 struct ConstantDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Union{Nothing, BK.AllOpticTypes}, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
-    "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem"
+    "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem."
     VF::Tvf
-    "function delays. It takes the parameters and return the non-zero delays in an `AbstractVector` form. Example: `delays = par -> [1.]`"
+    "function delays. It takes the parameters and return the non-zero delays in an `AbstractVector` form. Example: `delays = par -> [1, 2]`."
     delays::Tdf
     "Initial guess"
     u0::Tu
-    "initial delays (set internally by the constructor)"
+    "[internal] initial delays (set internally by the constructor)."
     delays0::Td
-    "parameters"
+    "parameters."
     params::Tp
     "Typically a `Accessors.@optic`. It specifies which parameter axis among `params` is used for continuation. For example, if `par = (α = 1.0, β = 1)`, we can perform continuation w.r.t. `α` by using `lens = (@optic _.α)`. If you have an array `par = [ 1.0, 2.0]` and want to perform continuation w.r.t. the first variable, you can use `lens = (@optic _[1])`. For more information, we refer to `Accessors.jl`."
     lens::Tl
-    "user function to plot solutions during continuation. Signature: `plotSolution(x, p; kwargs...)`"
+    "user function to plot solutions during continuation. Signature: `plotSolution(x, p; kwargs...)`."
     plotSolution::Tplot
     "`record_from_solution = (x, p; k...) -> norm(x)` function used record a few indicators about the solution. It could be `norm` or `(x, p) -> x[1]`. This is also useful when saving several huge vectors is not possible for memory reasons (for example on GPU...). This function can return pretty much everything but you should keep it small. For example, you can do `(x, p) -> (x1 = x[1], x2 = x[2], nrm = norm(x))` or simply `(x, p) -> (sum(x), 1)`. This will be stored in `contres.branch` (see below). Finally, the first component is used to plot in the continuation curve."
     recordFromSolution::Trec
-    "function to save the full solution on the branch. Some problem are mutable (like periodic orbit functional with adaptive mesh) and this function allows to save the state of the problem along with the solution itself. Signature `save_solution(x, p)`"
+    "function to save the full solution on the branch. Some problem are mutable (like periodic orbit functional with adaptive mesh) and this function allows to save the state of the problem along with the solution itself. Signature: `save_solution(x, p)`."
     save_solution::Tgets
-    "delta for Finite differences"
+    "delta for Finite differences."
     δ::Tδ
 end
 
@@ -77,9 +77,9 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 d3F = nothing,
                 d3Fc = nothing,
                 issymmetric::Bool = false,
-                record_from_solution = BifurcationKit.record_sol_default,
-                plot_solution = BifurcationKit.plot_default,
-                save_solution = BifurcationKit.save_solution_default,
+                record_from_solution = BK.record_sol_default,
+                plot_solution = BK.plot_default,
+                save_solution = BK.save_solution_default,
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8),
                 kwargs_jet...
@@ -97,13 +97,13 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
     end
 
     if isnothing(d3F)
-        d3F  = (x, p, dx1, dx2, dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.)
+        d3F  = (x, p, dx1, dx2, dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), zero(𝒯))
         d3Fc = (x, p, dx1, dx2, dx3) -> TrilinearMap((_dx1, _dx2, _dx3) -> d3F(x,p,_dx1,_dx2,_dx3))(dx1, dx2, dx3)
     else
         d3Fc = d3F
     end
 
-    d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
+    d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), zero(𝒯)) : d3F
     # VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
     VF = BifFunction(F, F!, dF, dFad, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...))
     return ConstantDDEBifProblem(VF,
@@ -246,7 +246,7 @@ end
 
 function (l::BK.MatrixBLS)(J::JacobianDDE, dR,
                         dzu, dzp::T, R::AbstractVecOrMat, n::T,
-                        ξu::T = T(1), ξp::T = T(1) ; kwargs...) where {T <: Number}
+                        ξu::T = one(T), ξp::T = one(T) ; kwargs...) where {T <: Number}
     l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
 end
 
@@ -255,7 +255,7 @@ $(TYPEDEF)
 
 Structure to hold the bifurcation problem. If don't have parameters, you can pass `nothing`.
 
-## Fields
+## Internal fields
 
 $(TYPEDFIELDS)
 
@@ -273,25 +273,25 @@ $(TYPEDFIELDS)
 
 """
 struct SDDDEBifProblem{Tvf, Tdf, Tu, Td, Tp, Tl <: Union{Nothing, BK.AllOpticTypes}, Tplot, Trec, Tgets, Tδ} <: AbstractDDEBifurcationProblem
-    "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem"
+    "Vector field, typically a [`BifFunction`](@ref). For more information, please look at the website https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/BifProblem."
     VF::Tvf
-    "function delays. It takes the parameters and the state and return the non-zero delays in an `AsbtractVector` form. Example: `delays = (par, u) -> [1. + u[1]^2]`"
+    "function delays. It takes the state and the parameters and return the non-zero delays in an `AsbtractVector` form. Example: `delays = (u, pars) -> [1 + u[1]^2]`."
     delays::Tdf
-    "Initial guess"
+    "Initial guess."
     u0::Tu
-    "initial delays (set internally by the constructor)"
+    "[internal] initial delays (set internally by the constructor)."
     delays0::Td
     "parameters"
     params::Tp
     "see ConstantDDEBifProblem for more information."
     lens::Tl
-    "user function to plot solutions during continuation. Signature: `plotSolution(x, p; kwargs...)`"
+    "user function to plot solutions during continuation. Signature: `plotSolution(x, p; kwargs...)`."
     plotSolution::Tplot
     "`record_from_solution = (x, p; k...) -> norm(x)` function used record a few indicators about the solution. It could be `norm` or `(x, p) -> x[1]`. This is also useful when saving several huge vectors is not possible for memory reasons (for example on GPU...). This function can return pretty much everything but you should keep it small. For example, you can do `(x, p) -> (x1 = x[1], x2 = x[2], nrm = norm(x))` or simply `(x, p) -> (sum(x), 1)`. This will be stored in `contres.branch` (see below). Finally, the first component is used to plot in the continuation curve."
     recordFromSolution::Trec
-    "function to save the full solution on the branch. Some problem are mutable (like periodic orbit functional with adaptive mesh) and this function allows to save the state of the problem along with the solution itself. Signature `save_solution(x, p)`"
+    "function to save the full solution on the branch. Some problem are mutable (like periodic orbit functional with adaptive mesh) and this function allows to save the state of the problem along with the solution itself. Signature: `save_solution(x, p)`."
     save_solution::Tgets
-    "delta for Finite differences"
+    "delta for Finite differences."
     δ::Tδ
 end
 
@@ -342,8 +342,7 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
     return SDDDEBifProblem(VF,
                            delayF,
                            u0,
-                           delayF(u0,
-                           parms),
+                           delayF(u0, parms),
                            parms,
                            lens,
                            plot_solution,

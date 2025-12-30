@@ -11,9 +11,9 @@
     return result
 end
 
-function _po_coll_bc!(coll::PeriodicOrbitOCollProblem, dest, ∂u, u, ud, par, h, tmp)
+function __po_coll_bc!(coll::PeriodicOrbitOCollProblem, dest, ∂u, u, ud, par, h, tmp)
     tmp .= coll.prob_vf.VF.F(u, ud, par)
-    dest .= @. ∂u - h * tmp
+    @. dest = ∂u - h * tmp
 end
 
 # function for collocation problem
@@ -28,20 +28,24 @@ end
     n, ntimes = size(u)
     m = coll.mesh_cache.degree
     Ntst = coll.mesh_cache.Ntst
-    # we want slices at fixed  times, hence gj[:, j] is the fastest
+    # we want slices at fixed times, hence gj[:, j] is the fastest
     # temporaries to reduce allocations
-    gj  = BK.get_tmp(coll.cache.gj, u)  #zeros(𝒯, n, m)
-    ∂gj = BK.get_tmp(coll.cache.∂gj, u) #zeros(𝒯, n, m)
+    gj  = BK.get_tmp(coll.cache.gj, u)  # zeros(𝒯, n, m)
+    ∂gj = BK.get_tmp(coll.cache.∂gj, u) # zeros(𝒯, n, m)
     uj  = zeros(𝒯, n, m+1)
 
     # get P.O. interpolation which allows to get result(t)
     interp = BK.POSolution(coll, result)
     delays = coll.prob_vf.delays(pars)
 
-    # get the mesh of the OCollProblem
+    # get the mesh of the collocation problem
     mesh = BK.getmesh(coll)
-    σ = LinRange(0, 2, m)
-    # udj = [copy(uj[:,1]) for _ in delays]
+    σs = LinRange{𝒯}(0, 2, m) # TODO: better to rely on BK.get_mesh_coll(coll)
+    udj = VectorOfArray([copy(uj[:, 1]) for _ in delays])
+
+    # TODO: there is an issue here. If we use `σs = BK.get_mesh_coll(coll)` which is equivalent to
+    # choosing `σs = LinRange(0,2,m+1)`, do we take `σs[l+1]` below which runs for l in 1:m ?
+    # if we do, newton does not converge which indicates an issue with `interp`
 
     # range for locating time slices
     rg = UnitRange(1, m+1)
@@ -51,20 +55,19 @@ end
         LA.mul!(∂gj, uj, ∂L)
 
         # get the delayed states
-        tj = mesh[j]
-        dtj = (mesh[j+1] - mesh[j]) / 2
+        τj = mesh[j]
+        dτj = (mesh[j+1] - mesh[j]) / 2
 
         # compute the collocation residual
         for l in 1:m
-            tσ = tj + dtj * σ[l]
-            udj = [interp(mod(tσ * period - d, period)) for d in delays]
+            τ = τj + dτj * (σs[l])
+            udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays])
             # for (ind, d) in enumerate(delays)
-                # udj[ind] .= interp(mod(tσ*period - d, period))
+                # udj.u[ind] .= interp(τ * period - d)
             # end
-            _po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dtj, out[:, end])
+            __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
 
         end
-        # carefull here https://discourse.julialang.org/t/is-this-a-bug-scalar-ranges-with-the-parser/70670/4"
         rg = rg .+ m
     end
     # add the periodicity condition
@@ -83,7 +86,7 @@ end
     n, ntimes = size(u)
     m = coll.mesh_cache.degree
     Ntst = coll.mesh_cache.Ntst
-    # we want slices at fixed  times, hence gj[:, j] is the fastest
+    # we want slices at fixed times, hence gj[:, j] is the fastest
     # temporaries to reduce allocations
     gj  = zeros(𝒯, n, m)
     ∂gj = zeros(𝒯, n, m)
@@ -109,16 +112,16 @@ end
         LA.mul!(∂gj, uj, ∂L)
 
         # get the delayed states
-        tj = mesh[j]
-        dtj = (mesh[j+1]-mesh[j]) / 2
+        τj = mesh[j]
+        dτj = (mesh[j+1]-mesh[j]) / 2
 
         # compute the collocation residual
         for l in 1:m
-            tσ = tj + dtj * σ[l]
+            tσ = τj + dτj * σ[l]
             delays = coll.prob_vf.delays(gj[:, l], pars)
-            udj = [interp(mod(tσ*period - d, period)) for d in delays]
+            udj = VectorOfArray([interp(mod(tσ * period - d, period)) for d in delays])
             # out[:, end] can serve as buffer for now in the following function
-            _po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dtj, out[:, end])
+            __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
 
         end
         # carefull here https://discourse.julialang.org/t/is-this-a-bug-scalar-ranges-with-the-parser/70670/4"

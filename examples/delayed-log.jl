@@ -66,7 +66,7 @@ br_pocoll = @time continuation(
 		verbosity = 2,	plot = true,
 		args_po...,
 		ampfactor = 2,
-		δp = 0.0051,
+		δp = 0.01,
 		normC = norminf,
 		)
 

@@ -97,7 +97,7 @@ args_po = (	record_from_solution = (x, p; k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(200, 2; N = 1, jacobian = BK.AutoDiffDense())
+probpo = PeriodicOrbitOCollProblem(200, 3; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = continuation(
 	br, 2, opts_po_cont,
 	probpo;
@@ -105,8 +105,9 @@ br_pocoll = continuation(
 	# regular continuation options
 	verbosity = 2, plot = true,
 	args_po...,
-	ampfactor = 1/0.467829783456199 * 0.1,
-	δp = 0.01,
+	ampfactor = 0.4,
+	δp = 0.05,
+	use_normal_form = false,
 	callback_newton = BK.cbMaxNorm(10.0),
 	)
 ```

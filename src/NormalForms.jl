@@ -29,7 +29,7 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
                             pt::BK.Hopf, 
                             ls::BK.AbstractLinearSolver; # for dispatch from BK 
                             autodiff = true,
-                            verbose::Bool = false)
+                            verbose::Bool = false)    
     x0 = pt.x0
     p = pt.p
     lens = pt.lens

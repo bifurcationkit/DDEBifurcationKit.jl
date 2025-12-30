@@ -4,7 +4,7 @@ using Pkg, LinearAlgebra, Test
 pkg"activate ."
 
 # https://ddebiftool.sourceforge.net/demos/neuron/html/demo1_stst.html
-using Revise, DDEBifurcationKit, LinearAlgebra, Plots
+using Revise, DDEBifurcationKit, Plots
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
@@ -49,7 +49,7 @@ plot(brhopf, vars = (:κ1, :κ2))
 
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20, save_sol_every_step=1)
+nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
 @reset opts_po_cont.newton_options.tol = 1e-9
 @reset opts_po_cont.newton_options.verbose = true
 
@@ -79,6 +79,7 @@ br_pocoll = @time continuation(
     verbosity = 2, plot = true,
     args_po...,
     ampfactor = 0.2,
+    use_normal_form = false,
     δp = 0.01,
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)

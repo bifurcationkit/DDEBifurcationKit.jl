@@ -3,7 +3,6 @@ using LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 
-g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
 function neuron2VF(x, xd, p)
     (;a,b,c,d) = p
     [
@@ -11,10 +10,8 @@ function neuron2VF(x, xd, p)
         -x[2] - a * g(b*xd[1][2]) + c * g(d*xd[2][1])
     ]
 end
-
-function delaysF(par)
-    [par.τ1, par.τ2]
-end
+g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
+delaysF(par) = [par.τ1, par.τ2]
 
 pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
