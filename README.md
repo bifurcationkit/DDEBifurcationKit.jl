@@ -20,7 +20,7 @@ Assuming that you already have Julia correctly installed, it suffices to import
 `DDEBifurcationKit.jl` in the standard way:
 
 ```julia
-import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")
+] add DDEBifurcationKit.jl
 ```
 
 ## 📚 Support and citation

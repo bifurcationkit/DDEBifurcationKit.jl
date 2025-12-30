@@ -78,7 +78,7 @@ We compute the branch of periodic orbits from the Hopf bifurcation points using 
 ```julia
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-	nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20, save_sol_every_step=1)
+	nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
 @reset opts_po_cont.newton_options.tol = 1e-9
 @reset opts_po_cont.newton_options.verbose = true
 
@@ -103,7 +103,7 @@ br_pocoll = continuation(
 	probpo;
 	alg = PALC(tangent = Bordered()),
 	# regular continuation options
-	verbosity = 2,	plot = true,
+	verbosity = 2, plot = true,
 	args_po...,
 	ampfactor = 1/0.467829783456199 * 0.1,
 	δp = 0.01,

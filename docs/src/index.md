@@ -6,9 +6,9 @@ It builds upon [BifurcationKit.jl](https://bifurcationkit.github.io/BifurcationK
 
 ## 📦 Installation
 
-Assuming that you already have Julia correctly installed, it suffices to import `DDEBifurcationKit.jl` in the standard way:
+Assuming that you already have Julia correctly installed, it suffices to add `DDEBifurcationKit.jl` in the standard way:
 
-`import Pkg; Pkg.add("https://github.com/bifurcationkit/DDEBifurcationKit.jl")`
+`] add DDEBifurcationKit.jl`
 
 ## 📚 Citing this work
 If you use this package for your work, we ask that you **cite** the following paper!! Open source development strongly depends on this. It is referenced on [HAL-Inria](https://hal.archives-ouvertes.fr/hal-02902346) with *bibtex* entry [CITATION.bib](https://github.com/bifurcationkit/BifurcationKit.jl/blob/master/CITATION.bib).

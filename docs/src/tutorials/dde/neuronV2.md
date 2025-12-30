@@ -23,7 +23,7 @@ using Revise, DDEBifurcationKit, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
-g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
+g(z) = (tanh(z − 1) + tanh(1)) * cosh(1)^2
 function neuron2VF(x, xd, p)
    (; a,b,c,d) = p
    [
