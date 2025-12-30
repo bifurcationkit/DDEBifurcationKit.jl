@@ -49,7 +49,7 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     ζ★ ./= conj(LA.dot(ζ★, Δ(Val(:der), L, ζ, λ0)))
     # test the normalisation
     if ~isapprox(LA.dot(ζ★, Δ(Val(:der), L, ζ, λ0)), 1; rtol = 1e-3)
-        @warn "We found instead $(dot(ζ★, Δ(Val(:der), L, ζ, λ0)))"
+        @warn "We found instead $(LA.dot(ζ★, Δ(Val(:der), L, ζ, λ0)))"
     end
 
     x0c = VectorOfArray([copy(x0) for _ in 1:length(prob.delays0)+1])
@@ -195,6 +195,8 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
     # check that λ★ ≈ conj(λ)
     abs(λ + λ★) > 1e-2 && @warn "We did not find the left eigenvalue for the Hopf point to be very close to the imaginary part:\nλ ≈ $λ,\nλ★ ≈ $λ★?\n You can perhaps increase the number of computed eigenvalues, the number is nev = $nev"
 
+    # ζ, ζ★ = get_null_vectors(Δ(L, λ0))
+
     # normalise left eigenvector
     ζ★ ./= LA.dot(ζ, ζ★)
     @assert LA.dot(ζ, ζ★) ≈ 1
@@ -203,8 +205,11 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
         ω,
         parbif, lens,
         ζ, ζ★,
-        (a = zero(Complex{eltype(bifpt.x)}), b = zero(Complex{eltype(bifpt.x)}) ),
-        :SuperCritical
+        (a = missing, b = missing ),
+        Symbol("?")
     )
+    if ~detailed_type
+        return hopfpt
+    end
     return BK.hopf_normal_form(prob, hopfpt, options.linsolver ; verbose, autodiff)
 end
