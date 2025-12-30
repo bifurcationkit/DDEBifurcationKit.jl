@@ -1,3 +1,6 @@
+# TODO use getter from BK
+_get_gauss_nodes(coll) = coll.mesh_cache.gauss_nodes
+
 @views function BK.residual!(coll::PeriodicOrbitOCollProblem{Tprob},
                             result,
                             u::AbstractVector, 
@@ -41,12 +44,8 @@ end
 
     # get the mesh of the collocation problem
     mesh = BK.getmesh(coll)
-    σs = LinRange{𝒯}(0, 2, m) # TODO: better to rely on BK.get_mesh_coll(coll)
+    σs = _get_gauss_nodes(coll)
     udj = VectorOfArray([copy(uj[:, 1]) for _ in _delays])
-
-    # TODO: there is an issue here. If we use `σs = BK.get_mesh_coll(coll)` which is equivalent to
-    # choosing `σs = LinRange(0, 2, m+1)`, do we take `σs[l+1]` below which runs for l in 1:m ?
-    # if we do, newton does not converge which indicates an issue with `interp`
 
     # range for locating time slices
     rg = UnitRange(1, m+1)
@@ -56,12 +55,11 @@ end
         LA.mul!(∂gj, uj, ∂L)
 
         # get the delayed states
-        τj = mesh[j]
         dτj = (mesh[j+1] - mesh[j]) / 2
 
         # compute the collocation residual
         for l in 1:m
-            τ = τj + dτj * σs[l]
+            τ = BK.τj(σs[l], mesh, j)
             if VF isa SDDDEBifProblem
                 _delays = delays(VF, gj[:, l], pars)
             end
@@ -70,7 +68,6 @@ end
                 udj.u[ind] .= interp(τ * period - d)
             end
             __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
-
         end
         rg = rg .+ m
     end
@@ -99,7 +96,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         nJ = length(coll) + 1
         L, ∂L = BK.get_Ls(coll.mesh_cache) # L is of size (m+1, m)
         mesh = BK.getmesh(coll)
-        σs = LinRange{𝒯}(0, 2, m) # TODO: better to rely on BK.get_mesh_coll(coll)
+        σs = _get_gauss_nodes(coll)
         ω = coll.mesh_cache.gauss_weight
         period = BK.getperiod(coll, u, nothing)
         phase = zero(𝒯)
@@ -140,12 +137,12 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             α = period * dτj
             for l in 1:m
                 _rgX = rgNx .+ (l-1)*n
-                τ = τj + dτj * σs[l]
+                τ = BK.τj(σs[l], mesh, j)
                 # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays])
                 for (ind, d) in enumerate(delays)
                     udj.u[ind] .= interp(mod(τ * period - d, period))
                 end
-                JacDDE = BK.jacobian(VF, pj[:, l], udj, pars)
+                JacDDE = jacobian(VF, pj[:, l], udj, pars)
                 J0 .= JacDDE.J0
                 for l2 in 1:m+1
                     J[_rgX, rgNy .+ (l2-1)*n ] .+= @. (-α * L[l2, l] * ρF) * J0 +
@@ -156,10 +153,10 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                         τd = mod(t0, period) / period
                         index_t = searchsortedfirst(mesh, τd) - 1
                         # index_t = max(1, min(index_t, Ntst))
-                        @assert 1 <= index_t <= Ntst
+                        @assert 1 <= index_t <= Ntst "We have index_t = $index_t, which is out of bounds for mesh of size $(length(mesh)) and τd = $τd. Please open an issue on the website of BifurcationKit.jl"
                         rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t-1))
                         σ = BK.σj(τd, mesh, index_t)
-                        β = BK.lagrange(l2, σ, BK.get_mesh_coll(coll))
+                        β = BK.lagrange(l2, σ, BK.get_mesh_coll(coll)) * ρF
                         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
                             Jd[idelay][_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         elseif ($(fname == :analytical_jacobian_dde_cst_floquetcoll) && t0 < 0)

@@ -35,7 +35,7 @@ BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40,
-    nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 1, save_sol_every_step=1)
+    nev = 3, tol_stability = 1e-8, detect_bifurcation = 1, plot_every_step = 1, save_sol_every_step=1)
 @reset opts_po_cont.newton_options.tol = 1e-7
 @reset opts_po_cont.newton_options.verbose = true
 
@@ -53,7 +53,7 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(90, 4; N = 1, jacobian = BK.AutoDiffDense())
+probpo = PeriodicOrbitOCollProblem(50, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 1, opts_po_cont,
     # we want to use the Collocation method to locate PO, with polynomial degree 5
@@ -61,7 +61,6 @@ br_pocoll = @time continuation(
     # regular continuation options
     verbosity = 2,    plot = true,
     args_po...,
-    # ampfactor = 1/0.467829783456199 ,#* 0.014,
     δp = 0.01,
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)

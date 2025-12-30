@@ -10,9 +10,6 @@ We compute `Ntst` time slices of a periodic orbit using orthogonal collocation. 
 !!! warning "Large scale"
     The current implementation is not yet optimized for large scale problems. This will be improved in the future.
 
-!!! warning "Floquet coefficients"
-    The current implementation does not yet allow for computing stability of periodic orbits. This will be improved in the future.  
-
 The general method is explained in [BifurcationKit.jl](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/periodicOrbitCollocation/).
 
 We recall the basics for completeness.

@@ -12,17 +12,17 @@ using Plots
 
 wrightVF(x, xd, p) = [-p.a * xd.u[1][1] * (1 + x[1])]
 delaysF(par) = [1.0]
-pars = (a=0.1,b=0.)
+pars = (a=0.1, b=0.)
 x0 = [0.]
 
 prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@optic _.a), record_from_solution=(x,p;k...)-> (x=x[1], _x=1))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 9., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
-br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
+br = continuation(prob, PALC(), opts; verbosity = 0, plot = false, bothside = false)
 plot(br)
 
-BK.get_normal_form(br, 1)
+get_normal_form(br, 1)
 
 function NFcoeff(N)
    # Faria 2006

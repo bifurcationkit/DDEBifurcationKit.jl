@@ -73,12 +73,11 @@ plot!(brhopf, vars = (:a, :c), branchlabel = "Hopf")
 plot!(brhopf2, vars = (:a, :c), branchlabel = "Hopf")
 ################################################################################
 # computation periodic orbit
-
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 30, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step = 1)
-@reset opts_po_cont.newton_options.tol = 1e-9
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 30, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2)
+@reset opts_po_cont.newton_options.tol = 1e-8
 @reset opts_po_cont.newton_options.verbose = true
-@reset opts_po_cont.newton_options.max_iterations = 8
+@reset opts_po_cont.newton_options.max_iterations = 28
 
 # arguments for periodic orbits
 args_po = (    record_from_solution = (x, p; k...) -> begin
@@ -103,11 +102,10 @@ br_pocoll = @time continuation(
     plot = true,
     args_po...,
     # ampfactor = 1/0.24391300209895822 * 0.1,
-    ampfactor = 20,
+    ampfactor = 1,
     δp = 0.001,
     override = true,
     normC = norminf,
-    # eigsolver = BK.FloquetCollGEV(DefaultEig(), 602, 2),
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
         m1,m2 = extrema(xtt[:,:])
@@ -128,4 +126,9 @@ function neuronV2_DE(du,x,h,p,t)
 end
 
 u0 = -2ones(2)
-h0(p, t) = -0*ones(2) .+ 0.01cos(t/4)# h(p,t) = br_pocoll.orbit(t)prob_de = DDEProblem(neuronV2_DE,h0(pars,0),h0,(0.,54240.),(pars..., a = br.specialpoint[1].param + 0.001); constant_lags=delaysF(pars))alg = MethodOfSteps(Rosenbrock23())sol = solve(prob_de,alg)plot(plot(sol, xlims = (sol.t[end]-100,sol.t[end])), plot(sol))
+h0(p, t) = -0*ones(2) .+ 0.01cos(t/4)
+# h(p,t) = br_pocoll.orbit(t)
+prob_de = DDEProblem(neuronV2_DE,h0(pars,0),h0,(0.,54240.),(pars..., a = br2.specialpoint[1].param + 0.0001); constant_lags=delaysF(pars))
+alg = MethodOfSteps(Rosenbrock23())
+sol = DifferentialEquations.solve(prob_de,alg)
+plot(plot(sol, xlims = (sol.t[end]-100,sol.t[end])), plot(sol))

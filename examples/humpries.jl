@@ -26,7 +26,7 @@ end
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 x0 = zeros(1)
 
-prob = DDEBK.SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
+prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )

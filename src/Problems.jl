@@ -1,5 +1,35 @@
 abstract type AbstractDDEBifurcationProblem <: BK.AbstractBifurcationProblem end
 
+struct JacobianDDE{Tp,T1,T2,T3,Td}
+    prob::Tp
+    Jall::T1
+    J0::T2
+    Jd::T3
+    delays::Td
+end
+
+# for matrix-free operators, we do not sum the arrays
+JacobianDDE(prob, J0, Jd, delays) = JacobianDDE(prob, nothing, J0, Jd, delays)
+JacobianDDE(prob, J0::AbstractArray, Jd::AbstractVector{ <: AbstractArray}, delays) = JacobianDDE(prob, J0 + sum(Jd), J0, Jd, delays)
+
+function (l::BK.DefaultLS)(J::JacobianDDE, args...; kwargs...)
+    l(J.Jall, args...; kwargs...)
+end
+
+function (l::BK.MatrixBLS)(iter::BK.AbstractContinuationIterable, state::BK.AbstractContinuationState, J::JacobianDDE, args...; kwargs...)
+    l(iter, state, J.Jall, args...; kwargs...)
+end
+
+function (l::BK.MatrixBLS)(J::JacobianDDE, args...; kwargs...)
+    l(J.Jall, args...; kwargs...)
+end
+
+function (l::BK.MatrixBLS)(J::JacobianDDE, dR,
+                        dzu, dzp::T, R::AbstractVecOrMat, n::T,
+                        ξu::T = one(T), ξp::T = one(T) ; kwargs...) where {T <: Number}
+    l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
+end
+
 """
 $(TYPEDEF)
 
@@ -121,20 +151,12 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                                  δ)
 end
 
-BK.dF(prob::ConstantDDEBifProblem, x,p, dx) = BK.dF(prob.VF, x, p, dx)
+BK.dF(prob::ConstantDDEBifProblem, x, p, dx) = BK.dF(prob.VF, x, p, dx)
 BK.update!(prob::ConstantDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
-
-struct JacobianDDE{Tp,T1,T2,T3,Td}
-    prob::Tp
-    Jall::T1
-    J0::T2
-    Jd::T3
-    delays::Td
-end
 
 function BK.residual(prob::ConstantDDEBifProblem, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
-    prob.VF.F(x,xd,p)
+    prob.VF.F(x, xd, p)
 end
 
 function BK.residual!(prob::ConstantDDEBifProblem, o, x, p)
@@ -150,18 +172,23 @@ function jacobian_forwarddiff(prob::ConstantDDEBifProblem, x, p)
     return J0, Jd
 end
 
-function BK.jacobian(prob::ConstantDDEBifProblem, x, p)
-    if isnothing(prob.VF.J)
-        J0, Jd = jacobian_forwarddiff(prob, x, p)
-    else
-        J0, Jd = prob.VF.J(x, p)
-    end
-    return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(p))
+BK.jacobian(prob::ConstantDDEBifProblem, x, pars) = jacobian_cst_dde(prob.VF, prob, x, pars)
+
+function jacobian_cst_dde(VF::BifFunction, prob, x, pars)
+    J0, Jd = VF.J(x, pars)
+    return JacobianDDE(prob, J0, Jd, prob.delays(pars))
 end
 
-function BK.jacobian_adjoint(prob::ConstantDDEBifProblem, x, p)
+function jacobian_cst_dde(VF::BifFunction{Tf, TFinp, Tdf, Tdfad, Nothing}, prob, x, pars) where {Tf, TFinp, Tdf, Tdfad}
+    J0, Jd = jacobian_forwarddiff(prob, x, pars)
+    return JacobianDDE(prob, J0, Jd, prob.delays(pars))
+end
+
+function BK.jacobian_adjoint(prob::AbstractDDEBifurcationProblem, x, p)
     J = BK.jacobian(prob, x, p)
-    J.Jall .= J.Jall'
+    if isnothing(J.Jall) == false
+        J.Jall .= J.Jall'
+    end
     J.J0 .= J.J0'
     for _J in J.Jd
         _J .= _J'
@@ -169,7 +196,7 @@ function BK.jacobian_adjoint(prob::ConstantDDEBifProblem, x, p)
     J
 end
 
-function BK.jacobian(prob::ConstantDDEBifProblem, x, xd, p)
+function jacobian(prob::ConstantDDEBifProblem, x, xd, p)
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
     Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), xd.u[ii]) for ii in eachindex(prob.delays0)]
     return JacobianDDE(prob, missing, J0, Jd, prob.delays(p))
@@ -237,24 +264,6 @@ function Δ(::Val{:der}, J::JacobianDDE, v, λ)
         LA.mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
     end
     res
-end
-
-function (l::BK.DefaultLS)(J::JacobianDDE, args...; kwargs...)
-    l(J.Jall, args...; kwargs...)
-end
-
-function (l::BK.MatrixBLS)(iter::BK.AbstractContinuationIterable, state::BK.AbstractContinuationState, J::JacobianDDE, args...; kwargs...)
-    l(iter, state, J.Jall, args...; kwargs...)
-end
-
-function (l::BK.MatrixBLS)(J::JacobianDDE, args...; kwargs...)
-    l(J.Jall, args...; kwargs...)
-end
-
-function (l::BK.MatrixBLS)(J::JacobianDDE, dR,
-                        dzu, dzp::T, R::AbstractVecOrMat, n::T,
-                        ξu::T = one(T), ξp::T = one(T) ; kwargs...) where {T <: Number}
-    l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
 end
 
 """
@@ -373,12 +382,12 @@ end
 
 function BK.residual(prob::SDDDEBifProblem, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
-    prob.VF.F(x,xd,p)
+    prob.VF.F(x, xd, p)
 end
 
 function BK.residual!(prob::SDDDEBifProblem, o, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
-    o .= prob.VF.F(x,xd,p)
+    o .= prob.VF.F(x, xd, p)
     o
 end
 
@@ -387,14 +396,4 @@ function BK.jacobian(prob::SDDDEBifProblem, x, p)
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
     Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), x) for ii in eachindex(prob.delays0)]
     return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
-end
-
-function BK.jacobian_adjoint(prob::SDDDEBifProblem, x, p)
-    J = BK.jacobian(prob, x, p)
-    J.Jall .= J.Jall'
-    J.J0 .= J.J0'
-    for _J in J.Jd
-        _J .= _J'
-    end
-    J
 end
