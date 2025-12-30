@@ -335,13 +335,9 @@ end
 
 function (eig::HopfDDEEig)(Jddehopf, nev; kwargs...)
     xh = Jddehopf.x.x[1]            # hopf point
-    p1, ω = Jddehopf.x.x[4]            # first parameter
-
+    p1, ω = Jddehopf.x.x[4]         # first parameter
     newpar = set(Jddehopf.p, BK.getlens(Jddehopf.prob.prob), p1)
-
     J = BK.jacobian(Jddehopf.prob.prob.prob_vf, xh, newpar)
-
     eigenelts = eig.eigsolver(J, nev; kwargs...)
-
     return eigenelts
 end

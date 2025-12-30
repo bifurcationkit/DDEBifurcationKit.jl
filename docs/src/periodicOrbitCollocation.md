@@ -35,7 +35,7 @@ $$\tau=\tau^{(j)}(\sigma):=\tau_{j}+\frac{(1+\sigma)}{2}\left(\tau_{j+1}-\tau_{j
 
 The functions $x^{(j)}$ defined on $[-1,1]$ by $x^{(j)}(\sigma) \equiv x(\tau_j(\sigma))$ satisfies the following equation on $[-1,1]$:
 
-$$\dot x^{(j)} = T\frac{\tau_{j+1}-\tau_j}{2}\cdot F(x^{(j)})\tag{$E_j$}$$
+$$\dot x^{(j)} = T\frac{\tau_{j+1}-\tau_j}{2}\cdot F(x^{(j)}, x^{(j-\tau)})\tag{$E_j$}$$
 
 with the continuity equation $x^{(j+1)}(-1) = x^{(j)}(1)$.
 
@@ -55,7 +55,7 @@ $$\mathcal p_j(\sigma)\equiv \sum\limits_{k=1}^{m+1}\mathcal L_k(\sigma)x_{j,k}$
 
 and the problem to be solved at the **nodes** $z_l$, $l=1,\cdots,m$:
 
-$$\forall 1\leq l\leq m,\quad 1\leq j\leq N_{tst},\quad \dot p_j(z_l) = T\frac{\tau_{j+1}-\tau_j}{2}\cdot F(p_j(z_l), p_{j_0}(``t_l-\tau''))\tag{$E_j^2$}.$$
+$$\forall 1\leq l\leq m,\quad 1\leq j\leq N_{tst},\quad \dot p_j(z_l) = T\frac{\tau_{j+1}-\tau_j}{2}\cdot F(p_j(z_l), p_{j-\tau}(\tau_{j,l}-\tau))\tag{$E_j^2$}.$$
 
 The **nodes** $(z_l)$ are associated with a Gauss–Legendre quadrature.
 
@@ -63,3 +63,43 @@ The **nodes** $(z_l)$ are associated with a Gauss–Legendre quadrature.
 ## Mesh adaptation
 
 Mesh adaptation can be turned on like in the case of [ODEs](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation).
+
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+
+🚧 🚧 BELOW IS WORK IN PROGRESS 🚧 🚧
+
+🚧 🚧 🚧 🚧 DO NOT USE YET 🚧 🚧 🚧 🚧
+
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+
+## Jacobians
+
+All [jacobians](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation) of the ODE case are available.
+
+## Linear solvers
+
+All [linear solvers](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Linear-solvers) of the ODE case are available.
+
+## Floquet multipliers computation
+
+This part is specific to delay differential equations. Let's explain it in the simple case 
+
+$$\frac{dx(t)}{dt} = F(x(t), x(t-\tau)).$$
+
+The variational equation around a periodic orbit reads 
+
+$$\frac{dz(t)}{dt} = A(t)\cdot x(t) +B(t) x(t-\tau).$$
+
+where $A,B$ are periodic functions. The Floquet $\lambda$ exponents are solution to
+
+$$\left(\lambda + \frac{d}{dt}\right) z(t) = A(t)\cdot x(t) + e^{-\lambda\tau} B(t) x(t-\tau)\tag{1}$$
+
+
+We provide one method(s) to compute the Floquet coefficients.
+
+1. The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
+2. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here but this can be used to check the results of the previous method.
+
+## References
+
+[^Lust]:> Verheyden, K. & Lust, K. A Newton-Picard Collocation Method for Periodic Solutions of Delay Differential Equations. Bit Numer Math 45, 605–625 (2005).

@@ -23,37 +23,31 @@ br = continuation(prob, PALC(), opts, bothside = false)
 
 #######################################################
 # hopf aBS
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 5, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step = 1)
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 5, nev = 10, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2)
 @reset opts_po_cont.newton_options.tol = 1e-9
-@reset opts_po_cont.newton_options.verbose = true
-@reset opts_po_cont.newton_options.max_iterations = 8
 
-# arguments for periodic orbits
-args_po = (    record_from_solution = (x, p; k...) -> begin
-            xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-            return (max = maximum(xtt[1,:]),
-                    min = minimum(xtt[1,:]),
-                    period = getperiod(p.prob, x, nothing))
-        end,
-        plot_solution = (x, p; k...) -> begin
-            xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-            plot!(xtt.t, xtt[1,:]; label = "V1", k...)
-            plot!(xtt.t, xtt[2,:]; label = "V2", k...)
-            plot!(br; subplot = 1, putspecialptlegend = false)
-            end,
-        normC = norminf)
+for m in (3,4,5), Ntst in (99, 100)
+    probpo = PeriodicOrbitOCollProblem(Ntst, m; N = 2, jacobian = BK.AutoDiffDense())
+    br_pocoll = @time continuation(
+            br, 1, opts_po_cont,
+            probpo;
+            ampfactor = 1.42,
+            δp = 0.001,
+            normC = norminf,
+            callback_newton = (state; k...) -> begin
+                state.step < 16
+            end
+            )
 
-probpo = PeriodicOrbitOCollProblem(100, 3; N = 2, jacobian = BK.AutoDiffDense())
-br_pocoll = @time continuation(
-        br, 1, opts_po_cont,
-        # PeriodicOrbitOCollProblem(100, 4);
-        probpo;
-        # verbosity = 2,    plot = true,
-        args_po...,
-        ampfactor = 1.42,
-        δp = 0.001,
-        normC = norminf,
-        callback_newton = (state; k...) -> begin
-            state.step < 16
-        end
-        )
+    # test anaytical jacobian
+    ind_po = 5
+    br_pocoll.sol[ind_po].p
+    period = br_pocoll.sol[ind_po].x[end]
+    _J = @time BK.jacobian(br_pocoll.prob, br_pocoll.sol[ind_po].x, BK.setparam(br,br_pocoll.sol[ind_po].p))
+
+    _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst(br_pocoll.prob, br_pocoll.sol[ind_po].x, BK.setparam(br,br_pocoll.sol[ind_po].p))
+    @test ((_J-_J2)[1:end-1,1:end-1] |> norminf) ≈ 0 atol = 1e-14
+
+    _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob, br_pocoll.sol[ind_po].x, BK.setparam(br,br_pocoll.sol[ind_po].p))
+    @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-14
+end

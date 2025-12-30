@@ -169,6 +169,12 @@ function BK.jacobian_adjoint(prob::ConstantDDEBifProblem, x, p)
     J
 end
 
+function BK.jacobian(prob::ConstantDDEBifProblem, x, xd, p)
+    J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
+    Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), xd.u[ii]) for ii in eachindex(prob.delays0)]
+    return JacobianDDE(prob, missing, J0, Jd, prob.delays(p))
+end
+
 """
 $(SIGNATURES)
 
@@ -180,6 +186,15 @@ function expθ(J::JacobianDDE, x, λ::T) where T
         push!(buffer, copy(x) * exp(λ * (-τ)))
     end
     VectorOfArray(buffer)
+end
+
+function Δ(J::JacobianDDE, λ)
+    n = size(J.Jall, 1)
+    res = λ .* LA.I(n) .- J.J0
+    for (ind, A) in pairs(J.Jd)
+        res .+= (-exp(-λ * J.delays[ind])) .* A
+    end
+    res
 end
 
 """
@@ -220,15 +235,6 @@ function Δ(::Val{:der}, J::JacobianDDE, v, λ)
     res = Complex.(v)
     for (ind, A) in pairs(J.Jd)
         LA.mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
-    end
-    res
-end
-
-function Δ(J::JacobianDDE, λ)
-    n = size(J.Jall, 1)
-    res = λ .* LA.I(n) .- J.J0
-    for (ind, A) in pairs(J.Jd)
-        res .+= (-exp(-λ * J.delays[ind])) .* A
     end
     res
 end

@@ -34,11 +34,11 @@ delaysF(par) = [par.τ1, par.τ2, par.τs]
 pars = (κ = 0.5, β = -1, a12 = 1, a21 = 0.5, τ1 = 0.2, τ2 = 0.2, τs = 1.5)
 x0 = [0.01, 0.001]
 
-prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs))
+prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs), record_from_solution = (x,p;k...)->x[1])
 
-optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=200))
+optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit = 200))
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 15, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
+br = continuation(prob, PALC(), opts; bothside = true, normC = norminf)
 ```
 
 We then plot the branch
@@ -89,9 +89,7 @@ We then compute the branch of periodic orbits from the Hopf bifurcation points u
 
 ```@example TUTneuron
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-0., max_steps = 120, detect_bifurcation = 0, save_sol_every_step=1)
-@reset opts_po_cont.newton_options.tol = 1e-8
-@reset opts_po_cont.newton_options.verbose = false
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min= 0., max_steps = 100, detect_bifurcation = 2)
 
 # arguments for periodic orbits
 args_po = (	record_from_solution = (x, p; k...) -> begin
@@ -112,7 +110,7 @@ probpo = PeriodicOrbitOCollProblem(60, 4; N = 2, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
 	br2, 1, opts_po_cont,
 	probpo;
-	verbosity = 0,	plot = false,
+	# verbosity = 2, plot = true,
 	args_po...,
 	δp = 0.003,
 	normC = norminf,
