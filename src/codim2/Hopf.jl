@@ -101,7 +101,7 @@ function BK.newton_hopf(br::BK.AbstractResult{Tk, Tp},
         _Jt = ~BK.hasAdjoint(prob) ? adjoint(L) : jad(prob, bifpt.x, parbif)
 
         ζstar, λstar = BK.getAdjointBasis(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = false)
-        ζad .= ζstar ./ dot(ζstar, ζ)
+        ζad .= ζstar ./ LA.dot(ζstar, ζ)
     end
 
     # solve the hopf equations
@@ -129,27 +129,29 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
     options_newton = options_cont.newton_options
     threshBT = 100options_newton.tol
 
-    hopfPb = HopfDDEProblem(
+    𝐇 = HopfDDEProblem(
             prob_vf,
             BK._copy(eigenvec_ad),    # this is a ≈ null space of (J - iω I)^*
             BK._copy(eigenvec),       # this is b ≈ null space of  J - iω I
             options_newton.linsolver,
             # do not change linear solver if user provides it
             @set bdlinsolver.solver = (isnothing(bdlinsolver.solver) ? options_newton.linsolver : bdlinsolver.solver);
-            usehessian = usehessian,
-            massmatrix = massmatrix)
+            usehessian,
+            massmatrix,
+            _norm = normC,
+            update_minaug_every_step)
 
     # Jacobian for the Hopf problem
     if jacobian_ma == :autodiff
         # hopfpointguess = vcat(hopfpointguess.u, hopfpointguess.p)
-        prob_h = BK.HopfMAProblem(hopfPb, BK.AutoDiff(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = BK.HopfMAProblem(𝐇, BK.AutoDiff(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = DefaultLS()
     elseif jacobian_ma == :finiteDifferencesMF
         hopfpointguess = vcat(hopfpointguess.u, hopfpointguess.p)
-        prob_h = FoldMAProblem(hopfPb, FiniteDifferences(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = FoldMAProblem(𝐇, FiniteDifferences(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = options_cont.newton_options.linsolver
     else
-        prob_h = BK.HopfMAProblem(hopfPb, nothing, hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = BK.HopfMAProblem(𝐇, nothing, hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = HopfLinearSolverMinAug()
     end
 
@@ -158,9 +160,9 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
 
     # current lyapunov coefficient
     eTb = eltype(hopfpointguess)
-    hopfPb.l1 = Complex{eTb}(0, 0)
-    hopfPb.BT = one(eTb)
-    hopfPb.GH = one(eTb)
+    𝐇.l1 = Complex{eTb}(0, 0)
+    𝐇.BT = one(eTb)
+    𝐇.GH = one(eTb)
 
     # this function is used as a Finalizer
     # it is called to update the Minimally Augmented problem
@@ -170,8 +172,8 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         # if not, we do not update the problem with bad information!
         success = get(kUP, :state, nothing).converged
         (~BK.mod_counter(step, update_minaug_every_step) || success == false) && return true
-        x = getVec(z.u, hopfPb)    # hopf point
-        p1, ω = getP(z.u, hopfPb)
+        x = getVec(z.u, 𝐇)    # hopf point
+        p1, ω = getP(z.u, 𝐇)
         p2 = z.p        # second parameter
         newpar = set(par, lens1, p1)
         newpar = set(newpar, lens2, p2)
@@ -188,60 +190,16 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
 
         # call the user-passed finalizer
         finaliseUser = get(kwargs, :finaliseSolution, nothing)
-        resFinal = isnothing(finaliseUser) ? true : finaliseUser(z, tau, step, contResult; prob = hopfPb, kUP...)
+        resFinal = isnothing(finaliseUser) ? true : finaliseUser(z, tau, step, contResult; prob = 𝐇, kUP...)
 
         return abs(ω) >= threshBT && isbt && resFinal
-    end
-
-    function testBT_GH(iter, state)
-        z = getx(state)
-        x = getVec(z, hopfPb)        # hopf point
-        p1, ω = getP(z, hopfPb)        # first parameter
-        p2 = getp(state)            # second parameter
-        newpar = set(par, lens1, p1)
-        newpar = set(newpar, lens2, p2)
-
-        probhopf = iter.prob.prob
-
-        # expression of the jacobian
-        J_at_xp = BK.jacobian(probhopf.prob_vf, x, newpar)
-
-        # compute new b
-        T = typeof(p1)
-        # ζ = probhopf.linbdsolver(J_at_xp, a, b, T(0), probhopf.zero, T(1); shift = Complex(0, -ω), Mass = hopfPb.massmatrix)[1]
-        λ = Complex(0, ω)
-        ζ = @. z.x[2] + im * z.x[3]
-        ζ ./= normC(ζ)
-
-        # compute new ζstar
-        # JAd_at_xp = BK.hasAdjoint(probhopf.prob_vf) ? jad(probhopf.prob_vf, x, newpar) : transpose(J_at_xp)
-
-        JAd_at_xp = BK.has_adjoint(probhopf.prob_vf) ? BK.jacobian_adjoint(probhopf.prob_vf, x, newpar) : adjoint(J_at_xp)
-        ζ★, _ = BK.get_adjoint_basis(JAd_at_xp, conj(λ), BK.getcontparams(iter).newton_options.eigsolver.eigsolver)
-        # ζ★ = probhopf.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
-
-        # test function for Bogdanov-Takens
-        probhopf.BT = ω
-        # BT2 = real( dot(ζ★ ./ normC(ζ★), ζ) )
-        # ζ★ ./= dot(ζ, ζ★)
-
-        hp0 = BK.Hopf(x, nothing, p1, ω, newpar, lens1, ζ, ζ★, (a = Complex{T}(0,0), b = Complex{T}(0,0)), :hopf)
-        hp = BK.hopf_normal_form(probhopf.prob_vf, hp0, options_newton.linsolver; verbose = false) 
-
-        # lyapunov coefficient
-        probhopf.l1 = hp.nf.b
-        # test for Bautin bifurcation.
-        # If GH is too large, we take the previous value to avoid spurious detection
-        # GH will be large close to BR points
-        probhopf.GH = abs(real(hp.nf.b)) < 1e5 ? real(hp.nf.b) : state.eventValue[2][2]
-        return probhopf.BT, probhopf.GH
     end
 
     # the following allows to append information specific to the codim 2 continuation to the user data
     _printsol = get(kwargs, :record_from_solution, nothing)
     _printsol2 = isnothing(_printsol) ?
-        (u, p; kw...) -> (; zip(lenses, (getP(u, hopfPb)[1], p))..., ω = getP(u, hopfPb)[2], l1 = hopfPb.l1, BT = hopfPb.BT, GH = hopfPb.GH, BK._namedrecordfromsol(BK.record_from_solution(prob_vf)(getVec(u, hopfPb), p; kw...))...) :
-        (u, p; kw...) -> (; BK._namedrecordfromsol(_printsol(getVec(u, hopfPb), p; kw...))..., zip(lenses, (getP(u, hopfPb)[1], p))..., ω = getP(u, hopfPb)[2], l1 = hopfPb.l1, BT = hopfPb.BT, GH = hopfPb.GH)
+        (u, p; kw...) -> (; zip(lenses, (getP(u, 𝐇)[1], p))..., ω = getP(u, 𝐇)[2], l1 = 𝐇.l1, BT = 𝐇.BT, GH = 𝐇.GH, BK._namedrecordfromsol(BK.record_from_solution(prob_vf)(getVec(u, 𝐇), p; kw...))...) :
+        (u, p; kw...) -> (; BK._namedrecordfromsol(_printsol(getVec(u, 𝐇), p; kw...))..., zip(lenses, (getP(u, 𝐇)[1], p))..., ω = getP(u, 𝐇)[2], l1 = 𝐇.l1, BT = 𝐇.BT, GH = 𝐇.GH)
 
     prob_h = re_make(prob_h, record_from_solution = _printsol2)
 
@@ -268,7 +226,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         kind = BK.HopfCont(),
         linear_algo = BorderingBLS(solver = opt_hopf_cont.newton_options.linsolver, check_precision = false),
         normC = normC,
-        finalise_solution = update_minaug_every_step ==0 ? get(kwargs, :finalise_solution, BK.finalise_default) : updateMinAugHopf,
+        finalise_solution = update_minaug_every_step == 0 ? get(kwargs, :finalise_solution, BK.finalise_default) : updateMinAugHopf,
         event = event
     )
     @assert ~isnothing(br) "Empty branch!"
@@ -313,7 +271,7 @@ function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
         ζad .= ζstar ./ LA.dot(ζstar, ζ)
     end
 
-    return BK.continuation_hopf(br.prob, alg,
+    return BK.continuation_hopf(BK.getprob(br), alg,
                     hopfpointguess, parbif,
                     BK.getlens(br), lens2,
                     ζ, ζad,
@@ -321,6 +279,54 @@ function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
                     normC = normC,
                     kwargs...)
 end
+
+function testBT_GH(iter, state)
+    probma = BK.getprob(iter)
+    lens1, lens2 = BK.get_lenses(probma)
+
+    𝐇 = probma.prob
+    𝒯 = eltype(𝐇) 
+    z = getx(state)
+    x = getVec(z, 𝐇)          # hopf point
+    p1, ω = getP(z, 𝐇)        # first parameter
+    p2 = getp(state)           # second parameter
+    par = getparams(probma)
+    newpar = set(par, lens1, p1)
+    newpar = set(newpar, lens2, p2)
+
+    # expression of the jacobian
+    J_at_xp = BK.jacobian(𝐇.prob_vf, x, newpar)
+
+    # compute new b
+    T = typeof(p1)
+    # ζ = 𝐇.linbdsolver(J_at_xp, a, b, T(0), 𝐇.zero, T(1); shift = Complex(0, -ω), Mass = hopfPb.massmatrix)[1]
+    λ = Complex(0, ω)
+    ζ = @. z.x[2] + im * z.x[3]
+    ζ ./= 𝐇.norm(ζ)
+
+    # compute new ζstar
+    # JAd_at_xp = BK.hasAdjoint(𝐇.prob_vf) ? jad(𝐇.prob_vf, x, newpar) : transpose(J_at_xp)
+
+    JAd_at_xp = BK.has_adjoint(𝐇.prob_vf) ? BK.jacobian_adjoint(𝐇.prob_vf, x, newpar) : adjoint(J_at_xp)
+    ζ★, _ = BK.get_adjoint_basis(JAd_at_xp, conj(λ), BK.getcontparams(iter).newton_options.eigsolver.eigsolver)
+    # ζ★ = 𝐇.linbdsolver(JAd_at_xp, b, a, T(0), hopfPb.zero, T(1); shift = Complex(0, ω), Mass = transpose(hopfPb.massmatrix))[1]
+
+    # test function for Bogdanov-Takens
+    𝐇.BT = ω
+    # BT2 = real( LA.dot(ζ★ ./ 𝐇.norm(ζ★), ζ) )
+    # ζ★ ./= LA.dot(ζ, ζ★)
+
+    hp0 = BK.Hopf(x, nothing, p1, ω, newpar, lens1, ζ, ζ★, (a = Complex{T}(0, 0), b = Complex{T}(0, 0)), :hopf)
+    hp = BK.hopf_normal_form(𝐇.prob_vf, hp0, 𝐇.linsolver; verbose = false) #increase nev?
+
+    # lyapunov coefficient
+    𝐇.l1 = hp.nf.b
+    # test for Bautin bifurcation.
+    # If GH is too large, we take the previous value to avoid spurious detection
+    # GH will be large close to BR points
+    𝐇.GH = abs(real(hp.nf.b)) < 1e5 ? real(hp.nf.b) : state.eventValue[2][2]
+    return 𝐇.BT, 𝐇.GH
+    end
 
 # structure to compute the eigenvalues along the Hopf branch
 struct HopfDDEEig{S} <: BK.AbstractCodim2EigenSolver
