@@ -1,35 +1,5 @@
 abstract type AbstractDDEBifurcationProblem <: BK.AbstractBifurcationProblem end
 
-struct JacobianDDE{Tp,T1,T2,T3,Td}
-    prob::Tp
-    Jall::T1
-    J0::T2
-    Jd::T3
-    delays::Td
-end
-
-# for matrix-free operators, we do not sum the arrays
-JacobianDDE(prob, J0, Jd, delays) = JacobianDDE(prob, nothing, J0, Jd, delays)
-JacobianDDE(prob, J0::AbstractArray, Jd::AbstractVector{ <: AbstractArray}, delays) = JacobianDDE(prob, J0 + sum(Jd), J0, Jd, delays)
-
-function (l::BK.DefaultLS)(J::JacobianDDE, args...; kwargs...)
-    l(J.Jall, args...; kwargs...)
-end
-
-function (l::BK.MatrixBLS)(iter::BK.AbstractContinuationIterable, state::BK.AbstractContinuationState, J::JacobianDDE, args...; kwargs...)
-    l(iter, state, J.Jall, args...; kwargs...)
-end
-
-function (l::BK.MatrixBLS)(J::JacobianDDE, args...; kwargs...)
-    l(J.Jall, args...; kwargs...)
-end
-
-function (l::BK.MatrixBLS)(J::JacobianDDE, dR,
-                        dzu, dzp::T, R::AbstractVecOrMat, n::T,
-                        ξu::T = one(T), ξp::T = one(T) ; kwargs...) where {T <: Number}
-    l(J.Jall, dR, dzu, dzp, R, n, ξu, ξp ; kwargs...)
-end
-
 """
 $(TYPEDEF)
 
@@ -202,70 +172,16 @@ function jacobian(prob::ConstantDDEBifProblem, x, xd, p)
     return JacobianDDE(prob, missing, J0, Jd, prob.delays(p))
 end
 
-"""
-$(SIGNATURES)
-
-Evaluate ∑ᵢ exp(-λᵢτᵢ)xᵢ
-"""
-function expθ(J::JacobianDDE, x, λ::T) where T
-    buffer = [one(T) * x]
-    for τ in J.delays
-        push!(buffer, copy(x) * exp(λ * (-τ)))
-    end
-    VectorOfArray(buffer)
+function BK.d2F(prob::ConstantDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p, dx1, dx2) where {Tf, TFinp}
+    𝒯 = BK.VI.scalartype(x)
+    ForwardDiff.derivative(t -> BK.dF(prob, x .+ t .* dx2, p, dx1), zero(𝒯))
 end
 
-function Δ(J::JacobianDDE, λ)
-    n = size(J.Jall, 1)
-    res = λ .* LA.I(n) .- J.J0
-    for (ind, A) in pairs(J.Jd)
-        res .+= (-exp(-λ * J.delays[ind])) .* A
-    end
-    res
+function BK.d3F(prob::ConstantDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p, dx1, dx2, dx3) where {Tf, TFinp}
+    𝒯 = BK.VI.scalartype(x)
+    ForwardDiff.derivative(t -> BK.d2F(prob, x .+ t .* dx3, p, dx1, dx2), zero(𝒯))
 end
-
-"""
-$(SIGNATURES)
-
-Evaluate Δ(λ)⋅v where
-    Δ(λ) = λI - J₀ - exp(-λτ)J₁
-"""
-function Δ(prob::AbstractDDEBifurcationProblem, x, p, v, λ)
-    J = BK.jacobian(prob, x, p)
-    Δ(J, v, λ)
-end
-
-function Δ(J::JacobianDDE, v, λ)
-    res = λ .* v
-    LA.mul!(res, J.J0, v, -1, 1)
-    for (ind, A) in pairs(J.Jd)
-        LA.mul!(res, A, v, -exp(-λ * J.delays[ind]), 1)
-    end
-    res
-end
-
-function A(J::JacobianDDE, v, λ)
-    res = (0λ) .* v
-    LA.mul!(res, J.J0, v, 1, 1)
-    for (ind, A) in pairs(J.Jd)
-        LA.mul!(res, A, v, exp(-λ * J.delays[ind]), 1)
-    end
-    res
-end
-
-"""
-$(SIGNATURES)
-
-Evaluate Δ'(λ)⋅v
-"""
-function Δ(::Val{:der}, J::JacobianDDE, v, λ)
-    res = Complex.(v)
-    for (ind, A) in pairs(J.Jd)
-        LA.mul!(res, A, v, J.delays[ind] * exp(-λ * J.delays[ind]), 1)
-    end
-    res
-end
-
+####################################################################################################
 """
 $(TYPEDEF)
 
