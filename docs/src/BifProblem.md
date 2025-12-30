@@ -18,8 +18,8 @@ where `pars` are some user defined variables. The vector field is then specified
 ```julia
 function myF(x, xd, pars)
 	[
-		x[1] + xd[2][1]^2,
-		x[2] + xd[3][2]^2,
+		x[1] + xd.u[2][1]^2,
+		x[2] + xd.u[3][2]^2,
 	]
 end
 ```

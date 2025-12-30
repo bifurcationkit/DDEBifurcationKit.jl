@@ -27,21 +27,19 @@ g(z) = (tanh(z − 1) + tanh(1)) * cosh(1)^2
 function neuron2VF(x, xd, p)
    (; a,b,c,d) = p
    [
-      -x[1] - a * g(b*xd[1][1]) + c * g(d*xd[2][2]),
-      -x[2] - a * g(b*xd[1][2]) + c * g(d*xd[2][1])
+      -x[1] - a * g(b * xd.u[1][1]) + c * g(d * xd.u[2][2]),
+      -x[2] - a * g(b * xd.u[1][2]) + c * g(d * xd.u[2][1])
    ]
 end
 
-function delaysF(par)
-   [par.τ1, par.τ2]
-end
+delaysF(par) = [par.τ1, par.τ2]
 
 pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
 
 prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 
-optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig(maxit=100))
+optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 1., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(tangent=Bordered()), opts)
 ```

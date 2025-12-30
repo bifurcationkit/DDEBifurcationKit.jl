@@ -12,7 +12,7 @@ const DDEBK = DDEBifurcationKit
 function humpriesVF(x, xd, p)
    (; κ1, κ2, γ, a1, a2, c) = p
    [
-      -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
+      -γ * x[1] - κ1 * xd.u[1][1] - κ2 * xd.u[2][1]
    ]
 end
 

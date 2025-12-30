@@ -11,7 +11,7 @@ using Plots
 
 function delayedlogVF(x, xd, p)
    (;λ) = p
-   y = xd[1][1]
+   y = xd.u[1][1]
    [
       (λ - y) * x[1]
    ]

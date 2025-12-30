@@ -9,8 +9,8 @@ using Plots
 function neuronVF(x, xd, p)
    (;κ, β, a12, a21, τs, τ1, τ2) = p
    [
-      -κ * x[1] + β * tanh(xd[3][1]) + a12 * tanh(xd[2][2]),
-      -κ * x[2] + β * tanh(xd[3][2]) + a21 * tanh(xd[1][1])
+      -κ * x[1] + β * tanh(xd.u[3][1]) + a12 * tanh(xd.u[2][2]),
+      -κ * x[2] + β * tanh(xd.u[3][2]) + a21 * tanh(xd.u[1][1])
    ]
 end
 
@@ -24,7 +24,6 @@ prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs); record
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 5., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
-
 plot(br)
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.a21); record_from_solution = prob.recordFromSolution)

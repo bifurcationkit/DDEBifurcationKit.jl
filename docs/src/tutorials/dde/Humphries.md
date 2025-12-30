@@ -21,7 +21,7 @@ const BK = BifurcationKit
 function humpriesVF(x, xd, p)
    (;κ1, κ2, γ, a1, a2, c) = p
    [
-      -γ * x[1] - κ1 * xd[1][1] - κ2 * xd[2][1]
+      -γ * x[1] - κ1 * xd.u[1][1] - κ2 * xd.u[2][1]
    ]
 end
 
@@ -33,7 +33,7 @@ function delaysF(x, par)
 end
 
 
-pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
+pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 x0 = zeros(1)
 
 prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
@@ -42,7 +42,7 @@ prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 We then compute the branch
 
 ```@example TUTHumphries
-optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
+optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
 br = continuation(prob, PALC(), opts; verbosity = 0, bothside = true)
 ```
@@ -77,10 +77,9 @@ We compute the branch of periodic orbits from the Hopf bifurcation points using 
 
 ```julia
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-	nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds = 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
+	tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
 @reset opts_po_cont.newton_options.tol = 1e-9
-@reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
 args_po = (	record_from_solution = (x, p; k...) -> begin

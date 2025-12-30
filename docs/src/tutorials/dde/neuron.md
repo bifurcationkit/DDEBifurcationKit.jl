@@ -24,8 +24,8 @@ const BK = BifurcationKit
 function neuronVF(x, xd, p)
    (; κ, β, a12, a21, τs, τ1, τ2) = p
    [
-      -κ * x[1] + β * tanh(xd[3][1]) + a12 * tanh(xd[2][2]),
-      -κ * x[2] + β * tanh(xd[3][2]) + a21 * tanh(xd[1][1])
+      -κ * x[1] + β * tanh(xd.u[3][1]) + a12 * tanh(xd.u[2][2]),
+      -κ * x[2] + β * tanh(xd.u[3][2]) + a21 * tanh(xd.u[1][1])
    ]
 end
 
@@ -37,7 +37,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=200))
-opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 15, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
 ```
 
@@ -56,7 +56,7 @@ hopfpt = BK.get_normal_form(br, 2)
 ```
 
 ## Continuation of Hopf points
-We follow the Hopf points in the parameter plane $(a_{21},\tau_s)$. We tell the solver to consider br.specialpoint[3] and continue it.
+We follow the Hopf points in the parameter plane $(a_{21}, \tau_s)$. We tell the solver to consider br.specialpoint[3] and continue it.
 
 ```@example TUTneuron
 # continuation of the first Hopf point

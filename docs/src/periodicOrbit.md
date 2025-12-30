@@ -19,5 +19,5 @@ We regroup here some important notes which are valid for all methods above.
 ### 1. Finaliser
 If you pass a `finalize` function to [continuation](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/library/#BifurcationKit.continuation), the following occurs:
 
-1. If the newton solve was successfull, we update the phase condition every `update_section_every_step`
+1. If the newton solve was successful, we update the phase condition every `update_section_every_step`
 2. we call the user defined finalizer `finalize`.

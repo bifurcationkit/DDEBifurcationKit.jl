@@ -10,7 +10,7 @@ const DDEBK = DDEBifurcationKit
 
 function TW(u, ud, p)
    (;a, Δ) = p
-   (Δ * u) .+ u .- a .* ud[1] .* (1 .+ u)
+   (Δ * u) .+ u .- a .* ud.u[1] .* (1 .+ u)
 end
 
 delaysF(par) = [1.]
@@ -31,7 +31,6 @@ prob = ConstantDDEBifProblem(TW, delaysF, x0, pars, (@optic _.a))
 optn = NewtonPar(verbose = true, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
-
 plot(br)
 ################################################################################
 hopfpt = BK.get_normal_form(br, 1)

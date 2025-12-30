@@ -14,8 +14,8 @@ More precisely, if $\ker dF(x_0,p_0) = \mathbb R\zeta$, one can show that $x_0+z
 In the above scalar equation,
 
 - if $a\neq 0$, this is a *Saddle-Node* bifurcation
-- if $a=0,b_2\neq 0$, the bifurcation point is a *Transcritical* one where the bifurcated branch exists on each side of $p$.
-- if $a=0,b_2=0, b_3\neq 0$, the bifurcation point is a *Pitchfork* one where the bifurcated branch only exists on one side of $p$. If it exists at smaller values then $p$, this is a *subcritical Pitchfork* bifurcation. In the other case, this is a *supercritical Pitchfork* bifurcation.
+- if $a = 0, b_2\neq 0$, the bifurcation point is a *Transcritical* one where the bifurcated branch exists on each side of $p$.
+- if $a = 0, b_2 = 0, b_3\neq 0$, the bifurcation point is a *Pitchfork* one where the bifurcated branch only exists on one side of $p$. If it exists at smaller values then $p$, this is a *subcritical Pitchfork* bifurcation. In the other case, this is a *supercritical Pitchfork* bifurcation.
 
 ## Normal form computation
 

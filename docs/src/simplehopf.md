@@ -1,6 +1,5 @@
 # Simple Hopf point
 
-
 At a Hopf branch point $(x_0,p_0)$ for the problem $F(x,p)=0$, the spectrum of the linear operator $dF(x_0,p_0)$ contains two purely imaginary $\pm i\omega,\ \omega > 0$ which are simple. At such point, we can compute the **normal form** to transform the DDE problem
 
 $$\dot x = \mathbf{F}(x_t,p)$$

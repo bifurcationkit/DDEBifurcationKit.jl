@@ -12,7 +12,7 @@ using DiffEqOperators
 
 function Hutchinson(u, ud, p)
    (;a,d,Δ) = p
-   d .* (Δ*u) .- a .* ud[1] .* (1 .+ u)
+   d .* (Δ*u) .- a .* ud.u[1] .* (1 .+ u)
 end
 
 delaysF(par) = [1.]

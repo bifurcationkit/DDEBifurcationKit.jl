@@ -12,7 +12,7 @@ using Plots
 
 function ikedaVF(x, xd, p)
    (; Λ) = p
-   y = xd[1][1]
+   y = xd.u[1][1]
    [
       -pi/2 + Λ/2 * y^2;
    ]
@@ -29,7 +29,6 @@ optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
 plot(br)
-
 BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 ################################################################################
 # computation periodic orbit

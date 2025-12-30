@@ -86,12 +86,13 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
-    Fc = (xd, p) -> F(xd.u[1], xd.u[2:end], p)
+    F_voa = (xd, p) -> F(xd.u[1], VectorOfArray(xd.u[2:end]), p) # VectorOfArray version of F
+    𝒯 = BK.VI.scalartype(u0)
     # J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
-    dF = isnothing(dF) ? (x, p, dx) -> ForwardDiff.derivative(t -> Fc(x .+ t .* dx, p), 0.) : dF
-    d1Fad(x, p, dx1) = ForwardDiff.derivative(t -> Fc(x .+ t .* dx1, p), 0.)
+    dF = isnothing(dF) ? (x, p, dx) -> ForwardDiff.derivative(t -> F_voa(x .+ t .* dx, p), zero(𝒯)) : dF
+    jvp(x, p, dx1) = ForwardDiff.derivative(t -> F_voa(x .+ t .* dx1, p), zero(𝒯))
     if isnothing(d2F)
-        d2F = (x, p, dx1, dx2) -> ForwardDiff.derivative(t -> d1Fad(x .+ t .* dx2, p, dx1), 0.)
+        d2F = (x, p, dx1, dx2) -> ForwardDiff.derivative(t -> jvp(x .+ t .* dx2, p, dx1), zero(𝒯))
         d2Fc = (x, p, dx1, dx2) -> BilinearMap((_dx1, _dx2) -> d2F(x,p,_dx1,_dx2))(dx1,dx2)
     else
         d2Fc = d2F
@@ -120,7 +121,6 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
 end
 
 BK.dF(prob::ConstantDDEBifProblem, x,p, dx) = BK.dF(prob.VF, x, p, dx)
-
 BK.update!(prob::ConstantDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
 
 struct JacobianDDE{Tp,T1,T2,T3,Td}
@@ -145,7 +145,6 @@ end
 function jacobian_forwarddiff(prob::ConstantDDEBifProblem, x, p)
     xd = VectorOfArray([copy(x) for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
-
     Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), x) for ii in eachindex(prob.delays0)]
     return J0, Jd
 end
@@ -379,7 +378,6 @@ end
 function BK.jacobian(prob::SDDDEBifProblem, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
-
     Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), x) for ii in eachindex(prob.delays0)]
     return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
 end
