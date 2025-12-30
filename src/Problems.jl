@@ -55,6 +55,7 @@ BK.getdelta(prob::ConstantDDEBifProblem) = prob.δ
 BK.d2F(prob::ConstantDDEBifProblem, x, p, dx1, dx2) = BK.d2F(prob.VF, x, p, dx1, dx2)
 BK.d3F(prob::ConstantDDEBifProblem, x, p, dx1, dx2, dx3) = BK.d3F(prob.VF, x, p, dx1, dx2, dx3)
 BK.save_solution(prob::ConstantDDEBifProblem, x, p) = prob.save_solution(x, p)
+@inline delays(prob::ConstantDDEBifProblem, x, pars) = prob.delays(pars)
 
 function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
     print(io, prefix * "┌─ Constant Delays Bifurcation Problem with uType ")
@@ -302,6 +303,7 @@ BK.getlens(prob::SDDDEBifProblem) = prob.lens
 BK.has_adjoint(prob::SDDDEBifProblem) = true
 BK.getdelta(prob::SDDDEBifProblem) = prob.δ
 BK.save_solution(prob::SDDDEBifProblem, x, p) = prob.save_solution(x, p)
+@inline delays(prob::SDDDEBifProblem, x, pars) = prob.delays(x, pars)
 
 function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
