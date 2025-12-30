@@ -57,25 +57,18 @@ Custom state means, we can use something else than `AbstractArray`, for example 
 
 Type of delay: Constant (C), state-dependent (SD), nested (N)
 
-|Features| delay type | Matrix Free|Custom state| [Tutorial](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/tutorials/tutorials/) | GPU |
+|Features| delay type | Matrix Free|Custom state| [Tutorials](https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/tutorials/tutorials/) | GPU |
 |---|---|---|---|---|---|
 | (Deflated) Krylov-Newton| C/SD |  Yes | Yes| | |
 | Continuation PALC (Natural, Secant, Tangent, Polynomial) | C/SD| | | | |
 | Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | |
 | Fold Point continuation |C/SD | Y |  |  |
 | Hopf Point continuation | C/SD |  | `AbstractArray` | | |
-| ~~Bogdanov-Takens Point newton~~ | C/SD | Y | `AbstractArray` | | |
 | Branch point / Fold / Hopf normal form | C/SD | Y|  | |  | |
-| Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  
-| <span style="color:red">**Automatic bifurcation diagram computation of equilibria**</span> | C/SD| Y| `AbstractArray` |  | |
-| ~~Periodic Orbit (Trapezoid) Newton / continuation~~ | | | `AbstractVector` |  | |
+| Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  |
+| Automatic bifurcation diagram computation of equilibria | C/SD| Y| `AbstractArray` |  | |
 | Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| ~~Periodic Orbit (Parallel Poincaré / Standard Shooting) Newton / continuation~~ | | | `AbstractArray` |   | |
-| ~~Fold, Neimark-Sacker, Period doubling detection~~ | | | `AbstractVector` |   | |
-| ~~Continuation of Fold of periodic orbits~~ | | | `AbstractVector` |  |  |
 | Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD| Y|  |  |
-|~~Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf normal forms~~ | | Y|  |  |
-| ~~Branching from Bogdanov-Takens points to Fold / Hopf curve~~ |  | |  `AbstractVector` | |  |
 
 ## Requested methods for Custom State
 Needless to say, if you use regular arrays, you don't need to worry about what follows.
@@ -87,4 +80,6 @@ We make the same requirements as `KrylovKit.jl`. Hence, we refer to its [docs](h
 - `Base.eltype` must be extended to your vector type. It is mainly used for branching.
 
 ## Citations
-The papers citing this work are collected on [google scholar](https://scholar.google.fr/scholar?hl=fr&as_sdt=2005&cites=159498619004863176%2C8662907770106865595&scipsc=&as_ylo=&as_yhi=).
+Papers citing this work are collected on [Zotero](https://www.zotero.org/groups/6097154/citations_of_bifurcationkit/library).
+
+These citations are aggregated from [Google Scholar (search)](https://scholar.google.com/scholar?q=bifurcationkit&hl=en&as_sdt=0,5) and [Google Scholar (citations)](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=159498619004863176,12573642401780006854,8662907770106865595). Note that each link may reference different subsets of papers.

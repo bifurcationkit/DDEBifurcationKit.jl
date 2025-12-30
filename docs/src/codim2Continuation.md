@@ -22,7 +22,7 @@ The continuation of Fold bifurcation points is based on a **Minimally Augmented*
 You can detect the following codim 2 bifurcation points by using the option `detect_codim2_bifurcation` in the method `continuation`.
 
 - the detection of Cusp (Cusp) is done by the detection of Fold bifurcation points along the curve of Folds by monitoring the parameter component of the tangent.
-- the detection of Bogdanov-Takens (BT) is performed using the test function[^Bindel] $\psi_{BT}(p) = \langle w(p),\Delta'(0)\cdot v(p)\rangle$
+- the detection of Bogdanov-Takens (BT) is performed using the test function $\psi_{BT}(p) = \langle w(p),\Delta'(0)\cdot v(p)\rangle$
 - the detection of Zero-Hopf (ZH) is performed by monitoring the number of eigenvalues $\lambda$ such that $\Re\lambda > \min\limits_{\nu\in\Sigma(dF)}|\Re\nu|$ and $\Im\lambda > \epsilon$ where $\epsilon$ is the Newton tolerance.
 
 ## Hopf continuation
