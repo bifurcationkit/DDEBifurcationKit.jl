@@ -11,7 +11,7 @@ for op in (:HopfDDEProblem,)
 
         $(FIELDS)
         """
-        mutable struct $op{Tprob <: BK.AbstractBifurcationProblem, vectype, T <: Real, S <: BK.AbstractLinearSolver, Sa <: BK.AbstractLinearSolver, Sbd <: BK.AbstractBorderedLinearSolver, Sbda <: BK.AbstractBorderedLinearSolver, Tmass}
+        mutable struct $op{Tprob <: BK.AbstractBifurcationProblem, vectype, T <: Real, S <: BK.AbstractLinearSolver, Sa <: BK.AbstractLinearSolver, Sbd <: BK.AbstractBorderedLinearSolver, Sbda <: BK.AbstractBorderedLinearSolver, Tmass, Tn}
             "Functional F(x, p) - vector field - with all derivatives"
             prob_vf::Tprob
             "close to null vector of Jᵗ"
@@ -42,6 +42,10 @@ for op in (:HopfDDEProblem,)
             usehessian::Bool
             "wether to use a mass matrix M for studying M∂tu = F(u), default = I"
             massmatrix::Tmass
+            "norm to normalize vector in update or test"
+            norm::Tn
+            "Update the problem every such step"
+            update_minaug_every_step::Int
         end
 
         @inline BK.has_hessian(pb::$op) = BK.hasHessian(pb.prob_vf)
@@ -54,7 +58,12 @@ for op in (:HopfDDEProblem,)
         @inline BK.getdelta(pb::$op) = BK.getdelta(pb.prob_vf)
 
         # constructor
-        function $op(prob::AbstractDDEBifurcationProblem, a, b, linsolve::BK.AbstractLinearSolver, linbdsolver = BK.MatrixBLS(); usehessian = true, massmatrix = LA.I)
+        function $op(prob::AbstractDDEBifurcationProblem, a, b,
+                    linsolve::BK.AbstractLinearSolver,
+                    linbdsolver = BK.MatrixBLS(); usehessian = true,
+                    massmatrix = LA.I,
+                    _norm = LA.norm,
+                    update_minaug_every_step = 0)
             # determine scalar type associated to vectors a and b
             α = LA.norm(a) # this is valid, see https://jutho.github.io/KrylovKit.jl/stable/#Package-features-and-alternatives-1
             Ty = eltype(α)
@@ -64,7 +73,7 @@ for op in (:HopfDDEProblem,)
                         real(one(Ty)),        # bt
                         real(one(Ty)),        # gh
                         1,                            # zh
-                        linsolve, linsolve, linbdsolver, linbdsolver, usehessian, massmatrix)
+                        linsolve, linsolve, linbdsolver, linbdsolver, usehessian, massmatrix, _norm, update_minaug_every_step)
         end
     end
 end

@@ -80,21 +80,21 @@ end
                                  (L, ∂L),
                                  pars,
                                  result) where {Tprob <: SDDDEBifProblem}
-    Ty = eltype(u)
+    𝒯 = eltype(u)
     n, ntimes = size(u)
     m = pb.mesh_cache.degree
     Ntst = pb.mesh_cache.Ntst
     # we want slices at fixed  times, hence gj[:, j] is the fastest
     # temporaries to reduce allocations
-    gj  = zeros(Ty, n, m)
-    ∂gj = zeros(Ty, n, m)
-    uj  = zeros(Ty, n, m+1)
+    gj  = zeros(𝒯, n, m)
+    ∂gj = zeros(𝒯, n, m)
+    uj  = zeros(𝒯, n, m+1)
 
-    # get interpolator which allows to get result(t)
+    # get interpolation which allows to get result(t)
     interp = BK.POSolution(pb, result)
 
     if period <= 0
-        out .= 1e9
+        out .= Inf
         return out
     end
 
