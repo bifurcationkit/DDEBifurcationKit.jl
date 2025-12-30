@@ -126,21 +126,12 @@ function BK.hopf_normal_form(prob::SDDDEBifProblem,
                         autodiff = true,
                         verbose::Bool = false)
     @error "Hopf normal form computation for SD-DDE is not implemented"
-    a = Complex{eltype(pt.x0)}(1, 0)
-    b = Complex{eltype(pt.x0)}(1, 0)
     x0 = pt.x0
-    @reset pt.nf = (a = a, b = b,
+    @reset pt.nf = (a = missing, b = missing,
                     Ψ110 = zero(x0),
                     Ψ001 = zero(x0),
                     Ψ200 = zero(x0))
-    if real(b) < 0
-        pt.type = :SuperCritical
-    elseif real(b) > 0
-        pt.type = :SubCritical
-    else
-        pt.type = :Singular
-    end
-    verbose && printstyled(color = :red,"──▶ Hopf bifurcation point is: ", pt.type, "\n")
+    pt.type = :Singular
     return pt
 end
 
