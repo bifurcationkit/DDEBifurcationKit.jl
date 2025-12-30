@@ -19,4 +19,8 @@ module DDEBifurcationKit
 
     export ConstantDDEBifProblem, SDDDEBifProblem
     export DDE_DefaultEig
+
+    # re-export methods, macros from BK
+    export continuation, @optic, NewtonPar, ContinuationPar, PALC, MoorePenrose, Natural, Polynomial, Secant, Bordered
+    export @reset, norminf, PeriodicOrbitOCollProblem, get_periodic_orbit, getperiod, get_normal_form, setparam
 end
