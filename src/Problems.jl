@@ -229,40 +229,25 @@ BK.save_solution(prob::SDDDEBifProblem, x, p) = prob.save_solution(x, p)
 
 function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
-                dF = nothing,
-                dFad = nothing,
+                jvp = nothing,
+                vjp = nothing,
                 J = nothing,
                 Jᵗ = nothing,
                 J! = nothing,
                 d2F = nothing,
+                d2Fc = nothing,
                 d3F = nothing,
+                d3Fc = nothing,
                 issymmetric::Bool = false,
-                record_from_solution = BifurcationKit.record_sol_default,
-                plot_solution = BifurcationKit.plot_default,
-                save_solution = BifurcationKit.save_solution_default,
+                record_from_solution = BK.record_sol_default,
+                plot_solution = BK.plot_default,
+                save_solution = BK.save_solution_default,
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8),
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
-    J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
-    dF = isnothing(dF) ? (x,p,dx) -> ForwardDiff.derivative(t -> F(x .+ t .* dx, p), 0.) : dF
-    d1Fad(x,p,dx1) = ForwardDiff.derivative(t -> F(x .+ t .* dx1, p), 0.)
-    if isnothing(d2F)
-        d2F = (x,p,dx1,dx2) -> ForwardDiff.derivative(t -> d1Fad(x .+ t .* dx2, p, dx1), 0.)
-        d2Fc = (x,p,dx1,dx2) -> BilinearMap((_dx1, _dx2) -> d2F(x,p,_dx1,_dx2))(dx1,dx2)
-    else
-        d2Fc = d2F
-    end
-    if isnothing(d3F)
-        d3F  = (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.)
-        d3Fc = (x,p,dx1,dx2,dx3) -> TrilinearMap((_dx1, _dx2, _dx3) -> d3F(x,p,_dx1,_dx2,_dx3))(dx1,dx2,dx3)
-    else
-        d3Fc = d3F
-    end
-
-    d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), 0.) : d3F
-    VF = BifFunction(F, nothing, dF, dFad, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...))
+    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...))
     return SDDDEBifProblem(VF,
                            delayF,
                            u0,
