@@ -23,7 +23,7 @@ end
                                  period,
                                  (L, ∂L), 
                                  pars, 
-                                 result) where {Tprob <: ConstantDDEBifProblem}
+                                 result) where {Tprob <: AbstractDDEBifurcationProblem}
     𝒯 = eltype(u)
     n, ntimes = size(u)
     m = coll.mesh_cache.degree
@@ -36,15 +36,16 @@ end
 
     # get P.O. interpolation which allows to get result(t)
     interp = BK.POSolution(coll, result)
-    delays = coll.prob_vf.delays(pars)
+    VF = coll.prob_vf
+    _delays = delays(VF, gj[:, 1], pars)
 
     # get the mesh of the collocation problem
     mesh = BK.getmesh(coll)
     σs = LinRange{𝒯}(0, 2, m) # TODO: better to rely on BK.get_mesh_coll(coll)
-    udj = VectorOfArray([copy(uj[:, 1]) for _ in delays])
+    udj = VectorOfArray([copy(uj[:, 1]) for _ in _delays])
 
     # TODO: there is an issue here. If we use `σs = BK.get_mesh_coll(coll)` which is equivalent to
-    # choosing `σs = LinRange(0,2,m+1)`, do we take `σs[l+1]` below which runs for l in 1:m ?
+    # choosing `σs = LinRange(0, 2, m+1)`, do we take `σs[l+1]` below which runs for l in 1:m ?
     # if we do, newton does not converge which indicates an issue with `interp`
 
     # range for locating time slices
@@ -61,8 +62,11 @@ end
         # compute the collocation residual
         for l in 1:m
             τ = τj + dτj * (σs[l])
-            udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays])
-            # for (ind, d) in enumerate(delays)
+            if VF isa SDDDEBifProblem
+                _delays = delays(VF, gj[:, l], pars)
+            end
+            udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in _delays])
+            # for (ind, d) in enumerate(_delays)
                 # udj.u[ind] .= interp(τ * period - d)
             # end
             __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
@@ -74,59 +78,3 @@ end
     @. out[:, end] = u[:, end] - u[:, 1]
 end
 
-# function for collocation problem
-@views function functional_coll!(coll::PeriodicOrbitOCollProblem{Tprob},
-                                 out,
-                                 u,
-                                 period,
-                                 (L, ∂L),
-                                 pars,
-                                 result) where {Tprob <: SDDDEBifProblem}
-    𝒯 = eltype(u)
-    n, ntimes = size(u)
-    m = coll.mesh_cache.degree
-    Ntst = coll.mesh_cache.Ntst
-    # we want slices at fixed times, hence gj[:, j] is the fastest
-    # temporaries to reduce allocations
-    gj  = zeros(𝒯, n, m)
-    ∂gj = zeros(𝒯, n, m)
-    uj  = zeros(𝒯, n, m+1)
-
-    # get interpolation which allows to get result(t)
-    interp = BK.POSolution(coll, result)
-
-    if period <= 0
-        out .= Inf
-        return out
-    end
-
-    # get the mesh of the OCollProblem
-    mesh = BK.getmesh(coll)
-    σ = LinRange(0, 2, m)
-
-    # range for locating time slices
-    rg = UnitRange(1, m+1)
-    for j in 1:Ntst
-        uj .= u[:, rg]
-        LA.mul!(gj, uj, L)
-        LA.mul!(∂gj, uj, ∂L)
-
-        # get the delayed states
-        τj = mesh[j]
-        dτj = (mesh[j+1]-mesh[j]) / 2
-
-        # compute the collocation residual
-        for l in 1:m
-            tσ = τj + dτj * σ[l]
-            delays = coll.prob_vf.delays(gj[:, l], pars)
-            udj = VectorOfArray([interp(mod(tσ * period - d, period)) for d in delays])
-            # out[:, end] can serve as buffer for now in the following function
-            __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
-
-        end
-        # carefull here https://discourse.julialang.org/t/is-this-a-bug-scalar-ranges-with-the-parser/70670/4"
-        rg = rg .+ m
-    end
-    # add the periodicity condition
-    @. out[:, end] = u[:, end] - u[:, 1]
-end
