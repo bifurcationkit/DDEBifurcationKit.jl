@@ -61,7 +61,6 @@ probpo = PeriodicOrbitOCollProblem(100, 4; N = 1, jacobian = BK.AutoDiffDense())
 # probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
 br_pocoll = @time continuation(
 		br, 1, opts_po_cont,
-		# PeriodicOrbitOCollProblem(100, 4);
 		probpo;
 		verbosity = 2,	plot = true,
 		args_po...,

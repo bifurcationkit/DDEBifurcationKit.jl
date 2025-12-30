@@ -63,7 +63,7 @@ br_pocoll = @time continuation(
     args_po...,
     δp = 0.01,
     callback_newton = (state; k...) -> begin
-        xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
+        xtt = BK.get_periodic_orbit(probpo, state.x, nothing)
         # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
         # printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
         @show state.x[end]

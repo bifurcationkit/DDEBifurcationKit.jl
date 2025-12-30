@@ -21,7 +21,7 @@ x0 = [0.01, 0.001]
 
 prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs); record_from_solution = (x,p; k...) -> (x1 = x[1], x2 = x[2]))
 
-optn = NewtonPar(eigsolver = DDE_DefaultEig())
+optn = NewtonPar(eigsolver = DDE_DefaultEig(σ = 1e-1 ))
 opts = ContinuationPar(p_max = 5., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
 plot(br)
@@ -41,7 +41,7 @@ plot(br2, br_pitchfork)
 ################################################################################
 brhopf = continuation(br, 2, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
-         verbosity = 2, plot = true,
+         verbosity = 0, plot = true,
          detect_codim2_bifurcation = 2,
          # bothside = true,
          start_with_eigen = true)
@@ -89,7 +89,7 @@ br_pocoll = @time continuation(
     alg = PALC(tangent = Bordered()),
     verbosity = 2,    plot = true,
     args_po...,
-    # eigsolver = BK.FloquetCollGEV(DefaultEig(), length(probpo), probpo.N),
+    # eigsolver = BK.FloquetGEV(DefaultEig(), length(probpo), probpo.N),
     δp = 0.001,
     normC = norminf,
     callback_newton = (state; k...) -> begin
@@ -105,7 +105,7 @@ br_pocoll = @time continuation(
 plot(br2, br_pocoll)
 plot(br_pocoll, vars = (:param, :period))
 
-plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
+plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param, :min))
 
 # plot the periodic orbit
 plot(layout = 2)
@@ -114,7 +114,7 @@ for ii = 1:10:41
     plot!(solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
 end
 xlabel!("t / period", subplot = 1)
-plot!(br_pocoll, vars = (:param, :period), subplot = 2, xlims=(2.2,2.4))
+plot!(br_pocoll, vars = (:param, :period), subplot = 2, xlims = (2.2, 2.4))
 
 plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
 ############

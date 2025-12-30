@@ -24,27 +24,27 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     @assert coll.prob_vf isa ConstantDDEBifProblem
     _delays = delays(coll.prob_vf, nothing, par)
 
-    # λ⋅B*p + D*p - J0*p - exp(-λ⋅τ) * Jd1*p = 0
-    # λ⋅B*p + J.J0 + exp(-λ⋅τ) * J.Jd[1]*p = 0
+    # λ⋅B * p + D * p - J0 * p - exp(-λ⋅τ) * Jd1 * p = 0
+    # λ⋅B * p + J.J0 + exp(-λ⋅τ) * J.Jd[1] * p = 0
     fs = Function[λ -> λ, λ -> one(λ)]
     for τ in _delays
         push!(fs, λ -> exp(-λ*τ))
     end
 
     # B is the identity matrix for the collocation problem
-    B = analytical_jacobian_dde_cst(wrapcoll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1,1:end-1]
+    B = analytical_jacobian_dde_cst(wrapcoll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1]
     for i=1:n
         B[end-n+i,end-n+i] = 0
         B[end-n+i,i] = 0
     end
     B = SA.sparse(B)
-    mats = [B, SA.sparse(J.J0[1:end-1, 1:end-1])]
+        mats = [B, SA.sparse(J.J0[1:end-1, 1:end-1])]
     for i in eachindex(J.Jd)
         push!(mats, J.Jd[i][1:end-1, 1:end-1] |> SA.sparse)
     end
 
-    nep = SPMF_NEP(mats, fs)
-    v0 = isnothing(eig.eigsolver.v) ? rand(size(nep, 1), 1) : eig.eigsolver.v
+        nep = SPMF_NEP(mats, fs)
+    v0 = isnothing(eig.eigsolver.v) ? rand(size(nep, 1)) : eig.eigsolver.v
     v0[1:n] .= v0[end-n+1:end]
     λ, V = NonlinearEigenproblems.iar_chebyshev(nep;
                     maxit = eig.eigsolver.maxit,
@@ -55,7 +55,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
                     )
     λ = @. log(complex(exp(λ * period)))
     I = sortperm(λ, by = real, rev = true)
-    return unique(λ[I]), nothing, true, 1
+    return λ[I], nothing, true, 1
 end
 # A Newton-Picard Collocation Method for Periodic Solutions of Delay Differential Equations,
 # author = Verheyden, Koen and Lust, Kurt,

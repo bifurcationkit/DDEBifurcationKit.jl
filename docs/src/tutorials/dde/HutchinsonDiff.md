@@ -1,4 +1,4 @@
-# Hutchinson with Diffusion
+# Hutchinson with Diffusion (codim2, sparse matrices)
 
 ```@contents
 Pages = ["HutchinsonDiff.md"]
@@ -47,7 +47,7 @@ We are now ready to compute the bifurcation of the trivial (constant in space) s
 
 ```@example TUTHut
 # bifurcation problem
-pars = (a = 0.5, d = 1, τ = 1.0, Δ = Δ, N = Nx)
+pars = (a = 0.5, d = 1.0, τ = 1.0, Δ = Δ, N = Nx)
 x0 = zeros(Nx)
 
 prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a))

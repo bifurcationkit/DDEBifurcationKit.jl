@@ -30,7 +30,6 @@ plot(br)
 br2 = continuation(br, 2, bothside = true, normC = norminf)
 plot(br,br2)
 ################################################################################
-error("ca devrait trouver une BT!!")
 brhopf = continuation(br2, 2, (@optic _.τ),
          ContinuationPar(br2.contparams; detect_bifurcation = 0, dsmax = 0.01, max_steps = 70, p_max = 0.9, p_min = 0.6,ds = 0.01, n_inversion = 2, tol_stability = 1e-6, nev = 5);
          verbosity = 1, plot = true,
