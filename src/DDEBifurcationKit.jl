@@ -22,5 +22,6 @@ module DDEBifurcationKit
 
     # re-export methods, macros from BK
     export continuation, @optic, NewtonPar, ContinuationPar, PALC, MoorePenrose, Natural, Polynomial, Secant, Bordered
-    export @reset, norminf, PeriodicOrbitOCollProblem, get_periodic_orbit, getperiod, get_normal_form, setparam
+    export PeriodicOrbitTrapProblem, PeriodicOrbitOCollProblem, ShootingProblem, FloquetCollGEV
+    export @reset, norminf, get_periodic_orbit, getperiod, get_normal_form, setparam
 end

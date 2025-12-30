@@ -1,5 +1,4 @@
 cd(@__DIR__)
-# cd("..")
 using Pkg, LinearAlgebra, Test
 pkg"activate ."
 

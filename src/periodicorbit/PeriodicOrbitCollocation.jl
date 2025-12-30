@@ -3,11 +3,11 @@
                             u::AbstractVector, 
                             pars) where {Tprob <: AbstractDDEBifurcationProblem}
     uc = BK.get_time_slices(coll, u)
-    T = BK.getperiod(coll, u, nothing)
+    period = BK.getperiod(coll, u, nothing)
     resultc = BK.get_time_slices(coll, result)
-    functional_coll!(coll, resultc, uc, T, BK.get_Ls(coll.mesh_cache), pars, u)
+    functional_coll!(coll, resultc, uc, period, BK.get_Ls(coll.mesh_cache), pars, u)
     # add the phase condition
-    result[end] = BK.phase_condition(coll, uc, BK.get_Ls(coll.mesh_cache), T)
+    result[end] = BK.phase_condition(coll, uc, BK.get_Ls(coll.mesh_cache), period)
     return result
 end
 
@@ -61,14 +61,14 @@ end
 
         # compute the collocation residual
         for l in 1:m
-            τ = τj + dτj * (σs[l])
+            τ = τj + dτj * σs[l]
             if VF isa SDDDEBifProblem
                 _delays = delays(VF, gj[:, l], pars)
             end
-            udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in _delays])
-            # for (ind, d) in enumerate(_delays)
-                # udj.u[ind] .= interp(τ * period - d)
-            # end
+            # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in _delays])
+            for (ind, d) in enumerate(_delays)
+                udj.u[ind] .= interp(τ * period - d)
+            end
             __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
 
         end

@@ -10,14 +10,7 @@ const DDEBK = DDEBifurcationKit
 
 using Plots
 
-function wrightVF(x, xd, p)
-   (;a) = p
-   y = xd.u[1][1]
-   [
-      -a * y * (1 + x[1])
-   ]
-end
-
+wrightVF(x, xd, p) = [-p.a * xd.u[1][1] * (1 + x[1])]
 delaysF(par) = [1.0]
 pars = (a=0.1,b=0.)
 x0 = [0.]
