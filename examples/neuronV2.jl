@@ -6,7 +6,7 @@ using Revise, DDEBifurcationKit, LinearAlgebra, Plots, Accessors
 using BifurcationKit
 const BK = BifurcationKit
 
-g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
+g(z) = (tanh(z − 1) + tanh(1)) * cosh(1)^2
 function neuron2VF(x, xd, p)
    (; a,b,c,d) = p
    [
@@ -25,7 +25,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
-opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, nev = 9, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = false)
 
 plot(br)
