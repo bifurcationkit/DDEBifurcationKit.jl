@@ -72,7 +72,7 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     ~cv && @debug "[Hopf Ψ001] Linear solver for J did not converge. it = $it"
     Ψ001θ = Complex.(expθ(L, Ψ001, 0))
 
-    # (2iω−L)Ψ200 = R20(ζ,ζ)
+    # (2iω−L)Ψ200 = R20(ζ, ζ)
     R20 = R2(ζθ, ζθ)
     Ψ200, cv, it = ls(Δ2ω, R20)
     ~cv && @debug "[Hopf Ψ200] Linear solver for J did not converge. it = $it"

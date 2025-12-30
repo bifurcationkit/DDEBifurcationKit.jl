@@ -8,6 +8,7 @@ module DDEBifurcationKit
 
     include("Problems.jl")
     include("Utils.jl")
+    include("LinearSolver.jl")
     include("NormalForms.jl")
     include("EigSolver.jl")
     include("codim2/codim2.jl")
