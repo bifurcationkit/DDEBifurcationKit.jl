@@ -52,8 +52,6 @@ BK.getlens(prob::ConstantDDEBifProblem) = prob.lens
 BK.has_adjoint(prob::ConstantDDEBifProblem) = true
 BK.has_adjoint_MF(prob::ConstantDDEBifProblem) = false
 BK.getdelta(prob::ConstantDDEBifProblem) = prob.δ
-BK.d2F(prob::ConstantDDEBifProblem, x, p, dx1, dx2) = BK.d2F(prob.VF, x, p, dx1, dx2)
-BK.d3F(prob::ConstantDDEBifProblem, x, p, dx1, dx2, dx3) = BK.d3F(prob.VF, x, p, dx1, dx2, dx3)
 BK.save_solution(prob::ConstantDDEBifProblem, x, p) = prob.save_solution(x, p)
 @inline delays(prob::ConstantDDEBifProblem, x, pars) = prob.delays(pars)
 
@@ -70,8 +68,8 @@ end
 function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
                 J! = nothing,
-                dF = nothing,
-                dFad = nothing,
+                jvp = nothing,
+                vjp = nothing,
                 J = nothing,
                 Jᵗ = nothing,
                 d2F = nothing,
@@ -87,28 +85,8 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
-    F_voa = (xd, p) -> F(xd.u[1], VectorOfArray(xd.u[2:end]), p) # VectorOfArray version of F
-    𝒯 = BK.VI.scalartype(u0)
-    # J = isnothing(J) ? (x,p) -> ForwardDiff.jacobian(z -> F(z, p), x) : J
-    dF = isnothing(dF) ? (x, p, dx) -> ForwardDiff.derivative(t -> F_voa(x .+ t .* dx, p), zero(𝒯)) : dF
-    jvp(x, p, dx1) = ForwardDiff.derivative(t -> F_voa(x .+ t .* dx1, p), zero(𝒯))
-    if isnothing(d2F)
-        d2F = (x, p, dx1, dx2) -> ForwardDiff.derivative(t -> jvp(x .+ t .* dx2, p, dx1), zero(𝒯))
-        d2Fc = (x, p, dx1, dx2) -> BilinearMap((_dx1, _dx2) -> d2F(x,p,_dx1,_dx2))(dx1,dx2)
-    else
-        d2Fc = d2F
-    end
 
-    if isnothing(d3F)
-        d3F  = (x, p, dx1, dx2, dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), zero(𝒯))
-        d3Fc = (x, p, dx1, dx2, dx3) -> TrilinearMap((_dx1, _dx2, _dx3) -> d3F(x,p,_dx1,_dx2,_dx3))(dx1, dx2, dx3)
-    else
-        d3Fc = d3F
-    end
-
-    d3F = isnothing(d3F) ? (x,p,dx1,dx2,dx3) -> ForwardDiff.derivative(t -> d2F(x .+ t .* dx3, p, dx1, dx2), zero(𝒯)) : d3F
-    # VF = BifFunction(F, dF, dFad, J, Jᵗ, d2F, d3F, d2Fc, d3Fc, issymmetric, 1e-8, inplace)
-    VF = BifFunction(F, F!, dF, dFad, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...))
+    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...)) ## TODO: it requires a specific DDEBifFunction
     return ConstantDDEBifProblem(VF,
                                  delayF,
                                  u0,
@@ -121,7 +99,20 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                                  δ)
 end
 
-BK.dF(prob::ConstantDDEBifProblem, x, p, dx) = BK.dF(prob.VF, x, p, dx)
+function F_voa(prob::ConstantDDEBifProblem, x, p)
+    n_delays = length(delays(prob, x, p))
+    F_voa(prob, VectorOfArray([copy(x) for _ in 1:(n_delays+1)]), p)
+end
+
+function F_voa(prob::ConstantDDEBifProblem, xd::VectorOfArray, p)
+    prob.VF.F(xd.u[1], VectorOfArray(xd.u[2:end]), p)
+end
+
+function BK.dF(prob::ConstantDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p, dx) where {Tf, TFinp}
+    𝒯 = BK.VI.scalartype(x)
+    return ForwardDiff.derivative(t -> F_voa(prob, x .+ t .* dx, p), zero(𝒯))
+end
+
 BK.update!(prob::ConstantDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
 
 function BK.residual(prob::ConstantDDEBifProblem, x, p)
