@@ -64,6 +64,7 @@ end
 Itilde(K, L) = [zeros(K, L-K)  LA.I(K)]
 isnonzero(x) = !iszero(x)
 
+# compute the Floquet multipliers based on monodromy. See online documentation.
 function BK.compute_eigenvalues(eig::FloquetColl, 
                                 iter::BK.ContIterable{BK.PeriodicOrbitCont, <: BK.WrapPOColl{ <: BK.PeriodicOrbitOCollProblem{Tprob}}}, 
                                 state, 
@@ -71,6 +72,15 @@ function BK.compute_eigenvalues(eig::FloquetColl,
                                 par, 
                                 nev = iter.contparams.nev; k...) where {Tkind <: BK.AbstractContinuationKind, Tprob <: AbstractDDEBifurcationProblem}
     wrapcoll = BK.get_wrap_po(iter)
+    return __floquet_coll(eig, BK.get_wrap_po(iter), u0, par, nev)
+end
+
+function __floquet_coll(eig::FloquetColl,
+                            wrapcoll,
+                            u0,
+                            par,
+                            nev = 2
+                        )
     coll = wrapcoll.prob
     n, = size(coll)
     # n = 0 # if we put this, we obtain the zero eigenvalue

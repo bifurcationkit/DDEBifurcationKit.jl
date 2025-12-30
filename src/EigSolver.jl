@@ -28,8 +28,12 @@ $(TYPEDFIELDS)
 end
 
 function (eig::DDE_DefaultEig)(J::JacobianDDE, nev; kwargs...)
+    return _eig_defaulteig(eig, J.J0, J.Jd, J.delays, nev; kwargs...)
+end
+
+function _eig_defaulteig(eig::DDE_DefaultEig, J0, Jd, delays, nev; kwargs...)
     # we have to be careful: Jd matrices must be non-zero
-    dep = NonlinearEigenproblems.DEP([J.J0, J.Jd...], [0, J.delays...])
+    dep = NonlinearEigenproblems.DEP([J0, Jd...], [0, delays...])
     λ, V = NonlinearEigenproblems.iar_chebyshev(dep;
                     maxit = eig.maxit,
                     neigs = nev + 2,
