@@ -21,14 +21,7 @@ pars = (A = 0.5, ω = 1.0, r = -0.1)
 x0 = [0.01,]
 
 prob = ConstantDDEBifProblem(sinusvf, delaysF, x0, pars, (@optic _.A))
-args_po = (    record_from_solution = (x, p; k...) -> begin
-        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-        mi, ma = extrema(xtt[1,:])
-        return (max = ma,
-                min = mi,
-                amp = ma-mi,
-                period = getperiod(p.prob, x, nothing))
-    end,
+args_po = (
     plot_solution = (x, p; k...) -> begin
         xtt = BK.get_periodic_orbit(p.prob, x, nothing)
         plot!(xtt.t, xtt[1,:]; label = "V1", k...)
@@ -36,7 +29,7 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
     normC = norminf)
 
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9, max_steps = 120, nev = 15, tol_stability = 1e-4, plot_every_step = 1, newton_options = NewtonPar(tol = 1e-12, verbose = false))
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9, max_steps = 120, nev = 15, tol_stability = 1e-5, plot_every_step = 1, newton_options = NewtonPar(tol = 1e-12, verbose = false))
 
 # build the po functional
 probpo = PeriodicOrbitOCollProblem(20, 5; N = 1, 
@@ -106,7 +99,7 @@ _J2 = DDEBK.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob.prob, _po, _p
 # (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf
 
 # computation of Floquet exponents based in GEV: it works!
-res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol = 1e-12, σ = 1e-3), length(probpo), 1), br_pocoll.prob, _po, _pars, 15)[1]
+res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol = 1e-12, σ = 1e-2)), br_pocoll.prob, _po, _pars, 15)[1]
 
 # computation of Floquet exponents based Verheyden, Lust 2005
 # it does not work !!

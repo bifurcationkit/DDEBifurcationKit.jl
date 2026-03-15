@@ -1,11 +1,9 @@
 import LinearAlgebra as LA
 import SparseArrays as SA
 
-function BK.FloquetGEV(eig::AbstractDDEEigenSolver)
-    return BK.FloquetGEV(eig, 0, 0)
-end
-
-
+# dispatch on the following constructor to pass options specific to DDE
+BK.FloquetGEV(eig::AbstractDDEEigenSolver; ntot = 0, n = 0, k...) = BK.FloquetGEV(eig, ntot, n; k...)
+########################################################################################
 # compute the Floquet exponents based on GEV. Seem online documentation.
 function BK.compute_eigenvalues(eig::FloquetGEV{ <: AbstractDDEEigenSolver}, 
                                 iter::BK.ContIterable{Tkind}, 
@@ -127,14 +125,41 @@ function __floquet_coll(eig::FloquetColl,
     J = analytical_jacobian_dde_cst_floquetcoll(coll, u0, par)
 
     # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]
+    # we then find the closest coarse mesh point
     Jdnz = vec(sum(isnonzero, J.Jd; dims = 1))
-    a_left = findfirst(isnonzero, vec(Jdnz))
+    a_left = findfirst(isnonzero, Jdnz)
 
     # remove the phase/periodicity condition and derivative wrt period
     B = @views J.J0[1:end-1-n, 1:end-1]
     A = @views J.Jd[1:end-1-n, a_left:end-1]
+
+    # the part corresponding to t = 0 must be in A
+    ii = n # ii = m * n
+    A = hcat(A[:, 1:end-ii], B[:, 1:ii]) # replace the last columns of A with the first ones of B
+    B = B[:, ii+1:end]
+
     @assert size(A, 1) == size(B, 1)
 
+    # C   = [A B; I 0]
+    # Cbc = [0 0; 0 I]
+    if true
+        # using ii does not change the following
+        C = hcat(A, B)
+        dn = size(C, 2) - size(C, 1)+1
+        dn = size(A, 2)
+        # matrix to ensure periodicity boundary condition
+        Cbc = vcat(zero(C), zeros(𝒯, dn, size(C, 2)))
+        C = vcat(C, zeros(𝒯, dn, size(C, 2)))
+        s2 = size(B, 2)
+        for i in 1:dn
+            Cbc[s2+i, s2+i+1] = 1
+            C[s2+i, i] = 1
+        end
+        # return Cbc, C
+        vals  = LA.eigvals(Cbc, C) # (Cbc - λC)x = 0
+        logvals = log.(complex.(vals))
+        return sort(logvals, by = real, rev = true)[1:nev], nothing, true, 1
+    end
     Mₜ = -B\A
     Nₜ, N = size(Mₜ)
 

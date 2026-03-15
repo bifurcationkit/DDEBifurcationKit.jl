@@ -32,10 +32,8 @@ function delaysF(x, par)
    ]
 end
 
-
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 x0 = zeros(1)
-
 prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 ```
 
@@ -77,18 +75,10 @@ We compute the branch of periodic orbits from the Hopf bifurcation points using 
 
 ```julia
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds = 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-	tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
-@reset opts_po_cont.newton_options.tol = 1e-9
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds = 0.001, dsmin = 1e-4, p_max = 12., max_steps = 3000, detect_bifurcation = 0, plot_every_step = 20)
 
 # arguments for periodic orbits
-args_po = (	record_from_solution = (x, p; k...) -> begin
-		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-		_max = maximum(xtt[1,:])
-		_min = minimum(xtt[1,:])
-		return (amp = _max - _min,
-				period = getperiod(p.prob, x, nothing))
-	end,
+args_po = (
 	plot_solution = (x, p; k...) -> begin
 		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
 		plot!(xtt.t, xtt[1,:]; label = "x", k...)
@@ -96,7 +86,7 @@ args_po = (	record_from_solution = (x, p; k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(200, 3; N = 1, jacobian = BK.AutoDiffDense())
+probpo = PeriodicOrbitOCollProblem(100, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = continuation(
 	br, 2, opts_po_cont,
 	probpo;
