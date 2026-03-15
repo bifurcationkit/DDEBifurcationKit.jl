@@ -126,7 +126,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.001, max_steps = 185, nev =
 probpo = PeriodicOrbitOCollProblem(20, 5; N = 2, 
             jacobian = BK.AutoDiffDense(),)
 
-br_po = @time continuation(
+br_po = continuation(
             br3, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 3),
             probpo;
             normC = norminf,

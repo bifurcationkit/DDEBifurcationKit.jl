@@ -19,6 +19,10 @@ function __po_coll_bc!(coll::PeriodicOrbitOCollProblem, dest, ∂u, u, ud, par, 
     @. dest = ∂u - h * tmp
 end
 
+function (sol::BK.POSolution{ <: PeriodicOrbitOCollProblem})(::Val{:der}, t0)
+    ForwardDiff.derivative(sol, t0)
+end
+
 # function for collocation problem
 @views function functional_coll!(coll::PeriodicOrbitOCollProblem{Tprob},
                                  outc::AbstractMatrix{𝒯},
@@ -156,11 +160,18 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
                             Jd[idelay][_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         elseif ($(fname == :analytical_jacobian_dde_cst_floquetcoll) && t0 < 0)
+                            rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t - 1))
                             Jd[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         else # case analytical_jacobian_dde_cst
                             J[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         end
                     end
+                end
+                # ================================
+                # add derivative w.r.t. the period
+                J[_rgX, nJ] .= coll.prob_vf.VF.F(pj[:, l], udj, pars) .* (-dτj)
+                for (idelay, d) in enumerate(delays_v)
+                    J[_rgX, nJ] .+= -(α * d/period ) .* (JacDDE.Jd[idelay] * interp(Val(:der), τ * period - d))
                 end
                 # ================================
                 phase += LA.dot(pj[:, l], coll.∂ϕ[:, (j-1)*m + l]) * ω[l]

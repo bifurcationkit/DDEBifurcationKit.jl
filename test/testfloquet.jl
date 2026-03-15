@@ -4,7 +4,8 @@ using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
-using Plots
+# using Plots
+# plotH(x) = heatmap(x, yflip=true, color = :viridis)
 
 function sinusvf(X, xd, p)
     (;A, ω, r) = p
@@ -38,7 +39,10 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9, max_steps = 120, nev = 15, tol_stability = 1e-4, plot_every_step = 1, newton_options = NewtonPar(tol = 1e-12, verbose = false))
 
 # build the po functional
-probpo = PeriodicOrbitOCollProblem(30, 4; N = 1, jacobian = BK.AutoDiffDense(), prob_vf = prob, xπ = zeros(1), ϕ = zeros(2))
+probpo = PeriodicOrbitOCollProblem(20, 5; N = 1, 
+    jacobian = BK.AutoDiffDense(),
+    # jacobian = BK.DenseAnalytical(), 
+    prob_vf = prob, xπ = zeros(1), ϕ = zeros(2))
 @reset probpo.xπ = zeros(length(probpo))
 @reset probpo.ϕ = zeros(length(probpo))
 ci = BK.generate_solution(probpo, t->[(pars.A)*cos(t)], 2pi);
@@ -61,10 +65,9 @@ br_pocoll = @time continuation(
 # we find a = 0 and b = -ω
 
 # the floquet exponents are analytical
-using LambertW#, SparseArrays, RecursiveArrayTools
-λs = [2*pars.ω/pi * lambertw(complex(-pi/2,0), k) for k in -0:7]
-μs = exp.(λs*2pi)
-# hcat(log.(μs), eigenvals(br_pocoll, 2)[1:2:16])
+# using LambertW#, SparseArrays, RecursiveArrayTools
+# λs = [2*pars.ω/pi * lambertw(complex(-pi/2,0), k) for k in -0:7]
+# μs = exp.(λs*2pi)
 
 # log.(μs) gives
 # 8-element Vector{ComplexF64}:
@@ -76,19 +79,35 @@ using LambertW#, SparseArrays, RecursiveArrayTools
 #    -12.183953392697111 - 0.3693428703906798im
 #     -12.88060245239543 - 0.32795127295702187im
 #    -13.473627512100485 - 0.2957194071943831im
+
 ind_po = 3
 br_pocoll.sol[ind_po].p
 period = br_pocoll.sol[ind_po].x[end]
 _pars = BK.setparam(br_pocoll,br_pocoll.sol[ind_po].p)
 _po = br_pocoll.sol[ind_po].x
+_sol = BK.get_periodic_orbit(br_pocoll, ind_po)
 
 # jacobian of the PO functional
-_J = BK.jacobian(br_pocoll.prob, _po, _pars);
-heatmap(iszero.(_J) , yflip=true, color = :viridis)
+_J = BK.jacobian(br_pocoll.prob, BK.AutoDiffDense(), _po, _pars);
+# plotH(iszero.(_J))
+
+_J2 = DDEBK.analytical_jacobian_dde_cst(br_pocoll.prob.prob, _po, _pars)
+# @test norm(_J - _J2, Inf) < 1e-10
+
+
+_J2 = DDEBK.analytical_jacobian_dde_cst_floquetgev(br_pocoll.prob.prob, _po, _pars)
+# plotH(iszero.(_J2.J0))
+# plotH(iszero.(_J2.Jd[1]))
+# (_J2.J0 + _J2.Jd[1] -_J)[1:end-1,1:end-1] |> norminf
+
+_J2 = DDEBK.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob.prob, _po, _pars)
+# plotH(iszero.(_J2.J0))
+# plotH(iszero.(_J2.Jd))
+# (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf
 
 # computation of Floquet exponents based in GEV: it works!
-res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-12, σ = 1e-3), length(probpo), 1), br_pocoll.prob, _po, _pars, 25)[1]
+res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol = 1e-12, σ = 1e-3), length(probpo), 1), br_pocoll.prob, _po, _pars, 15)[1]
 
 # computation of Floquet exponents based Verheyden, Lust 2005
 # it does not work !!
-res = @time DDEBK.__floquet_coll(BK.FloquetColl(), br_pocoll.prob, _po, _pars, 12)[1]
+vals = @time DDEBK.__floquet_coll(BK.FloquetColl(), br_pocoll.prob.prob, _po, _pars, 15)[1]

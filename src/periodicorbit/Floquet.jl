@@ -60,7 +60,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     else
         fs = Function[λ -> λ, λ -> one(λ)]
         for τ in _delays
-            push!(fs, λ -> exp(-λ*τ))
+            push!(fs, λ -> exp(-λ * τ))
         end
         nep = NLE.SPMF_NEP(mats, fs)
     end
@@ -91,6 +91,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     λ = λ[I] .* period
     # we filter the eigenvalues with large imaginary part
     # this must be done only if the translated version is in the spectrum...
+    # indeed, if λ is in the spectrum, so is λ + 2πZ
     mytol = 1e-5
     λ = filter(x -> -pi + mytol < imag(x) < pi + mytol, λ)
     λ =  unique(round.(λ; digits = abs(Int(log10(mytol)))) .+ (0+0im) ) # this trick is for -0 ≈ 0

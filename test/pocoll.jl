@@ -26,7 +26,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 1
 
 for m in (3,4,5), Ntst in (99, 100)
     probpo = PeriodicOrbitOCollProblem(Ntst, m; N = 2, jacobian = BK.AutoDiffDense())
-    br_pocoll = @time continuation(
+    br_pocoll = continuation(
             br, 1, opts_po_cont,
             probpo;
             δp = 0.001,
@@ -36,11 +36,11 @@ for m in (3,4,5), Ntst in (99, 100)
     ind_po = 5
     _po = br_pocoll.sol[ind_po].x
     _pars = BK.setparam(br,br_pocoll.sol[ind_po].p)
-    _J = @time BK.jacobian(br_pocoll.prob, _po, _pars)
-    _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst(br_pocoll.prob.prob, _po, _pars)
-    @test ((_J-_J2)[1:end-1,1:end-1] |> norminf) ≈ 0 atol = 1e-14
-    _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob.prob, _po, _pars)
+    _J = BK.jacobian(br_pocoll.prob, _po, _pars)
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst(br_pocoll.prob.prob, _po, _pars)
+    @test norminf(_J-_J2) ≈ 0 atol = 1e-14
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob.prob, _po, _pars)
     @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-14
-    _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(br_pocoll.prob.prob, _po, _pars)
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(br_pocoll.prob.prob, _po, _pars)
     @test (_J2.J0 + sum(_J2.Jd) -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-14
 end
