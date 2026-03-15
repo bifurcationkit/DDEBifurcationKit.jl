@@ -37,8 +37,8 @@ for m in (3,4,5), Ntst in (99, 100)
     _po = br_pocoll.sol[ind_po].x
     _pars = BK.setparam(br,br_pocoll.sol[ind_po].p)
     _J = @time BK.jacobian(br_pocoll.prob, _po, _pars)
-    @test ((_J-_J2)[1:end-1,1:end-1] |> norminf) ≈ 0 atol = 1e-14
     _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst(br_pocoll.prob.prob, _po, _pars)
+    @test ((_J-_J2) |> norminf) ≈ 0 atol = 1e-14
     _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob.prob, _po, _pars)
     @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-14
     _J2 = @time DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(br_pocoll.prob.prob, _po, _pars)
