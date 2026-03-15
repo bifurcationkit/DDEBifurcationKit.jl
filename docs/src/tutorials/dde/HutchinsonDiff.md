@@ -1,4 +1,4 @@
-# Hutchinson with Diffusion (codim2, sparse matrices)
+# Hutchinson with Diffusion (codim2, sparse matrices, periodic orbits)
 
 ```@contents
 Pages = ["HutchinsonDiff.md"]

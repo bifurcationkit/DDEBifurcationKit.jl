@@ -64,8 +64,10 @@ Mesh adaptation can be turned on like in the case of [ODEs](https://bifurcationk
 ## Jacobians
 
 - the jacobian `BifurcationKit.AutoDiffDense()` is available for constant delays and state-dependent delays.
-- the jacobian `BifurcationKit.DenseAnalytical()` is available for constant delays only.
-- the jacobian `BifurcationKit.FullSparse()` is available for constant delays only.
+
+Only for constant delays:
+- the jacobian `BifurcationKit.DenseAnalytical()` is available.
+- the jacobian `BifurcationKit.FullSparse()` is available.
 
 > All [jacobians](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation) of the ODE case will be made available in the future.
 
