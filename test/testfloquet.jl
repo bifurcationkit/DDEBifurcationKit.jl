@@ -50,7 +50,7 @@ br_pocoll = @time continuation(
             # verbosity = 2,
             # plot = true,
             args_po...,
-            # eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-10, σ = 1e-3), length(probpo), 1),
+            # eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-10, σ = 1e-3)),
             normC = norminf,
             )
 

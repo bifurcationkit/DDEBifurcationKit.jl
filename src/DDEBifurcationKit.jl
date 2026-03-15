@@ -16,6 +16,7 @@ module DDEBifurcationKit
     include("codim2/Fold.jl")
 
     include("periodicorbit/PeriodicOrbits.jl")
+    include("periodicorbit/Floquet.jl")
     include("periodicorbit/PeriodicOrbitCollocation.jl")
 
     export ConstantDDEBifProblem, SDDDEBifProblem

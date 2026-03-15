@@ -1,6 +1,11 @@
 import LinearAlgebra as LA
 import SparseArrays as SA
 
+function BK.FloquetGEV(eig::AbstractDDEEigenSolver)
+    return BK.FloquetGEV(eig, 0, 0)
+end
+
+
 # compute the Floquet exponents based on GEV. Seem online documentation.
 function BK.compute_eigenvalues(eig::FloquetGEV{ <: AbstractDDEEigenSolver}, 
                                 iter::BK.ContIterable{Tkind}, 
@@ -27,14 +32,14 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     # λ⋅B * p + D * p - J0 * p - exp(-λ⋅τ) * Jd1 * p = 0
     # λ⋅B * p + J.J0 + exp(-λ⋅τ) * J.Jd[1] * p = 0
 
-    # B is the identity matrix for the collocation problem
-    B = analytical_jacobian_dde_cst(coll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1] #remove phase condition
+    # Icoll is the identity matrix for the collocation problem
+    Icoll = analytical_jacobian_dde_cst(coll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1] #remove phase condition
     # remove periodic boundary condition
     for i = 1:n
-        B[end-n+i, end-n+i] = 0
-        B[end-n+i, i] = 0
+        Icoll[end-n+i, end-n+i] = 0
+        Icoll[end-n+i, i] = 0
     end
-    B = SA.sparse(B)
+    B = SA.sparse(Icoll)
 
     USENEP = true
 

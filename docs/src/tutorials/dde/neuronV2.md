@@ -77,8 +77,8 @@ brhopf2 = continuation(br, 2, (@optic _.c),
          bothside = true,
          start_with_eigen = true)
 
-scene = plot(brhopf, vars = (:a, :c), xlims = (0,0.7), ylims = (0, 1))
-plot!(scene, brhopf2, vars = (:a, :c), xlims = (-0,0.7), ylims = (-0.1, 1))
+scene = plot(brhopf,  vars = (:a, :c))
+plot!(scene, brhopf2, vars = (:a, :c), xlims = (0, 0.7), ylims = (-0.1, 1))
 scene
 ```
 
@@ -107,4 +107,35 @@ scene = plot(brbp, vars = (:a, :c), branchlabel = "Branch points")
 plot!(scene, brhopf, vars = (:a, :c), branchlabel = "Hopf")
 plot!(scene, brhopf2, vars = (:a, :c), branchlabel = "Hopf")
 scene
+```
+
+## Branch of periodic orbits
+
+We compute the branch of periodic orbits from a Hopf bifurcation.
+
+```@example TUTneuron2
+pars = (a = 0.069, b = 2., c = 0.6, d = 1.2, τ1 = 11.6, τ2 = 20.3)
+delaysF(par) = [par.τ1, par.τ2]
+prob3 = ConstantDDEBifProblem(neuron2VF, delaysF, zeros(2), pars, (@optic _.c))
+br3 = continuation(prob3, PALC(), ContinuationPar(opts, p_max = 1.0);)
+```
+
+```@example TUTneuron2
+opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.0001, max_steps = 100, nev = 10, tol_stability = 1e-4)
+
+probpo = PeriodicOrbitOCollProblem(20, 5; N = 2, 
+            jacobian = BK.AutoDiffDense(),)
+
+br_po = @time continuation(
+            br3, 1, ContinuationPar(opts_po_cont; max_steps = 185, detect_bifurcation = 3),
+            probpo;
+            plot = true,
+            normC = norminf,
+            eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=100, tol = 1e-12, σ = 1e-3)),
+            )
+plot(br_po, vars = (:param, :amplitude))
+```
+
+```@example TUTneuron2
+plot(br3, br_po)
 ```
