@@ -1,5 +1,5 @@
 using Test, DDEBifurcationKit
-using LinearAlgebra, LambertW
+using LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
