@@ -152,7 +152,7 @@ function __floquet_coll(eig::FloquetColl,
         C = vcat(C, zeros(𝒯, dn, size(C, 2)))
         s2 = size(B, 2)
         for i in 1:dn
-            Cbc[s2+i, s2+i+1] = 1
+            Cbc[s2+i, s2+i] = 1
             C[s2+i, i] = 1
         end
         # return Cbc, C
