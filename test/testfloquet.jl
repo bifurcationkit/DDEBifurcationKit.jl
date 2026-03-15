@@ -35,7 +35,7 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
     normC = norminf)
 
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9, max_steps = 120, nev = 15, tol_stability = 1e-4, plot_every_step = 1, newton_options = NewtonPar(tol = 1e-10, verbose = false))
+opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9, max_steps = 120, nev = 15, tol_stability = 1e-4, plot_every_step = 1, newton_options = NewtonPar(tol = 1e-12, verbose = false))
 
 # build the po functional
 probpo = PeriodicOrbitOCollProblem(30, 4; N = 1, jacobian = BK.AutoDiffDense(), prob_vf = prob, xπ = zeros(1), ϕ = zeros(2))
@@ -48,7 +48,7 @@ BK.residual(probpo, ci, pars) |> BK.norminf
 br_pocoll = @time continuation(
             probpo, ci, BK.PALC(), ContinuationPar(opts_po_cont; detect_bifurcation = 0);
             # verbosity = 2,
-            plot = true,
+            # plot = true,
             args_po...,
             # eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-10, σ = 1e-3), length(probpo), 1),
             normC = norminf,
@@ -83,7 +83,7 @@ _pars = BK.setparam(br_pocoll,br_pocoll.sol[ind_po].p)
 _po = br_pocoll.sol[ind_po].x
 
 # jacobian of the PO functional
-_J = BK.jacobian(br_pocoll.prob, _po, _pars)
+_J = BK.jacobian(br_pocoll.prob, _po, _pars);
 heatmap(iszero.(_J) , yflip=true, color = :viridis)
 
 # computation of Floquet exponents based in GEV: it works!

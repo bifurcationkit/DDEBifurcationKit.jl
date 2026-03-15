@@ -28,9 +28,7 @@ end
                                  pars, 
                                  u, # uc is a view of u[1:end-1] 
                                  ) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯}
-    n, ntimes = size(uc)
-    m = coll.mesh_cache.degree
-    Ntst = coll.mesh_cache.Ntst
+    n, m, Ntst = size(coll)
     # we want slices at fixed times, hence gj[:, j] is the fastest
     # temporaries to reduce allocations
     gj  = BK.get_tmp(coll.cache.gj, uc)  # zeros(𝒯, n, m)
@@ -81,14 +79,12 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                          (:analytical_jacobian_dde_cst_floquetcoll, true),
                          )
     @eval begin
-    function $fname(wrap::BK.WrapPOColl{ <: PeriodicOrbitOCollProblem{Tprob}}, 
+    @views function $fname(coll::PeriodicOrbitOCollProblem{Tprob}, 
                             u::AbstractVector{𝒯}, 
                             pars;
                             ρD = one(𝒯),
                             ρF = one(𝒯),
-                            ρI = zero(𝒯)) where {Tprob <: ConstantDDEBifProblem, 𝒯 }
-        coll = wrap.prob # TODO: use getdisc
-
+                            ρI = zero(𝒯)) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯 }
         n, m, Ntst = size(coll)
         nJ = length(coll) + 1
         L, ∂L = BK.get_Ls(coll.mesh_cache) # L is of size (m+1, m)
@@ -110,8 +106,8 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         rgNx = UnitRange(1, n)
         rgNy = UnitRange(1, n)
 
-        delays = VF.delays(pars)
-        udj = VectorOfArray([zeros(𝒯, n) for d in delays])
+        delays_v = delays(VF, u[1:n], pars) # vector of delays
+        udj = VectorOfArray([zeros(𝒯, n) for d in delays_v])
         J = zeros(𝒯, length(coll) + 1, length(coll) + 1)
         J0 = zeros(𝒯, n, n)
 
@@ -121,7 +117,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
 
         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
             # arrays to store the jacobian of the delayed terms
-            Jd = [zeros(𝒯, length(coll)+1, length(coll)+1) for _ in 1:length(delays)]
+            Jd = [zeros(𝒯, length(coll)+1, length(coll)+1) for _ in 1:length(delays_v)]
         elseif $(fname == :analytical_jacobian_dde_cst_floquetcoll)
             # this part contains the times t - d/period which are negative
             Jd = zeros(𝒯, length(coll)+1, length(coll)+1)
@@ -137,8 +133,8 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             for l in 1:m
                 _rgX = rgNx .+ (l-1)*n
                 τ = BK.τj(σs[l], mesh, j) # collocation nodes
-                # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays])
-                for (ind, d) in enumerate(delays)
+                # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays_v])
+                for (ind, d) in enumerate(delays_v)
                     udj.u[ind] .= interp(mod(τ * period - d, period))
                 end
                 JacDDE = jacobian(VF, pj[:, l], udj, pars)
@@ -146,7 +142,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                 for l2 in 1:m+1
                     J[_rgX, rgNy .+ (l2-1)*n ] .+= @. (-α * L[l2, l] * ρF) * J0 +
                                                     (ρD * ∂L[l2, l] - α * L[l2, l] * ρI) * In
-                    for (idelay, d) in enumerate(delays)
+                    for (idelay, d) in enumerate(delays_v)
                         # find interval where t-τ/period belongs
                         t0 = τ * period - d
                         τd = mod(t0, period) / period
@@ -174,7 +170,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             rgNy = rgNy .+ (m * n)
         end
         if $floquet
-            return JacobianDDE(missing, missing, J, Jd, delays)
+            return JacobianDDE(missing, missing, J, Jd, delays_v)
         else
             J[end, begin:end-1] .= coll.cache.∇phase ./ period
             J[nJ, nJ] = -phase / period^2

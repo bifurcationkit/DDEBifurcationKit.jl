@@ -21,13 +21,6 @@ function (hopfpb::HopfDDEProblem)(x::ArrayPartition, params)
     ArrayPartition(res...)
 end
 ###################################################################################################
-# define a problem <: AbstractBifurcationProblem
-# @inline hasAdjoint(hopfpb::HopfMAProblem) = hasAdjoint(hopfpb.prob)
-# @inline isSymmetric(hopfpb::HopfMAProblem) = isSymmetric(hopfpb.prob)
-# residual(hopfpb::HopfMAProblem, x, p) = hopfpb.prob(x, p)
-# # jacobian(hopfpb::HopfMAProblem, x, p) = hopfpb.jacobian(x, p)
-# jacobian(hopfpb::HopfMAProblem{Tprob, Nothing, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = (x = x, params = p, hopfpb = hopfpb.prob)
-#
 struct JacobianCodim2DDE{T1,T2,T3,T4}
     prob::T1
     J::T2
@@ -38,8 +31,6 @@ end
 (l::BK.DefaultLS)(J::JacobianCodim2DDE, args...; kw...) = l(J.J, args...; kw...)
 
 BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
-#
-# jacobian(hopfpb::HopfMAProblem{Tprob, FiniteDifferences, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob, Tu0, Tp, Tl <: Union{Lens, Nothing}, Tplot, Trecord} = dx -> (hopfpb.prob(x .+ 1e-8 .* dx, p) .- hopfpb.prob(x .- 1e-8 .* dx, p)) / (2e-8)
 ################################################################################################### Newton / Continuation functions
 function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
                         hopfpointguess::ArrayPartition,

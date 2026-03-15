@@ -59,10 +59,8 @@ brhopf2 = continuation(br, 2, (@optic _.a21),
 plot(brhopf, brhopf2, legend = :top)
 ################################################################################
 # computation periodic orbit
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 50,
-    nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step=1, detect_fold = true)
-@reset opts_po_cont.newton_options.tol = 1e-8
-@reset opts_po_cont.newton_options.verbose = true
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 80,
+    nev = 10, tol_stability = 1e-8, detect_bifurcation = 2, plot_every_step = 5, newton_options = NewtonPar(tol = 1e-12,))
 
 # arguments for periodic orbits
 args_po = (    record_from_solution = (x, p; k...) -> begin
@@ -77,29 +75,23 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
         xtt = BK.get_periodic_orbit(p.prob, x, p.p)
         plot!(xtt.t, xtt[1,:]; label = "V1", k...)
         plot!(xtt.t, xtt[2,:]; label = "V2", k...)
-        plot!(br; subplot = 1, putspecialptlegend = false)
+        plot!(br2; subplot = 1, putspecialptlegend = false)
         end,
     normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(50, 3; N = 2, jacobian = BK.AutoDiffDense())
-# probpo = PeriodicOrbitTrapProblem(M = 150, N = 2; jacobian = BK.AutoDiffDense())
+probpo = PeriodicOrbitOCollProblem(30, 3; N = 2,
+        # jacobian = BK.AutoDiffDense()
+        jacobian = BK.DenseAnalytical(), 
+)
 br_pocoll = @time continuation(
-    br, 2, opts_po_cont,
+    br2, 1, opts_po_cont,
     probpo;
     alg = PALC(tangent = Bordered()),
-    verbosity = 2,    plot = true,
+    verbosity = 2, plot = true,
     args_po...,
     # eigsolver = BK.FloquetGEV(DefaultEig(), length(probpo), probpo.N),
     δp = 0.001,
     normC = norminf,
-    callback_newton = (state; k...) -> begin
-        xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
-        # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-        # printstyled(color=:red, "amp = ", maximum(xtt.u[:,:],1),"\n")
-        # @show state.x[end]
-        # @show state.f[end]
-        state.step < 6
-    end
     )
 
 plot(br2, br_pocoll)
@@ -117,7 +109,7 @@ xlabel!("t / period", subplot = 1)
 plot!(br_pocoll, vars = (:param, :period), subplot = 2, xlims = (2.2, 2.4))
 
 plot(br2, br_pocoll, br_pitchfork);plot!(br_pocoll, vars = (:param,:min))
-############
+################################################################################
 ################################################################################
 using  DifferentialEquations
 

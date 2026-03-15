@@ -87,9 +87,11 @@ The variational equation around a periodic orbit reads
 
 $$\frac{dz(t)}{dt} = A(t)\cdot x(t) +B(t) x(t-\tau).$$
 
-where $A,B$ are periodic functions. The Floquet $\lambda$ exponents are solution to
+where $A,B$ are periodic functions. The Floquet $\lambda$ exponents are solution to the eigenvalue problem:
 
-$$\left(\lambda + \frac{d}{dt}\right) z(t) = A(t)\cdot x(t) + e^{-\lambda\tau} B(t) x(t-\tau)\tag{1}$$
+$$\left(\lambda + \frac{d}{dt}\right) z(t) = A(t)\cdot z(t) + e^{-\lambda\tau} B(t) z(t-\tau)\tag{1}$$
+
+Recall that they are related to the FLoquet coefficients $\mu$ by the relation $\mu=\exp(\lambda T)$.
 
 
 We provide one method(s) to compute the Floquet coefficients.

@@ -20,7 +20,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     coll = wrapcoll.prob
     n, m, Ntst = size(coll)
     period = BK.getperiod(coll, u0, nothing)
-    J = analytical_jacobian_dde_cst_floquetgev(wrapcoll, u0, par)
+    J = analytical_jacobian_dde_cst_floquetgev(coll, u0, par)
     @assert coll.prob_vf isa ConstantDDEBifProblem
     _delays = delays(coll.prob_vf, nothing, par)
 
@@ -32,7 +32,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     end
 
     # B is the identity matrix for the collocation problem
-    B = analytical_jacobian_dde_cst(wrapcoll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1]
+    B = analytical_jacobian_dde_cst(coll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1]
     for i = 1:n
         B[end-n+i, end-n+i] = 0
         B[end-n+i, i] = 0
@@ -72,20 +72,19 @@ function BK.compute_eigenvalues(eig::FloquetColl,
                                 par, 
                                 nev = iter.contparams.nev; k...) where {Tkind <: BK.AbstractContinuationKind, Tprob <: AbstractDDEBifurcationProblem}
     wrapcoll = BK.get_wrap_po(iter)
-    return __floquet_coll(eig, BK.get_wrap_po(iter), u0, par, nev)
+    return __floquet_coll(eig, BK.get_wrap_po(iter).prob, u0, par, nev)
 end
 
 function __floquet_coll(eig::FloquetColl,
-                            wrapcoll,
+                            coll,
                             u0::AbstractVector{𝒯},
                             par,
                             nev = 3
                         ) where {𝒯}
-    coll = wrapcoll.prob
     n, m, Ntst = size(coll)
     period = BK.getperiod(coll, u0, par)
     # n = 0 # if we put this, we obtain the zero eigenvalue
-    J = analytical_jacobian_dde_cst_floquetcoll(wrapcoll, u0, par)
+    J = analytical_jacobian_dde_cst_floquetcoll(coll, u0, par)
 
     # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]
     Jdnz = vec(sum(isnonzero, J.Jd; dims = 1))

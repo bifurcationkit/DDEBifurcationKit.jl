@@ -54,7 +54,7 @@ prob = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 0, plot = false, normC = norminf)
+br = continuation(prob, PALC(), opts; normC = norminf)
 br
 ```
 
@@ -85,9 +85,28 @@ prob2 = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a); J = J
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
+br = continuation(prob2, PALC(), opts; normC = norminf)
 br
 ```
 
+We can compute the Hopf normal form
+
+```@example TUTHut
+get_normal_form(br, 1)
+```
+
+## Continuation of Hopf points
+
+```@example TUTHut
+brhopfs = [continuation(br, i, (@optic _.d),
+         ContinuationPar(br.contparams, detect_bifurcation = 3, p_min = 0.1, p_max = 2.5, max_steps = 1000);
+         verbosity = 2,
+         detect_codim2_bifurcation = 2,
+         plot = true,
+         bothside = true,
+         ) for i = 1:3]
+
+plot(brhopfs..., title = "Hopf curves")
+```
 
 ## References
