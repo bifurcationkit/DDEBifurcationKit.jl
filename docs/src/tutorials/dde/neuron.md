@@ -89,30 +89,11 @@ We then compute the branch of periodic orbits from the Hopf bifurcation points u
 
 ```@example TUTneuron
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min= 0., max_steps = 100, detect_bifurcation = 2)
+opts_po_cont = ContinuationPar(ds = 1e-3, p_max = 3., max_steps = 100, detect_bifurcation = 0)
 
-# arguments for periodic orbits
-args_po = (	record_from_solution = (x, p; k...) -> begin
-			xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-			return (max = maximum(xtt[1,:]),
-					min = minimum(xtt[1,:]),
-					period = getperiod(p.prob, x, nothing))
-		end,
-		plot_solution = (x, p; k...) -> begin
-			xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-			plot!(xtt.t, xtt[1,:]; label = "V1", k...)
-			plot!(xtt.t, xtt[2,:]; label = "V2", k...)
-			plot!(br2; subplot = 1, putspecialptlegend = false)
-			end,
-		normC = norminf)
-
-probpo = PeriodicOrbitOCollProblem(60, 4; N = 2, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
 	br2, 1, opts_po_cont,
-	probpo;
-	# verbosity = 2, plot = true,
-	args_po...,
-	δp = 0.003,
+	PeriodicOrbitOCollProblem(20, 5; jacobian = BK.AutoDiffDense());
 	normC = norminf,
 	)
 scene = plot(br2, br_pocoll)
@@ -123,12 +104,11 @@ We can plot the periodic orbit as they approach the homoclinic point.
 ```@example TUTneuron
 scene = plot(layout = 2)
 for ii = 1:10:110
-	solpo = BK.get_periodic_orbit(br_pocoll.γ.prob.prob, br_pocoll.sol[ii].x, nothing)
+	solpo = BK.get_periodic_orbit(br_pocoll, ii)
 	plot!(scene, solpo.t ./ solpo.t[end], solpo.u[1,:], label = "", subplot = 1)
 end
 xlabel!(scene, "t / period", subplot = 1)
+ylabel!(scene, "V1", subplot = 1)
 plot!(scene, br_pocoll, vars = (:param, :period), subplot = 2, xlims=(2.2,2.4))
 scene
 ```
-
-## References

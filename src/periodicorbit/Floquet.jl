@@ -26,13 +26,10 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
 
     # λ⋅B * p + D * p - J0 * p - exp(-λ⋅τ) * Jd1 * p = 0
     # λ⋅B * p + J.J0 + exp(-λ⋅τ) * J.Jd[1] * p = 0
-    fs = Function[λ -> λ, λ -> one(λ)]
-    for τ in _delays
-        push!(fs, λ -> exp(-λ*τ))
-    end
 
     # B is the identity matrix for the collocation problem
-    B = analytical_jacobian_dde_cst(coll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1]
+    B = analytical_jacobian_dde_cst(coll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1] #remove phase condition
+    # remove periodic boundary condition
     for i = 1:n
         B[end-n+i, end-n+i] = 0
         B[end-n+i, i] = 0
@@ -53,9 +50,13 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
 
     if USENEP == false
         dep = NLE.DEP(mats, [0, _delays...]) # M(λ) = -λI + Σ_i A_i exp(-τ_i λ)
-        pep = NLE.PEP([SA.spzeros(size(B)), LA.I+B])
+        pep = NLE.PEP([SA.spzeros(size(B)), LA.I + B])
         nep = NLE.SumNEP(pep, dep)
     else
+        fs = Function[λ -> λ, λ -> one(λ)]
+        for τ in _delays
+            push!(fs, λ -> exp(-λ*τ))
+        end
         nep = NLE.SPMF_NEP(mats, fs)
     end
 
@@ -117,7 +118,6 @@ function __floquet_coll(eig::FloquetColl,
                         ) where {𝒯}
     n, m, Ntst = size(coll)
     period = BK.getperiod(coll, u0, par)
-    # n = 0 # if we put this, we obtain the zero eigenvalue
     J = analytical_jacobian_dde_cst_floquetcoll(coll, u0, par)
 
     # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]
