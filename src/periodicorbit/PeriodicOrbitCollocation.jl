@@ -77,6 +77,20 @@ end
     @. outc[:, end] = uc[:, end] - uc[:, 1]
 end
 
+function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, 
+                ::BK.DenseAnalytical,
+                x, 
+                p) where {Tprob <: ConstantDDEBifProblem}
+    return analytical_jacobian_dde_cst(coll, x, p)
+end
+
+function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, 
+                ::BK.FullSparse,
+                x, 
+                p) where {Tprob <: ConstantDDEBifProblem}
+    return analytical_jacobian_dde_cst(coll, x, p)
+end
+
 # analytical jacobian for constant DDE
 for (fname, floquet) in ((:analytical_jacobian_dde_cst, false), 
                          (:analytical_jacobian_dde_cst_floquetgev, true),
@@ -112,8 +126,14 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
 
         delays_v = delays(VF, u[1:n], pars) # vector of delays
         udj = VectorOfArray([zeros(𝒯, n) for d in delays_v])
-        J = zeros(𝒯, length(coll) + 1, length(coll) + 1)
-        J0 = zeros(𝒯, n, n)
+        if coll.jacobian isa BK.FullSparse
+            J = SA.spzeros(𝒯, length(coll) + 1, length(coll) + 1)
+            J0 = SA.spzeros(𝒯, n, n)
+            In = SA.sparse(In)
+        else
+            J = zeros(𝒯, length(coll) + 1, length(coll) + 1)
+            J0 = zeros(𝒯, n, n)
+        end
 
         # put boundary condition
         J[nJ-n:nJ-1, nJ-n:nJ-1] .= In

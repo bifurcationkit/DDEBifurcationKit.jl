@@ -109,4 +109,25 @@ brhopfs = [continuation(br, i, (@optic _.d),
 plot(brhopfs..., title = "Hopf curves")
 ```
 
+## Computation of the periodic orbit
+
+```@example TUTHut
+br_pocoll = @time continuation(
+            br, 1, ContinuationPar(br.contparams; detect_bifurcation = 0, max_steps = 3, newton_options = NewtonPar(eigsolver = DDE_DefaultEig(), verbose = true), plot_every_step = 1),
+            PeriodicOrbitOCollProblem(20, 4; jacobian = BK.FullSparse());
+            verbosity = 2,
+            plot = true,
+            normC = norminf,
+            )
+
+plot(br, br_pocoll)
+```
+
+We can plot a solution from the curve
+
+```@example TUTHut
+sol = BK.get_periodic_orbit(br_pocoll, 3)
+heatmap(sol.t, X, sol[:,:], xlabel = "time")
+```
+
 ## References
