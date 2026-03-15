@@ -121,15 +121,14 @@ br3 = continuation(prob3, PALC(), ContinuationPar(opts, p_max = 1.0);)
 ```
 
 ```@example TUTneuron2
-opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.0001, max_steps = 100, nev = 10, tol_stability = 1e-4)
+opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.001, max_steps = 185, nev = 10, tol_stability = 1e-4)
 
 probpo = PeriodicOrbitOCollProblem(20, 5; N = 2, 
             jacobian = BK.AutoDiffDense(),)
 
 br_po = @time continuation(
-            br3, 1, ContinuationPar(opts_po_cont; max_steps = 185, detect_bifurcation = 3),
+            br3, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 3),
             probpo;
-            plot = true,
             normC = norminf,
             eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=100, tol = 1e-12, σ = 1e-3)),
             )
