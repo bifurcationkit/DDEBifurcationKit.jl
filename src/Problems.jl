@@ -292,3 +292,9 @@ function BK.jacobian(prob::SDDDEBifProblem, x, p)
     Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), x) for ii in eachindex(prob.delays0)]
     return JacobianDDE(prob, J0 + sum(Jd), J0, Jd, prob.delays(x, p))
 end
+
+function jacobian(prob::SDDDEBifProblem, x, xd, p)
+    J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
+    Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), xd.u[ii]) for ii in eachindex(prob.delays0)]
+    return JacobianDDE(prob, missing, J0, Jd, prob.delays(x, p))
+end

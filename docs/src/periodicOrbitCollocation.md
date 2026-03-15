@@ -8,7 +8,7 @@ Depth = 3
 We compute `Ntst` time slices of a periodic orbit using orthogonal collocation. This is implemented in the structure `BifurcationKit.PeriodicOrbitOCollProblem`.
 
 !!! warning "Large scale"
-    The current implementation is not yet optimized for large scale problems. This will be improved in the future.
+    The current implementation is not yet optimized for large scale problems. This will be improved in the future. Right now, you can easily go to 1000 unknowns.
 
 The general method is explained in [BifurcationKit.jl](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/periodicOrbitCollocation/).
 
@@ -61,21 +61,19 @@ The **nodes** $(z_l)$ are associated with a Gauss–Legendre quadrature.
 
 Mesh adaptation can be turned on like in the case of [ODEs](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation).
 
-🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
-
-🚧 🚧 BELOW IS WORK IN PROGRESS 🚧 🚧
-
-🚧 🚧 🚧 🚧 DO NOT USE YET 🚧 🚧 🚧 🚧
-
-🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
-
 ## Jacobians
 
-All [jacobians](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation) of the ODE case are available.
+- the jacobian `BifurcationKit.AutoDiffDense()` is available for constant delays and state-dependent delays.
+- the jacobian `BifurcationKit.DenseAnalytical()` is available for constant delays only.
+- the jacobian `BifurcationKit.FullSparse()` is available for constant delays only.
+
+> All [jacobians](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation) of the ODE case will be made available in the future.
 
 ## Linear solvers
 
-All [linear solvers](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Linear-solvers) of the ODE case are available.
+- only `DefaultLS()` is exposed for now.
+
+> All [linear solvers](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Linear-solvers) of the ODE case are available.
 
 ## Floquet multipliers computation
 
@@ -96,8 +94,8 @@ Recall that they are related to the FLoquet coefficients $\mu$ by the relation $
 
 We provide one method(s) to compute the Floquet coefficients.
 
-1. The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
-2. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here but this can be used to check the results of the previous method.
+1. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here but this can be used to check the results of the previous method.
+2. 🚧 🚧 🚧 🚧 DO NOT USE THIS ONE YET 🚧 🚧 🚧 🚧 The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
 
 ## References
 
