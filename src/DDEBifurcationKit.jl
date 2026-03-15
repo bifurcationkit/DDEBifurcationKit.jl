@@ -2,7 +2,7 @@ module DDEBifurcationKit
     using BifurcationKit, DocStringExtensions, RecursiveArrayTools
     using ForwardDiff, Parameters
     import LinearAlgebra as LA
-    using NonlinearEigenproblems
+    import NonlinearEigenproblems as NLE
     const BK = BifurcationKit
 
 

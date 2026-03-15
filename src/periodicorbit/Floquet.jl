@@ -38,24 +38,58 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
         B[end-n+i, i] = 0
     end
     B = SA.sparse(B)
+
+    USENEP = true
+
+    if USENEP
         mats = [B, SA.sparse(J.J0[1:end-1, 1:end-1])]
+    else
+        mats = [SA.sparse(J.J0[1:end-1, 1:end-1])]
+    end
+
     for i in eachindex(J.Jd)
         push!(mats, J.Jd[i][1:end-1, 1:end-1] |> SA.sparse)
     end
 
-        nep = SPMF_NEP(mats, fs)
+    if USENEP == false
+        dep = NLE.DEP(mats, [0, _delays...]) # M(λ) = -λI + Σ_i A_i exp(-τ_i λ)
+        pep = NLE.PEP([SA.spzeros(size(B)), LA.I+B])
+        nep = NLE.SumNEP(pep, dep)
+    else
+        nep = NLE.SPMF_NEP(mats, fs)
+    end
+
     v0 = isnothing(eig.eigsolver.v) ? rand(size(nep, 1)) : eig.eigsolver.v
     v0[1:n] .= v0[end-n+1:end]
-    λ, V = NonlinearEigenproblems.iar_chebyshev(nep;
-                    maxit = eig.eigsolver.maxit,
+    
+    args_nep = (maxit = eig.eigsolver.maxit,
                     neigs = nev + 2,
                     tol = eig.eigsolver.tol,
-                    v = v0,
-                    σ = eig.eigsolver.σ
+                    logger = eig.eigsolver.logger,
+                    v = v0,)
+    λ, V = NLE.iar_chebyshev(nep; args_nep...,
+                    σ = eig.eigsolver.σ,
                     )
-    λ = @. log(complex(exp(λ * period)))
+    λ2, V = NLE.iar_chebyshev(nep; args_nep...,
+                    σ = eig.eigsolver.σ + pi*im/period,
+                    )
+    λ3, V = NLE.iar_chebyshev(nep; args_nep...,
+                    σ = eig.eigsolver.σ - pi*im/period,
+                    )
+    append!(λ, λ2)
+    append!(λ, λ3)
+    
+
+    # λ = @. log(complex(exp(λ * period)))
     I = sortperm(λ, by = real, rev = true)
-    return λ[I], nothing, true, 1
+    λ = λ[I] .* period
+    # we filter the eigenvalues with large imaginary part
+    # this must be done only if the translated version is in the spectrum...
+    mytol = 1e-5
+    λ = filter(x -> -pi + mytol < imag(x) < pi + mytol, λ)
+    λ =  unique(round.(λ; digits = abs(Int(log10(mytol)))) .+ (0+0im) ) # this trick is for -0 ≈ 0
+
+    return λ, nothing, true, 1
 end
 # A Newton-Picard Collocation Method for Periodic Solutions of Delay Differential Equations,
 # author = Verheyden, Koen and Lust, Kurt,

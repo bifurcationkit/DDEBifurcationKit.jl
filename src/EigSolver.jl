@@ -1,6 +1,6 @@
 abstract type AbstractDDEEigenSolver <: BifurcationKit.AbstractEigenSolver end
 
-_build_dep(J0, Jd, delays) = NonlinearEigenproblems.DEP([J0, Jd...], [0, delays...])
+_build_dep(J0, Jd, delays) = NLE.DEP([J0, Jd...], [0, delays...])
 
 """
 $(TYPEDEF)
@@ -36,7 +36,7 @@ end
 function _eig_defaulteig(eig::DDE_DefaultEig, J0, Jd, delays, nev; kwargs...)
     # we have to be careful: Jd matrices must be non-zero
     dep = _build_dep(J0, Jd, delays)
-    λ, V = NonlinearEigenproblems.iar_chebyshev(dep;
+    λ, V = NLE.iar_chebyshev(dep;
                     maxit = eig.maxit,
                     logger = eig.logger,
                     neigs = nev + 2,
