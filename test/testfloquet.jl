@@ -43,7 +43,7 @@ probpo = PeriodicOrbitOCollProblem(30, 4; N = 1, jacobian = BK.AutoDiffDense(), 
 @reset probpo.ϕ = zeros(length(probpo))
 ci = BK.generate_solution(probpo, t->[(pars.A)*cos(t)], 2pi);
 BK.updatesection!(probpo, ci, nothing)
-BK.residual(probpo, ci, pars)|>BK.norminf
+BK.residual(probpo, ci, pars) |> BK.norminf
 
 br_pocoll = @time continuation(
             probpo, ci, BK.PALC(), ContinuationPar(opts_po_cont; detect_bifurcation = 0);

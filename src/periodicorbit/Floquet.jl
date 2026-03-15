@@ -33,9 +33,9 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
 
     # B is the identity matrix for the collocation problem
     B = analytical_jacobian_dde_cst(wrapcoll, u0, par; ρD = 0, ρF = 0, ρI = -1)[1:end-1, 1:end-1]
-    for i=1:n
-        B[end-n+i,end-n+i] = 0
-        B[end-n+i,i] = 0
+    for i = 1:n
+        B[end-n+i, end-n+i] = 0
+        B[end-n+i, i] = 0
     end
     B = SA.sparse(B)
         mats = [B, SA.sparse(J.J0[1:end-1, 1:end-1])]
@@ -83,7 +83,7 @@ function __floquet_coll(eig::FloquetColl,
                         ) where {𝒯}
     coll = wrapcoll.prob
     n, m, Ntst = size(coll)
-    period = u0[end]
+    period = BK.getperiod(coll, u0, par)
     # n = 0 # if we put this, we obtain the zero eigenvalue
     J = analytical_jacobian_dde_cst_floquetcoll(wrapcoll, u0, par)
 

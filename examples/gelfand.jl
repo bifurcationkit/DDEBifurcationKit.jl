@@ -52,13 +52,13 @@ lx = 0.5; ly = 0.5
 const w = (lx .+ LinRange(-lx,lx,Nx)) * (LinRange(-ly,ly,Ny))' |> vec
 
 Δ, = Laplacian2D(Nx, Ny, lx, ly)
-par_mit = (λ = .05, Δ = Δ)
+par_mit = (λ = .05, Δ = Δ, τ = 1.)
 
 # initial guess f for newton
 sol0 = zeros(Nx, Ny) |> vec
 
 # Bifurcation Problem
-delayF(par) = [1.0]
+delayF(par) = [par.τ]
 
 prob = ConstantDDEBifProblem(Fmit, delayF, sol0, par_mit, (@optic _.λ),; J = JFmit,
   record_from_solution = (x, p; k...) -> (x = normbratu(x), n2 = norm(x), n∞ = norminf(x)),
@@ -88,3 +88,5 @@ opts_br = ContinuationPar(p_max = 3.5, p_min = 0.025,
 kwargsC = (verbosity = 2, plot = true, normC = norminf)
 
 br = continuation(prob, PALC(), opts_br; kwargsC...)
+
+get_normal_form(br, 1)

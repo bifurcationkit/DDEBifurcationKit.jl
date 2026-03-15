@@ -29,7 +29,6 @@ for m in (3,4,5), Ntst in (99, 100)
     br_pocoll = @time continuation(
             br, 1, opts_po_cont,
             probpo;
-            ampfactor = 1.42,
             δp = 0.001,
             normC = norminf,
             )

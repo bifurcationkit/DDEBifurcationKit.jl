@@ -21,24 +21,24 @@ end
 
 # function for collocation problem
 @views function functional_coll!(coll::PeriodicOrbitOCollProblem{Tprob},
-                                 out,
-                                 u,
+                                 outc::AbstractMatrix{𝒯},
+                                 uc::AbstractMatrix{𝒯},
                                  period,
                                  (L, ∂L), 
                                  pars, 
-                                 result) where {Tprob <: AbstractDDEBifurcationProblem}
-    𝒯 = eltype(u)
-    n, ntimes = size(u)
+                                 u, # uc is a view of u[1:end-1] 
+                                 ) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯}
+    n, ntimes = size(uc)
     m = coll.mesh_cache.degree
     Ntst = coll.mesh_cache.Ntst
     # we want slices at fixed times, hence gj[:, j] is the fastest
     # temporaries to reduce allocations
-    gj  = BK.get_tmp(coll.cache.gj, u)  # zeros(𝒯, n, m)
-    ∂gj = BK.get_tmp(coll.cache.∂gj, u) # zeros(𝒯, n, m)
+    gj  = BK.get_tmp(coll.cache.gj, uc)  # zeros(𝒯, n, m)
+    ∂gj = BK.get_tmp(coll.cache.∂gj, uc) # zeros(𝒯, n, m)
     uj  = zeros(𝒯, n, m+1)
 
-    # get P.O. interpolation which allows to get result(t)
-    interp = BK.POSolution(coll, result)
+    # get P.O. interpolation which allows to get interp(t)
+    interp = BK.POSolution(coll, u)
     VF = coll.prob_vf
     _delays = delays(VF, gj[:, 1], pars)
 
@@ -50,7 +50,7 @@ end
     # range for locating time slices
     rg = UnitRange(1, m+1)
     for j in 1:Ntst
-        uj .= u[:, rg]
+        uj .= uc[:, rg]
         LA.mul!(gj, uj, L)
         LA.mul!(∂gj, uj, ∂L)
 
@@ -67,12 +67,12 @@ end
             for (ind, d) in enumerate(_delays)
                 udj.u[ind] .= interp(τ * period - d)
             end
-            __po_coll_bc!(coll, out[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, out[:, end])
+            __po_coll_bc!(coll, outc[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, outc[:, end])
         end
         rg = rg .+ m
     end
     # add the periodicity condition
-    @. out[:, end] = u[:, end] - u[:, 1]
+    @. outc[:, end] = uc[:, end] - uc[:, 1]
 end
 
 # analytical jacobian for constant DDE
@@ -88,12 +88,11 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                             ρF = one(𝒯),
                             ρI = zero(𝒯)) where {Tprob <: ConstantDDEBifProblem, 𝒯 }
         coll = wrap.prob # TODO: use getdisc
-        J = zeros(𝒯, length(coll)+1, length(coll)+1)
 
         n, m, Ntst = size(coll)
         nJ = length(coll) + 1
         L, ∂L = BK.get_Ls(coll.mesh_cache) # L is of size (m+1, m)
-        mesh = BK.getmesh(coll)
+        mesh = BK.getmesh(coll)            # coarse mesh of size Ntst + 1
         σs = _get_gauss_nodes(coll)
         ω = coll.mesh_cache.gauss_weight
         period = BK.getperiod(coll, u, nothing)
@@ -106,10 +105,6 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         interp = BK.POSolution(coll, u)
         VF = coll.prob_vf
 
-        # put boundary condition
-        J[nJ-n:nJ-1, nJ-n:nJ-1] .= In
-        J[nJ-n:nJ-1, 1:n] .= (-1) .* In
-
         # loop over the mesh intervals
         rg = UnitRange(1, m+1)
         rgNx = UnitRange(1, n)
@@ -117,7 +112,12 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
 
         delays = VF.delays(pars)
         udj = VectorOfArray([zeros(𝒯, n) for d in delays])
+        J = zeros(𝒯, length(coll) + 1, length(coll) + 1)
         J0 = zeros(𝒯, n, n)
+
+        # put boundary condition
+        J[nJ-n:nJ-1, nJ-n:nJ-1] .= In
+        J[nJ-n:nJ-1, 1:n] .= (-1) .* In
 
         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
             # arrays to store the jacobian of the delayed terms
@@ -136,7 +136,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             α = period * dτj
             for l in 1:m
                 _rgX = rgNx .+ (l-1)*n
-                τ = BK.τj(σs[l], mesh, j)
+                τ = BK.τj(σs[l], mesh, j) # collocation nodes
                 # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays])
                 for (ind, d) in enumerate(delays)
                     udj.u[ind] .= interp(mod(τ * period - d, period))
@@ -151,20 +151,23 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                         t0 = τ * period - d
                         τd = mod(t0, period) / period
                         index_t = searchsortedfirst(mesh, τd) - 1
-                        # index_t = max(1, min(index_t, Ntst))
                         @assert 1 <= index_t <= Ntst "We have index_t = $index_t, which is out of bounds for mesh of size $(length(mesh)) and τd = $τd. Please open an issue on the website of BifurcationKit.jl"
-                        rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t-1))
+
+                        rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t - 1))
                         σ = BK.σj(τd, mesh, index_t)
                         β = BK.lagrange(l2, σ, BK.get_mesh_coll(coll)) * ρF
+
                         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
                             Jd[idelay][_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         elseif ($(fname == :analytical_jacobian_dde_cst_floquetcoll) && t0 < 0)
                             Jd[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
-                        else
+                        else # case analytical_jacobian_dde_cst
                             J[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         end
                     end
                 end
+                # ================================
+                phase += LA.dot(pj[:, l], coll.∂ϕ[:, (j-1)*m + l]) * ω[l]
             end
             rg = rg .+ m
             rgNx = rgNx .+ (m * n)
@@ -173,6 +176,8 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         if $floquet
             return JacobianDDE(missing, missing, J, Jd, delays)
         else
+            J[end, begin:end-1] .= coll.cache.∇phase ./ period
+            J[nJ, nJ] = -phase / period^2
             return J
         end
     end # function end

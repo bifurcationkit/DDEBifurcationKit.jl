@@ -11,7 +11,7 @@ function (eig::BK.FoldEig)(Jdde::JacobianCodim2DDE, nev; kwargs...)
 end
 
 # Bogdanov-Takens / Cusp test function for the Fold functional
-function BK.test_bt_cusp(iter::BK.ContIterable{BK.FoldCont, <: BK.FoldMAProblem{ <: BK.FoldProblemMinimallyAugmented{Tprob}} }, state) where {Tkind, Tprob <: AbstractDDEBifurcationProblem}
+function BK.test_bt_cusp(iter::BK.ContIterable{BK.FoldCont, <: BK.FoldMAProblem{ <: BK.FoldProblemMinimallyAugmented{Tprob}} }, state) where {Tprob <: AbstractDDEBifurcationProblem}
     probma = BK.getprob(iter)
     lens1, lens2 = BK.get_lenses(probma)
 
