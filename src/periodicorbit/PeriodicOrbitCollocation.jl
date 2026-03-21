@@ -76,7 +76,8 @@ end
     # add the periodicity condition
     @. outc[:, end] = uc[:, end] - uc[:, 1]
 end
-
+########################################################################################
+# API to select jacobian computation
 function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, 
                 ::BK.DenseAnalytical,
                 x, 
@@ -92,6 +93,8 @@ function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob},
 end
 
 # analytical jacobian for constant DDE
+########################################################################################
+# analytical jacobians for constant DDE
 for (fname, floquet) in ((:analytical_jacobian_dde_cst, false), 
                          (:analytical_jacobian_dde_cst_floquetgev, true),
                          (:analytical_jacobian_dde_cst_floquetcoll, true),

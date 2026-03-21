@@ -99,6 +99,8 @@ br_pocoll = continuation(
 	use_normal_form = false,
 	callback_newton = BK.cbMaxNorm(10.0),
 	)
+
+plot(br, br_pocoll)
 ```
 
 which gives
