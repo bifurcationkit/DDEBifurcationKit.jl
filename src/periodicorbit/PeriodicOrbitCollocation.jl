@@ -76,7 +76,8 @@ end
     # add the periodicity condition
     @. outc[:, end] = uc[:, end] - uc[:, 1]
 end
-
+########################################################################################
+# API to select jacobian computation
 function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, 
                 ::BK.DenseAnalytical,
                 x, 
