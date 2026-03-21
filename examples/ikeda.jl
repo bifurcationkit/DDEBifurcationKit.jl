@@ -35,9 +35,7 @@ BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40,
-    nev = 3, tol_stability = 1e-8, detect_bifurcation = 1, plot_every_step = 1, save_sol_every_step=1)
-@reset opts_po_cont.newton_options.tol = 1e-7
-@reset opts_po_cont.newton_options.verbose = true
+    nev = 10, tol_stability = 1e-8, detect_bifurcation = 2, plot_every_step = 1, save_sol_every_step=1)
 
 # arguments for periodic orbits
 args_po = (    record_from_solution = (x, p; k...) -> begin

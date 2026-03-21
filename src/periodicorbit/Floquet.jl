@@ -65,24 +65,17 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
 
     v0 = isnothing(eig.eigsolver.v) ? rand(size(nep, 1)) : eig.eigsolver.v
     v0[1:n] .= v0[end-n+1:end]
-    
+
     args_nep = (maxit = eig.eigsolver.maxit,
                     neigs = nev + 2,
                     tol = eig.eigsolver.tol,
                     logger = eig.eigsolver.logger,
                     v = v0,)
-    λ, V = NLE.iar_chebyshev(nep; args_nep...,
-                    σ = eig.eigsolver.σ,
-                    )
-    λ2, V = NLE.iar_chebyshev(nep; args_nep...,
-                    σ = eig.eigsolver.σ + pi*im/period,
-                    )
-    λ3, V = NLE.iar_chebyshev(nep; args_nep...,
-                    σ = eig.eigsolver.σ - pi*im/period,
-                    )
+    λ,  = NLE.iar_chebyshev(nep; args_nep..., σ = eig.eigsolver.σ)
+    λ2, = NLE.iar_chebyshev(nep; args_nep..., σ = eig.eigsolver.σ + pi * im / period)
+    λ3, = NLE.iar_chebyshev(nep; args_nep..., σ = eig.eigsolver.σ - pi * im / period)
     append!(λ, λ2)
     append!(λ, λ3)
-    
 
     # λ = @. log(complex(exp(λ * period)))
     I = sortperm(λ, by = real, rev = true)
@@ -96,6 +89,9 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
 
     return λ, nothing, true, 1
 end
+########################################################################################
+# blockdiag(a,b) = cat(a,b, dims=(1,2))
+
 # A Newton-Picard Collocation Method for Periodic Solutions of Delay Differential Equations,
 # author = Verheyden, Koen and Lust, Kurt,
 	
