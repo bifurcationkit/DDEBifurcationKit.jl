@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>(Another) Neuron model (codim 2, periodic orbits) · Bifurcation Analysis of DDEs in Julia</title><meta name="title" content="(Another) Neuron model (codim 2, periodic orbits) · Bifurcation Analysis of DDEs in Julia"/><meta property="og:title" content="(Another) Neuron model (codim 2, periodic orbits) · Bifurcation Analysis of DDEs in Julia"/><meta property="twitter:title" content="(Another) Neuron model (codim 2, periodic orbits) · Bifurcation Analysis of DDEs in Julia"/><meta name="description" content="Documentation for Bifurcation Analysis of DDEs in Julia."/><meta property="og:description" content="Documentation for Bifurcation Analysis of DDEs in Julia."/><meta property="twitter:description" content="Documentation for Bifurcation Analysis of DDEs in Julia."/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/indigo.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.svg" alt="Bifurcation Analysis of DDEs in Julia logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Bifurcation Analysis of DDEs in Julia</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><a class="tocitem" href="../../tutorials/">Tutorials</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Problems</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../BifProblem/">Bifurcation Problem</a></li><li><input class="collapse-toggle" id="menuitem-3-2" type="checkbox"/><label class="tocitem" for="menuitem-3-2"><span class="docs-label">Periodic Orbits</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../periodicOrbit/">Introduction</a></li><li><a class="tocitem" href="../../../periodicOrbitCollocation/">Collocation</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Functionalities</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><input class="collapse-toggle" id="menuitem-4-1" type="checkbox"/><label class="tocitem" for="menuitem-4-1"><span class="docs-label">Bifurcations</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../detectionBifurcation/">Bifurcation detection (codim 1)</a></li><li><a class="tocitem" href="../../../codim2Continuation/">Fold / Hopf Continuation (codim 2)</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4-2" type="checkbox"/><label class="tocitem" for="menuitem-4-2"><span class="docs-label">Normal form</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../simplebp/">Simple branch point</a></li><li><a class="tocitem" href="../../../nonsimplebp/">Non-simple branch point</a></li><li><a class="tocitem" href="../../../simplehopf/">Simple Hopf</a></li><li><span class="tocitem">Normal form (periodic orbit)</span></li></ul></li><li><a class="tocitem" href="../../../branchswitching/">Branch switching</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Options</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../eigensolver/">Eigen Solvers</a></li></ul></li><li><span class="tocitem">Contributing</span></li><li><a class="tocitem" href="../../../faq/">Frequently Asked Questions</a></li><li><a class="tocitem" href="../../../library/">Library</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>(Another) Neuron model (codim 2, periodic orbits)</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>(Another) Neuron model (codim 2, periodic orbits)</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/bifurcationkit/DDEBifurcationKit.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/bifurcationkit/DDEBifurcationKit.jl/blob/main/docs/src/tutorials/dde/neuronV2.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="(Another)-Neuron-model-(codim-2,-periodic-orbits)"><a class="docs-heading-anchor" href="#(Another)-Neuron-model-(codim-2,-periodic-orbits)">(Another) Neuron model (codim 2, periodic orbits)</a><a id="(Another)-Neuron-model-(codim-2,-periodic-orbits)-1"></a><a class="docs-heading-anchor-permalink" href="#(Another)-Neuron-model-(codim-2,-periodic-orbits)" title="Permalink"></a></h1><ul><li><a href="#(Another)-Neuron-model-(codim-2,-periodic-orbits)">(Another) Neuron model (codim 2, periodic orbits)</a></li><li class="no-marker"><ul><li><a href="#Continuation-and-codim-1-bifurcations">Continuation and codim 1 bifurcations</a></li><li><a href="#Normal-forms-computation">Normal forms computation</a></li><li><a href="#Continuation-of-Hopf-points">Continuation of Hopf points</a></li><li><a href="#Continuation-of-branch-points">Continuation of branch points</a></li><li><a href="#Branch-of-periodic-orbits">Branch of periodic orbits</a></li></ul></li></ul><p>Consider the neuron model</p><p class="math-container">\[\begin{aligned}
+&amp; \dot{x}_1(t)=-x_1(t)-a g\left(b x_1\left(t-\tau_1\right)\right)+c g\left(d x_2\left(t-\tau_2\right)\right) \\
+&amp; \dot{x}_2(t)=-x_2(t)-a g\left(b x_2\left(t-\tau_1\right)\right)+c g\left(d x_1\left(t-\tau_2\right)\right)
+\end{aligned}\]</p><p>where <span>$g(z)=[\tanh (z-1)+\tanh (1)] \cosh (1)^2$</span>. </p><h2 id="Continuation-and-codim-1-bifurcations"><a class="docs-heading-anchor" href="#Continuation-and-codim-1-bifurcations">Continuation and codim 1 bifurcations</a><a id="Continuation-and-codim-1-bifurcations-1"></a><a class="docs-heading-anchor-permalink" href="#Continuation-and-codim-1-bifurcations" title="Permalink"></a></h2><p>We first instantiate the model</p><pre><code class="language-julia hljs">using Revise, DDEBifurcationKit, Plots
+using BifurcationKit
+const BK = BifurcationKit
+
+g(z) = (tanh(z − 1) + tanh(1)) * cosh(1)^2
+function neuron2VF(x, xd, p)
+   (; a,b,c,d) = p
+   [
+      -x[1] - a * g(b * xd.u[1][1]) + c * g(d * xd.u[2][2]),
+      -x[2] - a * g(b * xd.u[1][2]) + c * g(d * xd.u[2][1])
+   ]
+end
+
+delaysF(par) = [par.τ1, par.τ2]
+
+pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
+x0 = [0.01, 0.001]
+
+prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
+
+optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
+opts = ContinuationPar(p_max = 1., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.1, n_inversion = 4)
+br = continuation(prob, PALC(tangent=Bordered()), opts)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> ┌─ Curve type: <span class="sgr36"><span class="sgr1">EquilibriumCont</span></span>
+ ├─ Number of points: 11
+ ├─ Type of vectors: <span class="sgr36"><span class="sgr1">Vector{Float64}</span></span>
+ ├─ Parameter <span class="sgr36"><span class="sgr1">a</span></span> starts at 0.25, ends at 1.0
+ ├─ Algo: <span class="sgr36"><span class="sgr1">PALC [Bordered]</span></span>
+ └─ Special points:
+
+- #  1, <span class="sgr34"><span class="sgr1">    hopf</span></span> at a ≈ +0.29890362 ∈ (+0.29853073, +0.29890362), |δp|=4e-04, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   3
+- #  2, <span class="sgr34"><span class="sgr1">    hopf</span></span> at a ≈ +0.34537483 ∈ (+0.34523499, +0.34537483), |δp|=1e-04, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   4
+- #  3, <span class="sgr34"><span class="sgr1">    hopf</span></span> at a ≈ +0.36830746 ∈ (+0.36662946, +0.36830746), |δp|=2e-03, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   5
+- #  4, <span class="sgr34"><span class="sgr1">    hopf</span></span> at a ≈ +0.57734590 ∈ (+0.57292648, +0.57734590), |δp|=4e-03, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   7
+- #  5, <span class="sgr34"><span class="sgr1">    hopf</span></span> at a ≈ +1.00000000 ∈ (+0.86018861, +1.00000000), |δp|=1e-01, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =  10
+- #  6, <span class="sgr1">endpoint</span> at a ≈ +1.00000000,                                                                     step =  10
+</code></pre><p>We then plot the branch</p><pre><code class="language-julia hljs">scene = plot(br)</code></pre><img src="d8c1db57.svg" alt="Example block output"/><h2 id="Normal-forms-computation"><a class="docs-heading-anchor" href="#Normal-forms-computation">Normal forms computation</a><a id="Normal-forms-computation-1"></a><a class="docs-heading-anchor-permalink" href="#Normal-forms-computation" title="Permalink"></a></h2><p>As in <a href="https://github.com/rveltz/BifurcationKit.jl">BifurcationKit.jl</a>, it is straightforward to compute the normal forms.</p><pre><code class="language-julia hljs">hopfpt = BK.get_normal_form(br, 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">SuperCritical - Hopf</span></span> bifurcation point at a ≈ 0.34537482504934847.
+Frequency ω ≈ 0.18264813234949323
+Period of the periodic orbit ≈ 34.400490310828076
+Normal form z⋅(iω + a⋅δa + b⋅|z|²):
+┌─ a = 0.0765382520396499 + 0.08333988822229839im
+└─ b = -0.04296044886006945 - 0.04757891550603473im
+</code></pre><h2 id="Continuation-of-Hopf-points"><a class="docs-heading-anchor" href="#Continuation-of-Hopf-points">Continuation of Hopf points</a><a id="Continuation-of-Hopf-points-1"></a><a class="docs-heading-anchor-permalink" href="#Continuation-of-Hopf-points" title="Permalink"></a></h2><p>We follow the Hopf points in the parameter plane <span>$(a,c)$</span>. We tell the solver to consider br.specialpoint[1] and continue it.</p><pre><code class="language-julia hljs"># continuation of the first Hopf point
+brhopf = continuation(br, 1, (@optic _.c),
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
+         verbosity = 0,
+         detect_codim2_bifurcation = 2,
+         bothside = true,
+         start_with_eigen = true)
+
+brhopf2 = continuation(br, 2, (@optic _.c),
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
+         verbosity = 0,
+         detect_codim2_bifurcation = 2,
+         bothside = true,
+         start_with_eigen = true)
+
+scene = plot(brhopf,  vars = (:a, :c))
+plot!(scene, brhopf2, vars = (:a, :c), xlims = (0, 0.7), ylims = (-0.1, 1))
+scene</code></pre><img src="62c244c0.svg" alt="Example block output"/><h2 id="Continuation-of-branch-points"><a class="docs-heading-anchor" href="#Continuation-of-branch-points">Continuation of branch points</a><a id="Continuation-of-branch-points-1"></a><a class="docs-heading-anchor-permalink" href="#Continuation-of-branch-points" title="Permalink"></a></h2><p>We follow the branch points in the parameter plane <span>$(a, c)$</span>.</p><pre><code class="language-julia hljs">prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (pars..., a = 0.12), (@optic _.c))
+br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22);)
+
+# change tolerance for avoiding error computation of the eigenvalues
+opts_bp = br.contparams
+@reset opts_bp.newton_options.eigsolver.σ = 1e-7
+
+# index of the first branch point
+index_bp = findfirst(x -&gt; x.type == :bp, br2.specialpoint)
+brbp = continuation(br2, index_bp, (@optic _.a),
+         ContinuationPar(opts_bp; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6, ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
+         verbosity = 0,
+         plot = true,
+         detect_codim2_bifurcation = 2,
+         bothside = false,
+         start_with_eigen = true)
+
+scene = plot(brbp, vars = (:a, :c), branchlabel = &quot;Branch points&quot;)
+plot!(scene, brhopf, vars = (:a, :c), branchlabel = &quot;Hopf&quot;)
+plot!(scene, brhopf2, vars = (:a, :c), branchlabel = &quot;Hopf&quot;)
+scene</code></pre><img src="3d0c5fc6.svg" alt="Example block output"/><h2 id="Branch-of-periodic-orbits"><a class="docs-heading-anchor" href="#Branch-of-periodic-orbits">Branch of periodic orbits</a><a id="Branch-of-periodic-orbits-1"></a><a class="docs-heading-anchor-permalink" href="#Branch-of-periodic-orbits" title="Permalink"></a></h2><p>We compute the branch of periodic orbits from a Hopf bifurcation.</p><pre><code class="language-julia hljs">pars = (a = 0.069, b = 2., c = 0.6, d = 1.2, τ1 = 11.6, τ2 = 20.3)
+delaysF(par) = [par.τ1, par.τ2]
+prob3 = ConstantDDEBifProblem(neuron2VF, delaysF, zeros(2), pars, (@optic _.c))
+br3 = continuation(prob3, PALC(), ContinuationPar(opts, p_max = 1.0);)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> ┌─ Curve type: <span class="sgr36"><span class="sgr1">EquilibriumCont</span></span>
+ ├─ Number of points: 9
+ ├─ Type of vectors: <span class="sgr36"><span class="sgr1">Vector{Float64}</span></span>
+ ├─ Parameter <span class="sgr36"><span class="sgr1">c</span></span> starts at 0.6, ends at 1.0
+ ├─ Algo: <span class="sgr36"><span class="sgr1">PALC [Secant]</span></span>
+ └─ Special points:
+
+- #  1, <span class="sgr34"><span class="sgr1">    hopf</span></span> at c ≈ +0.77139744 ∈ (+0.76971944, +0.77139744), |δp|=2e-03, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   5
+- #  2, <span class="sgr34"><span class="sgr1">    hopf</span></span> at c ≈ +0.80914893 ∈ (+0.80911440, +0.80914893), |δp|=3e-05, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   6
+- #  3, <span class="sgr34"><span class="sgr1">    hopf</span></span> at c ≈ +0.92847320 ∈ (+0.92405378, +0.92847320), |δp|=4e-03, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 2,  2), step =   7
+- #  4, <span class="sgr34"><span class="sgr1">      nd</span></span> at c ≈ +1.00000000 ∈ (+0.92847320, +1.00000000), |δp|=7e-02, [<span class="sgr32"><span class="sgr1">converged</span></span>], δ = ( 3,  2), step =   8
+- #  5, <span class="sgr1">endpoint</span> at c ≈ +1.00000000,                                                                     step =   8
+</code></pre><pre><code class="language-julia hljs">opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.001, max_steps = 185, nev = 10, tol_stability = 1e-4)
+
+probpo = PeriodicOrbitOCollProblem(20, 5; N = 2,
+            jacobian = BK.AutoDiffDense(),)
+
+br_po = continuation(
+            br3, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 3),
+            probpo;
+            normC = norminf,
+            eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=100, tol = 1e-12, σ = 1e-3)),
+            )
+plot(br_po, vars = (:param, :amplitude))</code></pre><img src="6215a4c4.svg" alt="Example block output"/><pre><code class="language-julia hljs">plot(br3, br_po)</code></pre><img src="8daf7895.svg" alt="Example block output"/></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 21 March 2026 16:21">Saturday 21 March 2026</span>. Using Julia version 1.10.11.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
