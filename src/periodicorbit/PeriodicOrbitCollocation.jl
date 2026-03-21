@@ -1,4 +1,3 @@
-# TODO use getter from BK
 _get_gauss_nodes(coll) = coll.mesh_cache.gauss_nodes
 
 @views function BK.residual!(coll::PeriodicOrbitOCollProblem{Tprob},
@@ -67,7 +66,8 @@ end
             end
             # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in _delays])
             for (ind, d) in enumerate(_delays)
-                udj.u[ind] .= interp(τ * period - d)
+                # udj.u[ind] .= interp(τ * period - d)
+                udj.u[ind] .= BK.__interpolate_posolution(coll, τ - d/period, u, 1)
             end
             __po_coll_bc!(coll, outc[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, outc[:, end])
         end
@@ -92,7 +92,14 @@ function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob},
     return analytical_jacobian_dde_cst(coll, x, p)
 end
 
-# analytical jacobian for constant DDE
+"""
+using DifferentiationInterface to automatically derive the sparse jacobian.
+"""
+struct AutoSparseDI <: BK.AbstractJacobianSparseMatrix end
+
+function BK._generate_jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, ::AutoSparseDI, orbitguess, pars; k...) where {Tprob <: AbstractDDEBifurcationProblem}
+    error("You need to import `DifferentiationInterface, SparseConnectivityTracer, SparseMatrixColorings` in order to use this jacobian")
+end
 ########################################################################################
 # analytical jacobians for constant DDE
 for (fname, floquet) in ((:analytical_jacobian_dde_cst, false), 
@@ -171,8 +178,8 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                                                     (ρD * ∂L[l2, l] - α * L[l2, l] * ρI) * In
                     for (idelay, d) in enumerate(delays_v)
                         # find interval where t-τ/period belongs
-                        t0 = τ * period - d
-                        τd = mod(t0, period) / period
+                        t0 = τ - d/period
+                        τd = mod(t0, 1) / 1
                         index_t = searchsortedfirst(mesh, τd) - 1
                         @assert 1 <= index_t <= Ntst "We have index_t = $index_t, which is out of bounds for mesh of size $(length(mesh)) and τd = $τd. Please open an issue on the website of BifurcationKit.jl"
 
@@ -184,6 +191,9 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                             Jd[idelay][_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         elseif ($(fname == :analytical_jacobian_dde_cst_floquetcoll) && t0 < 0)
                             rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t - 1))
+                            # fullmesh = coll.mesh_cache.full_mesh
+                            # index_tau = searchsortedlast(fullmesh, τd)- 2
+                            # rgNy_delay = UnitRange(1, n) .+ index_tau * n
                             Jd[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         else # case analytical_jacobian_dde_cst
                             J[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β

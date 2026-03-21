@@ -14,8 +14,16 @@ RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
+[weakdeps]
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
+SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
+SparseMatrixColorings = "0a514795-09f3-496d-8182-132a7b665d35"
+
+[extensions]
+SparseDIExt = ["DifferentiationInterface", "SparseConnectivityTracer", "SparseMatrixColorings"]
+
 [compat]
-BifurcationKit = "^0.5.5"
+BifurcationKit = "^0.5.6"
 DocStringExtensions = "^0.9"
 ForwardDiff = "^0.10, ^0.11"
 NonlinearEigenproblems = "^1.0.1"
