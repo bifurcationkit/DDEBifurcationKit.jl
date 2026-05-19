@@ -47,7 +47,7 @@ args_po = (
             end,
         normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(50, 4; N = 1, jacobian = BK.AutoDiffDense())
+probpo = Collocation(50, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 2, opts_po_cont,
     probpo;

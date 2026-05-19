@@ -16,7 +16,6 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 BifurcationKit = "^0.5.5"
-DocStringExtensions = "^0.9"
 ForwardDiff = "^0.10, ^0.11"
 NonlinearEigenproblems = "^1.0.1"
 Parameters = "0.12.3"

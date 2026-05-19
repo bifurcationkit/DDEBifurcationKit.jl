@@ -1,7 +1,6 @@
-# TODO use getter from BK
 _get_gauss_nodes(coll) = coll.mesh_cache.gauss_nodes
 
-@views function BK.residual!(coll::PeriodicOrbitOCollProblem{Tprob},
+@views function BK.po_residual!(coll::Collocation{Tprob},
                             result,
                             u::AbstractVector, 
                             pars) where {Tprob <: AbstractDDEBifurcationProblem}
@@ -14,17 +13,17 @@ _get_gauss_nodes(coll) = coll.mesh_cache.gauss_nodes
     return result
 end
 
-function __po_coll_bc!(coll::PeriodicOrbitOCollProblem, dest, ∂u, u, ud, par, h, tmp)
+function __po_coll_bc!(coll::Collocation, dest, ∂u, u, ud, par, h, tmp)
     tmp .= coll.prob_vf.VF.F(u, ud, par)
     @. dest = ∂u - h * tmp
 end
 
-function (sol::BK.POSolution{ <: PeriodicOrbitOCollProblem})(::Val{:der}, t0)
+function (sol::BK.POSolution{ <: Collocation})(::Val{:der}, t0)
     ForwardDiff.derivative(sol, t0)
 end
 
 # function for collocation problem
-@views function functional_coll!(coll::PeriodicOrbitOCollProblem{Tprob},
+@views function functional_coll!(coll::Collocation{Tprob},
                                  outc::AbstractMatrix{𝒯},
                                  uc::AbstractMatrix{𝒯},
                                  period,
@@ -100,7 +99,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                          (:analytical_jacobian_dde_cst_floquetcoll, true),
                          )
     @eval begin
-    @views function $fname(coll::PeriodicOrbitOCollProblem{Tprob}, 
+    @views function $fname(coll::Collocation{Tprob}, 
                             u::AbstractVector{𝒯}, 
                             pars;
                             ρD = one(𝒯),
@@ -130,7 +129,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         delays_v = delays(VF, u[1:n], pars) # vector of delays
         udj = VectorOfArray([zeros(𝒯, n) for d in delays_v])
         if coll.jacobian isa BK.FullSparse
-            J = SA.spzeros(𝒯, length(coll) + 1, length(coll) + 1)
+            J  = SA.spzeros(𝒯, length(coll) + 1, length(coll) + 1)
             J0 = SA.spzeros(𝒯, n, n)
             In = SA.sparse(In)
         else

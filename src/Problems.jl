@@ -83,12 +83,34 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 plot_solution = BK.plot_default,
                 save_solution = BK.save_solution_default,
                 inplace = false,
+                R01 = BK.FiniteDifferences(),
                 δ = convert(eltype(u0), 1e-8),
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
+    # type unstable but simplifies the types a lot
+    jet = if (isempty(kwargs_jet) && R01 === BK.AutoDiff()) 
+        nothing 
+    else
+        R01Trait = R01 === BK.FiniteDifferences() ? R01 : nothing
+        BK.Jet(;δ, R01Trait, kwargs_jet...)
+    end
 
-    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...)) ## TODO: it requires a specific DDEBifFunction
+    VF = BifFunction(F,
+                    F!,
+                    jvp,
+                    vjp,
+                    J,
+                    Jᵗ,
+                    nothing,
+                    d2F,
+                    d3F,
+                    d2Fc,
+                    d3Fc,
+                    issymmetric,
+                    δ,
+                    inplace,
+                    jet) ## TODO: it requires a specific DDEBifFunction
     return ConstantDDEBifProblem(VF,
                                  delayF,
                                  u0,
@@ -246,10 +268,17 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 save_solution = BK.save_solution_default,
                 inplace = false,
                 δ = convert(eltype(u0), 1e-8),
+                R01 = BK.FiniteDifferences(),
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
-    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, BK.Jet(;kwargs_jet...))
+    jet = if (isempty(kwargs_jet) && R01 === BK.AutoDiff()) 
+        nothing 
+    else
+        R01Trait = R01 === BK.FiniteDifferences() ? R01 : nothing
+        BK.Jet(;δ, R01Trait, kwargs_jet...)
+    end
+    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, jet)
     return SDDDEBifProblem(VF,
                            delayF,
                            u0,

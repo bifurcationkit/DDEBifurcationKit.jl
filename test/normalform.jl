@@ -14,6 +14,7 @@ end
 
 delaysF(par) = [1.0]
 
+let
 pars = (a=0.1, b=0.)
 x0 = [0.]
 
@@ -55,6 +56,7 @@ BK._getvectortype(prob)
 show(prob)
 
 DDEBifurcationKit.newton_hopf(br, 2)
+end
 ##########################################################################################
 # SDDE, test dummy Hopf normal form
 function humpriesVF(x, xd, p)
@@ -70,7 +72,7 @@ function delaysF(x, par)
     par.a2 + par.c * x[1],
 ]
 end
-
+let
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
 prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
@@ -86,3 +88,4 @@ BK.getlens(prob)
 BK.has_adjoint(prob)
 BK.getdelta(prob)
 show(prob)
+end

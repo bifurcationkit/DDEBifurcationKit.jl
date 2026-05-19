@@ -1,4 +1,4 @@
-BK.jacobian(hopfpb::BK.FoldMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: BK.FoldProblemMinimallyAugmented{ <: ConstantDDEBifProblem}, Tu0, Tp, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
+BK.jacobian(hopfpb::BK.FoldMAProblem{Tprob, BK.AutoDiff, Tl, Tplot, Trecord}, x, p) where {Tprob <: BK.FoldMinimallyAugmentedFormulation{ <: ConstantDDEBifProblem}, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
 
 
 function (eig::BK.FoldEig)(Jdde::JacobianCodim2DDE, nev; kwargs...)
@@ -11,7 +11,7 @@ function (eig::BK.FoldEig)(Jdde::JacobianCodim2DDE, nev; kwargs...)
 end
 
 # Bogdanov-Takens / Cusp test function for the Fold functional
-function BK.test_bt_cusp(iter::BK.ContIterable{BK.FoldCont, <: BK.FoldMAProblem{ <: BK.FoldProblemMinimallyAugmented{Tprob}} }, state) where {Tprob <: AbstractDDEBifurcationProblem}
+function BK.test_bt_cusp(iter::BK.ContIterable{BK.FoldCont, <: BK.FoldMAProblem{ <: BK.FoldMinimallyAugmentedFormulation{Tprob}} }, state) where {Tprob <: AbstractDDEBifurcationProblem}
     probma = BK.getprob(iter)
     lens1, lens2 = BK.get_lenses(probma)
 

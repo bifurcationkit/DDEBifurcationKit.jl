@@ -25,7 +25,7 @@ x0 = [-sqrt(pi)]
 
 prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@optic _.Λ), record_from_solution=(x,p;k...)-> (x=x[1], _x=1))
 
-optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
+optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
 plot(br)

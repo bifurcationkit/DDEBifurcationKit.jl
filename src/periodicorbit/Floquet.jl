@@ -20,7 +20,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
                             par,
                             nev = 3
                         )
-    coll = wrapcoll.prob
+    coll = BK.get_discretization(wrapcoll)
     n, m, Ntst = size(coll)
     period = BK.getperiod(coll, u0, nothing)
     J = analytical_jacobian_dde_cst_floquetgev(coll, u0, par)
@@ -101,13 +101,13 @@ isnonzero(x) = !iszero(x)
 
 # compute the Floquet multipliers based on monodromy. See online documentation.
 function BK.compute_eigenvalues(eig::FloquetColl, 
-                                iter::BK.ContIterable{BK.PeriodicOrbitCont, <: BK.WrapPOColl{ <: BK.PeriodicOrbitOCollProblem{Tprob}}}, 
+                                iter::BK.ContIterable{BK.PeriodicOrbitCont, <: BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{Tprob}}}, 
                                 state, 
                                 u0, 
                                 par, 
                                 nev = iter.contparams.nev; k...) where {Tkind <: BK.AbstractContinuationKind, Tprob <: AbstractDDEBifurcationProblem}
     wrapcoll = BK.get_wrap_po(iter)
-    return __floquet_coll(eig, BK.get_wrap_po(iter).prob, u0, par, nev)
+    return __floquet_coll(eig, BK.get_discretization(BK.get_wrap_po(iter)), u0, par, nev)
 end
 
 function __floquet_coll(eig::FloquetColl,
@@ -141,7 +141,7 @@ function __floquet_coll(eig::FloquetColl,
     if true
         # using ii does not change the following
         C = hcat(A, B)
-        dn = size(C, 2) - size(C, 1)+1
+        dn = size(C, 2) - size(C, 1)
         dn = size(A, 2)
         # matrix to ensure periodicity boundary condition
         Cbc = vcat(zero(C), zeros(𝒯, dn, size(C, 2)))

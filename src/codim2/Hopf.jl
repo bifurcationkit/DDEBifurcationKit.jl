@@ -1,8 +1,12 @@
-getP(u, hopfPb::HopfDDEProblem) = u.x[end]
-getVec(u, hopfPb::HopfDDEProblem) = u.x[1]
+getP(u, hopfPb::HopfDDEFormulation) = u.x[end]
+getVec(u, hopfPb::HopfDDEFormulation) = u.x[1]
+
+
+# The Hopf condition is Δ(iω, params)⋅q = 0
+# where we recall that Δ(λ, params) ≡ λI − A0 - Aⱼ​ exp(−λτⱼ)​
 
 # this function encodes the functional
-function (hp::HopfDDEProblem)(x, vR, vI, p::T, ω::T, params) where T
+function (hp::HopfDDEFormulation)(x, vR, vI, p::T, ω::T, params) where T
     # These are the equations of the Hopf bifurcation point
     # input:
     # - x guess for the point at which the jacobian has a purely imaginary eigenvalue
@@ -16,7 +20,7 @@ function (hp::HopfDDEProblem)(x, vR, vI, p::T, ω::T, params) where T
     return BK.residual(hp.prob_vf, x, par), real(w), imag(w), [real(ps) - 1, imag(ps)]
 end
 
-function (hopfpb::HopfDDEProblem)(x::ArrayPartition, params)
+function (hopfpb::HopfDDEFormulation)(x::ArrayPartition, params)
     res = hopfpb(x.x[1], x.x[2], x.x[3], x.x[4][1], x.x[4][2], params)
     ArrayPartition(res...)
 end
@@ -30,7 +34,7 @@ end
 
 (l::BK.DefaultLS)(J::JacobianCodim2DDE, args...; kw...) = l(J.J, args...; kw...)
 
-BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tu0, Tp, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEProblem, Tu0, Tp, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
+BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEFormulation, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
 ################################################################################################### Newton / Continuation functions
 function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
                         hopfpointguess::ArrayPartition,
@@ -43,16 +47,16 @@ function BK.newton_hopf(prob::AbstractDDEBifurcationProblem,
                         kwargs...)
     # we first need to update d2F and d3F for them to accept complex arguments
 
-    hopfproblem = HopfDDEProblem(
+    hopfproblem = HopfDDEFormulation(
         prob,
         BK._copy(eigenvec_ad),    # this is pb.a ≈ null space of (J - iω I)^*
-        BK._copy(eigenvec),     # this is pb.b ≈ null space of  J - iω I
+        BK._copy(eigenvec),       # this is pb.b ≈ null space of  J - iω I
         options.linsolver,
         # do not change linear solver if user provides it
         @set bdlinsolver.solver = (isnothing(bdlinsolver.solver) ? options.linsolver : bdlinsolver.solver);
         usehessian = usehessian)
 
-    prob_h = BK.HopfMAProblem(hopfproblem, BK.AutoDiff(), hopfpointguess, par, nothing, prob.plotSolution, prob.recordFromSolution)
+    prob_h = BK.HopfMAProblem(hopfproblem, BK.AutoDiff(), hopfpointguess, nothing, prob.plotSolution, prob.recordFromSolution)
 
     # options for the Newton Solver
     opt_hopf = @set options.linsolver = BK.DefaultLS()
@@ -108,7 +112,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
                             update_minaug_every_step = 0,
                             normC = norm,
                             bdlinsolver::BK.AbstractBorderedLinearSolver = MatrixBLS(),
-                            jacobian_ma::Symbol = :autodiff,
+                            jacobian_ma = BK.AutoDiff(),
                             compute_eigen_elements = false,
                             usehessian = true,
                             massmatrix = LA.I,
@@ -120,7 +124,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
     options_newton = options_cont.newton_options
     threshBT = 100options_newton.tol
 
-    𝐇 = HopfDDEProblem(
+    𝐇 = HopfDDEFormulation(
             prob_vf,
             BK._copy(eigenvec_ad),    # this is a ≈ null space of (J - iω I)^*
             BK._copy(eigenvec),       # this is b ≈ null space of  J - iω I
@@ -133,16 +137,17 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
             update_minaug_every_step)
 
     # Jacobian for the Hopf problem
-    if jacobian_ma == :autodiff
+    record_hopf = BK.RecordForHopf(get(kwargs, :record_from_solution, nothing), BK.record_from_solution(prob_vf))
+    if jacobian_ma == BK.AutoDiff()
         # hopfpointguess = vcat(hopfpointguess.u, hopfpointguess.p)
-        prob_h = BK.HopfMAProblem(𝐇, BK.AutoDiff(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = BK.HopfMAProblem(𝐇, BK.AutoDiff(), hopfpointguess, lens2, prob_vf.plotSolution, record_hopf)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = DefaultLS()
-    elseif jacobian_ma == :finiteDifferencesMF
+    elseif jacobian_ma == BK.FiniteDifferencesMF()
         hopfpointguess = vcat(hopfpointguess.u, hopfpointguess.p)
-        prob_h = FoldMAProblem(𝐇, FiniteDifferences(), hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = FoldMAProblem(𝐇, FiniteDifferences(), hopfpointguess, lens2, prob_vf.plotSolution, record_hopf)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = options_cont.newton_options.linsolver
     else
-        prob_h = BK.HopfMAProblem(𝐇, nothing, hopfpointguess, par, lens2, prob_vf.plotSolution, prob_vf.recordFromSolution)
+        prob_h = BK.HopfMAProblem(𝐇, nothing, hopfpointguess, lens2, prob_vf.plotSolution, record_hopf)
         opt_hopf_cont = @set options_cont.newton_options.linsolver = HopfLinearSolverMinAug()
     end
 
@@ -192,8 +197,6 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         (u, p; kw...) -> (; zip(lenses, (getP(u, 𝐇)[1], p))..., ω = getP(u, 𝐇)[2], l1 = 𝐇.l1, BT = 𝐇.BT, GH = 𝐇.GH, BK._namedrecordfromsol(BK.record_from_solution(prob_vf)(getVec(u, 𝐇), p; kw...))...) :
         (u, p; kw...) -> (; BK._namedrecordfromsol(_printsol(getVec(u, 𝐇), p; kw...))..., zip(lenses, (getP(u, 𝐇)[1], p))..., ω = getP(u, 𝐇)[2], l1 = 𝐇.l1, BT = 𝐇.BT, GH = 𝐇.GH)
 
-    prob_h = re_make(prob_h, record_from_solution = _printsol2)
-
     # eigen solver
     eigsolver = HopfDDEEig(BK.getsolver(opt_hopf_cont.newton_options.eigsolver))
 
@@ -207,7 +210,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
         event = BK.ContinuousEvent(2, testBT_GH, false, ("bt", "gh"), threshBT)
     end
 
-    prob_h = re_make(prob_h, record_from_solution = _printsol2)
+    # prob_h = re_make(prob_h, record_from_solution = _printsol2)
 
     # solve the hopf equations
     br = continuation(

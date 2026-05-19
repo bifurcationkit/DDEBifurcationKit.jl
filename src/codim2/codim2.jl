@@ -1,6 +1,6 @@
 abstract type AbstractCodim2DDEEigenSolver <: BK.AbstractEigenSolver end
 
-for op in (:HopfDDEProblem,)
+for op in (:HopfDDEFormulation,)
     @eval begin
         """
         $(TYPEDEF)
@@ -56,6 +56,7 @@ for op in (:HopfDDEProblem,)
         @inline BK.getlens(pb::$op) = BK.getlens(pb.prob_vf)
         jad(pb::$op, args...) = jad(pb.prob_vf, args...)
         @inline BK.getdelta(pb::$op) = BK.getdelta(pb.prob_vf)
+        @inline BK.getparams(pb::$op) = BK.getparams(pb.prob_vf)
 
         # constructor
         function $op(prob::AbstractDDEBifurcationProblem, a, b,
@@ -77,6 +78,26 @@ for op in (:HopfDDEProblem,)
         end
     end
 end
+
+@inline BK.getp(x, ::HopfDDEFormulation) = BK.get_par_bls(x, 2)
+@inline BK.getvec(x, 𝐏𝐛::HopfDDEFormulation) = getVec(x, 𝐏𝐛)
+@inline BK.get_parameter(x, 𝐏𝐛::HopfDDEFormulation) = BK.getp(x, 𝐏𝐛)[1]
+@inline BK.get_frequency(x, 𝐏𝐛::HopfDDEFormulation) = BK.getp(x, 𝐏𝐛)[2]
+
+BK.update!(𝐏𝐛::HopfDDEFormulation, iter::BK.ContIterable, state::BK.ContState) = true
+
+function BK.save_solution(𝐏𝐛::HopfDDEFormulation, x, p2)
+    p1 = BK.get_parameter(x, 𝐏𝐛)
+    # TODO!! is it a copy or else?
+    x_ma = BK.save_solution(𝐏𝐛.prob_vf, BK.getvec(x, 𝐏𝐛), p2)
+    return BK.MASolutionFreq(x_ma, p1, BK.get_frequency(x, 𝐏𝐛))
+end
+
+function BK.re_make(𝐌𝐚::HopfDDEFormulation;
+                 params = BK.getparams(𝐌𝐚))
+    new_prob = BK.re_make(𝐌𝐚.prob_vf; params)
+    return (@set 𝐌𝐚.prob_vf = new_prob)
+end
 ################################################################################
 """
 $(SIGNATURES)
@@ -84,10 +105,10 @@ $(SIGNATURES)
 This function uses information in the branch to detect codim 2 bifurcations like BT, ZH and Cusp.
 """
 function correctBifurcation(contres::ContResult)
-    if contres.prob.prob isa HopfDDEProblem == false
+    if contres.prob.prob isa HopfDDEFormulation == false
         return contres
     end
-    if contres.prob.prob isa HopfDDEProblem
+    if contres.prob.prob isa HopfDDEFormulation
         conversion = Dict(:bp => :zh, :hopf => :hh, :fold => :nd, :nd => :nd, :ghbt => :bt, :btgh => :bt, :ghbp => :zh)
     else
         throw("Error! this should not occur. Please open an issue on the website of BifurcationKit.jl")

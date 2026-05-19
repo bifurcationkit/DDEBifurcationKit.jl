@@ -32,7 +32,7 @@ args_po = (
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9, max_steps = 120, nev = 15, tol_stability = 1e-5, plot_every_step = 1, newton_options = NewtonPar(tol = 1e-12, verbose = false))
 
 # build the po functional
-probpo = PeriodicOrbitOCollProblem(20, 5; N = 1, 
+probpo = Collocation(20, 5; N = 1, 
     jacobian = BK.AutoDiffDense(),
     # jacobian = BK.DenseAnalytical(), 
     prob_vf = prob, xπ = zeros(1), ϕ = zeros(2))
@@ -40,7 +40,7 @@ probpo = PeriodicOrbitOCollProblem(20, 5; N = 1,
 @reset probpo.ϕ = zeros(length(probpo))
 ci = BK.generate_solution(probpo, t->[(pars.A)*cos(t)], 2pi);
 BK.updatesection!(probpo, ci, nothing)
-BK.residual(probpo, ci, pars) |> BK.norminf
+BK.po_residual(probpo, ci, pars) |> BK.norminf
 
 br_pocoll = @time continuation(
             probpo, ci, BK.PALC(), ContinuationPar(opts_po_cont; detect_bifurcation = 0);
@@ -81,19 +81,19 @@ _po = br_pocoll.sol[ind_po].x
 _sol = BK.get_periodic_orbit(br_pocoll, ind_po)
 
 # jacobian of the PO functional
-_J = BK.jacobian(br_pocoll.prob, BK.AutoDiffDense(), _po, _pars);
+_J = BK._jacobian_po(br_pocoll.prob, BK.AutoDiffDense(), _po, _pars);
 # plotH(iszero.(_J))
 
-_J2 = DDEBK.analytical_jacobian_dde_cst(br_pocoll.prob.prob, _po, _pars)
+_J2 = DDEBK.analytical_jacobian_dde_cst(BK.get_discretization(br_pocoll.prob), _po, _pars)
 # @test norm(_J - _J2, Inf) < 1e-10
 
 
-_J2 = DDEBK.analytical_jacobian_dde_cst_floquetgev(br_pocoll.prob.prob, _po, _pars)
+_J2 = DDEBK.analytical_jacobian_dde_cst_floquetgev(BK.get_discretization(br_pocoll.prob), _po, _pars)
 # plotH(iszero.(_J2.J0))
 # plotH(iszero.(_J2.Jd[1]))
 # (_J2.J0 + _J2.Jd[1] -_J)[1:end-1,1:end-1] |> norminf
 
-_J2 = DDEBK.analytical_jacobian_dde_cst_floquetcoll(br_pocoll.prob.prob, _po, _pars)
+_J2 = DDEBK.analytical_jacobian_dde_cst_floquetcoll(BK.get_discretization(br_pocoll.prob), _po, _pars)
 # plotH(iszero.(_J2.J0))
 # plotH(iszero.(_J2.Jd))
 # (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf
