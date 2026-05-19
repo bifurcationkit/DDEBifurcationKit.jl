@@ -16,8 +16,6 @@ makedocs(
 	# pagesonly = true,
 	doctest = false,
 	sitename = "Bifurcation Analysis of DDEs in Julia",
-	format = Documenter.HTML(collapselevel = 1, assets = ["assets/indigo.css"]),
-	# format = DocumenterLaTeX.LaTeX(),
 	warnonly = true,
 	draft = false,
 	authors = "Romain Veltz",
