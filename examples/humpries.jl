@@ -54,15 +54,7 @@ nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
 @reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p; k...) -> begin
-        xtt = DDEBK.get_periodic_orbit(p.prob, x, nothing)
-        _max = maximum(xtt[1,:])
-        _min = minimum(xtt[1,:])
-        return (amp = _max - _min,
-                max = _max,
-                min = _min,
-                period = getperiod(p.prob, x, nothing))
-    end,
+args_po = (    
     plot_solution = (x, p; k...) -> begin
         xtt = DDEBK.get_periodic_orbit(p.prob, x, nothing)
         plot!(xtt.t, xtt[1,:]; label = "x", k...)

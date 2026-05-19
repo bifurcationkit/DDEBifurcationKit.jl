@@ -32,29 +32,20 @@ plot(br)
 BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 ################################################################################
 # computation periodic orbit
-
-# continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40,
-    nev = 10, tol_stability = 1e-8, detect_bifurcation = 2, plot_every_step = 1, save_sol_every_step=1)
+opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40, nev = 10, tol_stability = 1e-8, detect_bifurcation = 2, plot_every_step = 1)
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p; k...) -> begin
-		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-		return (max = maximum(xtt[1,:]),
-				min = minimum(xtt[1,:]),
-				period = getperiod(p.prob, x, nothing))
-	end,
-	plot_solution = (x, p; k...) -> begin
-		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-		plot!(xtt.t, xtt[1,:]; label = "x", k...)
-		plot!(br; subplot = 1, putspecialptlegend = false)
-		end,
-	normC = norminf)
+args_po = (    
+    plot_solution = (x, p; k...) -> begin
+        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+        plot!(xtt.t, xtt[1,:]; label = "x", k...)
+        plot!(br; subplot = 1, putspecialptlegend = false)
+        end,
+    normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(50, 4; N = 1, jacobian = BK.AutoDiffDense())
+probpo = Collocation(50, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 1, opts_po_cont,
-    # we want to use the Collocation method to locate PO, with polynomial degree 5
     probpo;
     # regular continuation options
     verbosity = 2,    plot = true,
@@ -62,17 +53,13 @@ br_pocoll = @time continuation(
     δp = 0.01,
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo, state.x, nothing)
-        # plot(xtt.t, xtt[1,:], title = "it = $(state.it)") |> display
-        # printstyled(color=:red, "amp = ", BK.amplitude(xtt[:,:],1),"\n")
-        @show state.x[end]
+        @info state.x[end]
         state.step < 18
     end
     )
 
 plot(br, br_pocoll)
-
 plot(br_pocoll, vars = (:param, :period))
-
 ################################################################################
 using DifferentialEquations
 

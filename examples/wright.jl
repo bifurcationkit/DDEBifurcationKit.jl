@@ -4,9 +4,8 @@ cd("..")
 # pkg"activate ."
 
 using Revise, DDEBifurcationKit
-using BifurcationKit
-const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
+import BifurcationKit as BK
 
 using Plots
 

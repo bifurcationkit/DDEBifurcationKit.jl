@@ -49,7 +49,7 @@ end
 Nx = 30; Ny = 30
 lx = 0.5; ly = 0.5
 # weight for the weighted norm
-const w = (lx .+ LinRange(-lx,lx,Nx)) * (LinRange(-ly,ly,Ny))' |> vec
+const w = (lx .+ LinRange(-lx, lx, Nx)) * (LinRange(-ly, ly, Ny))' |> vec
 
 Δ, = Laplacian2D(Nx, Ny, lx, ly)
 par_mit = (λ = .05, Δ = Δ, τ = 1.)

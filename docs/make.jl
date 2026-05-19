@@ -21,6 +21,13 @@ makedocs(
 	warnonly = true,
 	draft = false,
 	authors = "Romain Veltz",
+	format = Documenter.HTML(
+		collapselevel = 1,
+		assets=[
+			asset("https://bifurcationkit.github.io/assets/js/documentation.js"),
+			asset("https://bifurcationkit.github.io/assets/css/documentation.css"),
+				],
+	),
 	pages = Any[
 		"Home" => "index.md",
 		"Tutorials" => "tutorials/tutorials.md",

@@ -39,7 +39,7 @@ get_normal_form(br, 1)
 
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 130,
-    nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step=1)
+    nev = 5, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step=1)
 @reset opts_po_cont.newton_options.tol = 1e-8
 @reset opts_po_cont.newton_options.verbose = true
 
@@ -57,12 +57,12 @@ args_po = (    record_from_solution = (x, p;k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(100, 4; N = 1, jacobian = BK.AutoDiffDense())
-# probpo = PeriodicOrbitTrapProblem(M = 2000, jacobian = :DenseAD, N = 2)
+probpo = Collocation(100, 4; N = 1, jacobian = BifurcationKit.DenseAnalyticalInplace())
 br_pocoll = @time continuation(
 		br, 1, opts_po_cont,
 		probpo;
 		verbosity = 2,	plot = true,
+		eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-10, σ = 1e-4), length(probpo), 1),
 		args_po...,
 		ampfactor = 2,
 		δp = 0.01,
