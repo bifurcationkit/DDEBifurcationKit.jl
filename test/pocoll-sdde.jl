@@ -18,6 +18,7 @@ function delaysF(x, par)
    ]
 end
 
+let
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c=1.)
 x0 = zeros(1)
 
@@ -67,4 +68,8 @@ _po = br_pocoll.sol[ind_po].x
 
 # jacobian of the PO functional
 _J = BK.jacobian(br_pocoll.prob, _po, _pars);
-_J2 = DDEBK.analytical_jacobian_dde_cst(br_pocoll.prob.prob, _po, _pars)
+# heatmap(iszero.(_J) , yflip=true, color = :viridis)
+
+_J2 = DDEBK.analytical_jacobian_dde_cst(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
+# @test norm(_J - _J2, Inf) < 1e-10
+end

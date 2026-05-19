@@ -75,23 +75,50 @@ end
     # add the periodicity condition
     @. outc[:, end] = uc[:, end] - uc[:, 1]
 end
-########################################################################################
-# API to select jacobian computation
-function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, 
+
+function BK._generate_jacobian(coll::BK.Collocation{ <: ConstantDDEBifProblem}, 
+                                J::BK.DenseAnalyticalInplace,
+                                orbitguess,
+                                pars; 
+                                Jcoll_matrix = nothing,
+                                k...)
+    _Jcoll_matrix = isnothing(Jcoll_matrix) ? analytical_jacobian_dde_cst(coll, orbitguess, pars) : Jcoll_matrix
+    return (BK.DenseAnalyticalInplace(), _Jcoll_matrix)
+end
+
+function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: ConstantDDEBifProblem}}, 
                 ::BK.DenseAnalytical,
                 x, 
-                p) where {Tprob <: ConstantDDEBifProblem}
+                p)
+    coll = BK.get_discretization(wrap)
     return analytical_jacobian_dde_cst(coll, x, p)
 end
 
-function BK.jacobian(coll::PeriodicOrbitOCollProblem{Tprob}, 
+function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: ConstantDDEBifProblem}}, 
+                J::Tuple{BK.DenseAnalyticalInplace, Tj},
+                x, 
+                p) where {Tj}
+    _Jcoll_matrix = J[2]
+    coll = BK.get_discretization(wrap)
+    return analytical_jacobian_dde_cst(coll, x, p; Jcoll = _Jcoll_matrix)
+end
+
+function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: ConstantDDEBifProblem}}, 
                 ::BK.FullSparse,
                 x, 
-                p) where {Tprob <: ConstantDDEBifProblem}
+                p)
+    coll = BK.get_discretization(wrap)
     return analytical_jacobian_dde_cst(coll, x, p)
 end
 
-# analytical jacobian for constant DDE
+"""
+using DifferentiationInterface to automatically derive the sparse jacobian.
+"""
+struct AutoSparseDI <: BK.AbstractJacobianSparseMatrix end
+
+function BK._generate_jacobian(coll::Collocation{Tprob}, ::AutoSparseDI, orbitguess, pars; k...) where {Tprob <: AbstractDDEBifurcationProblem}
+    error("You need to import `DifferentiationInterface, SparseConnectivityTracer, SparseMatrixColorings` in order to use this jacobian")
+end
 ########################################################################################
 # analytical jacobians for constant DDE
 for (fname, floquet) in ((:analytical_jacobian_dde_cst, false), 
@@ -104,7 +131,8 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                             pars;
                             ρD = one(𝒯),
                             ρF = one(𝒯),
-                            ρI = zero(𝒯)) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯 }
+                            ρI = zero(𝒯),
+                            Jcoll = nothing) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯}
         n, m, Ntst = size(coll)
         nJ = length(coll) + 1
         L, ∂L = BK.get_Ls(coll.mesh_cache) # L is of size (m+1, m)
@@ -133,7 +161,11 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             J0 = SA.spzeros(𝒯, n, n)
             In = SA.sparse(In)
         else
-            J = zeros(𝒯, length(coll) + 1, length(coll) + 1)
+            # careful, the sparsity pattern changes so we need to zero the output array Jcoll
+            J = isnothing(Jcoll) ? zeros(𝒯, length(coll) + 1, length(coll) + 1) : Jcoll
+            if isnothing(Jcoll) == false 
+                J .= 0
+            end
             J0 = zeros(𝒯, n, n)
         end
 
