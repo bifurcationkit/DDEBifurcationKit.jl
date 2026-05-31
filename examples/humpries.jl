@@ -62,13 +62,13 @@ args_po = (
         end,
     normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(200, 2; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense())
+probpo = Collocation(200, 2; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 2, opts_po_cont,
     probpo;
     alg = PALC(tangent = Bordered()),
     # regular continuation options
-    verbosity = 2, plot = true,
+    verbosity = 1, plot = true,
     args_po...,
     ampfactor = 0.2,
     use_normal_form = false,

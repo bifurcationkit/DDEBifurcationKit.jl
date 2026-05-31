@@ -94,7 +94,7 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
         end,
     normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(100, 3; N = 2, jacobian = BK.AutoDiffDense())
+probpo = Collocation(100, 3; N = 2, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 0, tol_stability = 1e-5),
     probpo;
@@ -104,7 +104,6 @@ br_pocoll = @time continuation(
     # ampfactor = 1/0.24391300209895822 * 0.1,
     ampfactor = 1,
     δp = 0.001,
-    override = true,
     normC = norminf,
     callback_newton = (state; k...) -> begin
         xtt = BK.get_periodic_orbit(probpo,state.x,nothing)

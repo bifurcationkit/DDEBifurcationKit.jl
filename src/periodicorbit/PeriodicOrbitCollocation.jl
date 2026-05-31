@@ -18,7 +18,7 @@ function __po_coll_bc!(coll::Collocation, dest, ∂u, u, ud, par, h, tmp)
     @. dest = ∂u - h * tmp
 end
 
-function (sol::BK.POSolution{ <: Collocation})(::Val{:der}, t0)
+function (sol::BK.POInterpolation{ <: Collocation})(::Val{:der}, t0)
     ForwardDiff.derivative(sol, t0)
 end
 
@@ -39,7 +39,7 @@ end
     uj  = zeros(𝒯, n, m+1)
 
     # get P.O. interpolation which allows to get interp(t)
-    interp = BK.POSolution(coll, u)
+    interp = BK.POInterpolation(coll, u)
     VF = coll.prob_vf
     _delays = delays(VF, gj[:, 1], pars)
 
@@ -66,7 +66,8 @@ end
             end
             # udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in _delays])
             for (ind, d) in enumerate(_delays)
-                udj.u[ind] .= interp(τ * period - d)
+                # udj.u[ind] .= interp(τ * period - d)
+                udj.u[ind] .= BK.__interpolate_posolution(coll, τ - d/period, u, 1)
             end
             __po_coll_bc!(coll, outc[:, rg[l]], ∂gj[:, l], gj[:, l], udj, pars, period * dτj, outc[:, end])
         end
@@ -146,7 +147,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         In = coll.cache.In # this helps greatly the for loop for J0 below
 
         # vector field
-        interp = BK.POSolution(coll, u)
+        interp = BK.POInterpolation(coll, u)
         VF = coll.prob_vf
 
         # loop over the mesh intervals

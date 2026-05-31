@@ -52,7 +52,6 @@ br_pocoll = @time continuation(
             )
 
 # plot(br_pocoll)
-
 # variational equation
 # ∂p = (a(t)- λ)⋅p(t) + exp(-λ⋅τ)⋅b(t)⋅p(t-τ)
 # we find a = 0 and b = -ω

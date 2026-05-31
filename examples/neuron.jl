@@ -79,7 +79,7 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
         end,
     normC = norminf)
 
-probpo = PeriodicOrbitOCollProblem(30, 3; N = 2,
+probpo = Collocation(30, 3; N = 2,
         # jacobian = BK.AutoDiffDense()
         jacobian = BK.DenseAnalytical(), 
 )

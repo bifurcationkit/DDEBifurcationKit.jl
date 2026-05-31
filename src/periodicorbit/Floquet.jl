@@ -21,7 +21,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
                             nev = 3
                         )
     coll = BK.get_discretization(wrapcoll)
-    n, m, Ntst = size(coll)
+    n, _, _ = size(coll)
     period = BK.getperiod(coll, u0, nothing)
     J = analytical_jacobian_dde_cst_floquetgev(coll, u0, par)
     @assert coll.prob_vf isa ConstantDDEBifProblem
@@ -105,19 +105,18 @@ function BK.compute_eigenvalues(eig::FloquetColl,
                                 state, 
                                 u0, 
                                 par, 
-                                nev = iter.contparams.nev; k...) where {Tkind <: BK.AbstractContinuationKind, Tprob <: AbstractDDEBifurcationProblem}
+                                nev = iter.contparams.nev; k...) where {Tprob <: AbstractDDEBifurcationProblem}
     wrapcoll = BK.get_wrap_po(iter)
-    return __floquet_coll(eig, BK.get_discretization(BK.get_wrap_po(iter)), u0, par, nev)
+    return __floquet_coll(eig, BK.get_discretization(wrapcoll), u0, par, nev)
 end
 
-function __floquet_coll(eig::FloquetColl,
+function __floquet_coll(::FloquetColl,
                             coll,
                             u0::AbstractVector{𝒯},
                             par,
                             nev = 3
                         ) where {𝒯}
-    n, m, Ntst = size(coll)
-    period = BK.getperiod(coll, u0, par)
+    n, _, _ = size(coll)
     J = analytical_jacobian_dde_cst_floquetcoll(coll, u0, par)
 
     # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]

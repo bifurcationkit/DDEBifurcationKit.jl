@@ -59,7 +59,7 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 150, nev = 10, tol_stability = 1e-5, detect_bifurcation = 0, plot_every_step = 10, newton_options = NewtonPar(tol = 1e-10, verbose = true))
 
-probpo = PeriodicOrbitOCollProblem(30, 5; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense(), meshadapt=false, K = 100)
+probpo = Collocation(30, 5; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense(), meshadapt=false, K = 100)
 br_pocoll = @time continuation(
             br, 1, ContinuationPar(opts_po_cont;detect_bifurcation = 0, nev = 10),
             probpo;

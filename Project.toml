@@ -1,7 +1,7 @@
 name = "DDEBifurcationKit"
 uuid = "954e4062-bdb8-4e3f-9eee-d47105dd3e65"
 authors = ["Romain Veltz <romain.veltz@inria.fr>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
@@ -15,7 +15,7 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-BifurcationKit = "^0.7.0"
+BifurcationKit = "^0.8.0"
 ForwardDiff = "^0.10, ^0.11, 1"
 NonlinearEigenproblems = "^1.0.1"
 Parameters = "0.12.3"
