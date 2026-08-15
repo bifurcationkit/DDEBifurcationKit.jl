@@ -2,7 +2,7 @@ using Pkg
 cd(@__DIR__)
 pkg" activate ."
 
-pkg"dev DDEBifurcationKit BifurcationKit"
+# pkg"dev DDEBifurcationKit BifurcationKit"
 pkg"dev DocumenterCodeBlocks"
 # using DocThemeIndigo
 ENV["GKSwstype"] = "100"

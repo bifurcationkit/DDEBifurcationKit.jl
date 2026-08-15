@@ -68,7 +68,7 @@ scene = plot(brhopf, vars = (:κ1, :κ2))
 
 ## Branch of periodic orbits
 
-We compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation. We use a lot of time sections $N_{tst}=200$ to have enough precision to resolve the sophisticated branch of periodic solutions especially near the first Fold point around $\kappa_1\approx 10$.
+We compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation. We use mesh adaptation to have enough precision to resolve the sophisticated branch of periodic solutions especially near the first Fold point around $\kappa_1\approx 10$.
 
 ```@example TUTHumphries
 # continuation parameters
