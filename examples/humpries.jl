@@ -24,9 +24,8 @@ end
 function plotSolution(x, p; k...)
     xtt = DDEBK.get_periodic_orbit(p.prob, x, nothing)
     plot!(xtt.t, xtt[1,:]; label = "x", marker = :d, markersize = 1, k...)
-    plot!(br; subplot = 1, putspecialptlegend = false)    
+    plot!(br; subplot = 1, putspecialptlegend = false)
 end
-
 
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 prob = SDDDEBifProblem(humpriesVF, delaysF, zeros(1), pars, (@optic _.κ1))
@@ -49,15 +48,17 @@ plot(brhopf..., vars = (:κ1, :κ2))
 ################################################################################
 # computation periodic orbit
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-nev = 20, tol_stability = 1e-3, plot_every_step = 4, newton_options = NewtonPar(tol = 1e-10, verbose = true))
+opts_po_cont = ContinuationPar(dsmax = 0.025, ds= 0.001, dsmin = 1e-4, p_max = 12.5, p_min=-5., max_steps = 300,
+nev = 20, tol_stability = 4e-3, plot_every_step = 20, newton_options = NewtonPar(tol = 1e-12))
 
 # arguments for periodic orbits
 args_po = (    
     plot_solution = plotSolution,
-    normC = norminf)
+    normC = norminf,
+    callback_newton = BifurcationKit.cbMaxNorm(10.),
+    )
 
-probpo = Collocation(200, 2; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense())
+probpo = Collocation(30, 5; N = 1, jacobian = DDEBK.BifurcationKit.DenseAnalytical(), meshadapt = true, verbose_mesh_adapt = false, K = 400.)
 br_pocoll = @time continuation(
     br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 2),
     probpo;

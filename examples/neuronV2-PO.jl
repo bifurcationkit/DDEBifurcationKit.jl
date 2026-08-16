@@ -36,7 +36,7 @@ hpnf = BK.get_normal_form(br, 2)
 end
 
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.0001, p_max = 1.2, p_min = 0.100661, max_steps = 200, nev = 10, tol_stability = 1e-4, plot_every_step = 10)
+opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.0001, p_max = 1.2, p_min = 0.100661, max_steps = 200, nev = 10, tol_stability = 1e-4, plot_every_step = 10, n_inversion = 6)
 
 # arguments for periodic orbits
 args_po = (  ;
@@ -67,4 +67,4 @@ plot(br, br_pocoll)
 # - #  6,       bp at c ≈ +0.61515927 ∈ (+0.61515927, +0.61515953), |δp|=3e-07, δ = ( 1,  0), step = 114
 # - #  7,       pd at c ≈ +0.52169354 ∈ (+0.52169354, +0.52176700), |δp|=7e-05, δ = ( 1,  1), step = 161
 # - #  8,       pd at c ≈ +0.52174066 ∈ (+0.52173603, +0.52174066), |δp|=5e-06, δ = (-1, -1), step = 165
-# - #  9, endpoint at c ≈ +0.61178495, 
+# - #  9, endpoint at c ≈ +0.61178495,

@@ -1,4 +1,4 @@
-# Neuron model (codim 2, periodic orbits)
+# [Neuron model (codim 2, periodic orbits)](@id neuron)
 
 ```@contents
 Pages = ["neuron.md"]
@@ -74,6 +74,22 @@ brhopf2 = continuation(br, 2, (@optic _.a21),
          )
 
 scene = plot(brhopf, brhopf2, legend = :top)
+```
+
+## Branch switching from Hopf-Hopf point to Hopf curve
+
+```@example TUTneuron
+brhopf3 = continuation(brhopf, 3, ContinuationPar(brhopf.contparams; ds = 0.005, max_steps = 20);
+         alg = PALC(tangent = Bordered()),
+         verbosity = 2, 
+         detect_codim2_bifurcation = 0,
+         detailed = Val(false),
+         bothside = true,
+         # normC = norminf,
+         nev = 20,
+         )
+
+scene = plot(brhopf, brhopf2, brhopf3, legend = :top)
 ```
 
 ## Branch of periodic orbits

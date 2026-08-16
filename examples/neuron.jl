@@ -1,4 +1,3 @@
-
 using Revise, DDEBifurcationKit
 using BifurcationKit
 const BK = BifurcationKit
@@ -40,23 +39,31 @@ br_pitchfork = continuation(br2, 2, opts_pitch)
 plot(br2, br_pitchfork)
 ################################################################################
 brhopf = continuation(br, 2, (@optic _.a21),
-         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
+         ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 100, p_max = 15., p_min = -1.,ds = -0.02);
          verbosity = 0, plot = true,
          detect_codim2_bifurcation = 2,
          # bothside = true,
+         bothside = true,
          start_with_eigen = true)
 
 plot(brhopf, vars = (:a21, :τs))
-plot(brhopf, vars = (:τs, :ω))
+bt = get_normal_form(brhopf, 2, detailed = Val(false), nev = 10, verbose = false)
+BK.get_normal_form(brhopf, 4; detailed = Val(false), nev = 10, verbose = true)
+BK.get_normal_form(brhopf, 5; detailed = Val(false), nev = 10, verbose = true)
 
-brhopf2 = continuation(br, 2, (@optic _.a21),
-         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 1.5, p_min = -1.,ds = -0.01, n_inversion = 4);
-         verbosity = 2, plot = true,
-         detect_codim2_bifurcation = 2,
-         start_with_eigen = true,
-         bothside=true)
-
-plot(brhopf, brhopf2, legend = :top)
+bropts = ContinuationPar(brhopf.contparams; ds = 0.005, max_steps = 20)
+@reset bropts.newton_options = NewtonPar(tol = 1e-10, verbose = false)
+hopf_from_hh = [continuation(brhopf, ii, bropts;
+         alg = PALC(tangent = Bordered()),
+         verbosity = 2,
+         plot = true,
+         detect_codim2_bifurcation = 0,
+         detailed = Val(false),
+         bothside=true,
+         normC = norminf,
+         nev = 20,
+         ) for ii in (3,4)]
+plot(brhopf, hopf_from_hh...)
 ################################################################################
 # computation periodic orbit
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 80,
@@ -79,9 +86,10 @@ args_po = (    record_from_solution = (x, p; k...) -> begin
         end,
     normC = norminf)
 
-probpo = Collocation(30, 3; N = 2,
+probpo = Collocation(30, 4; N = 2,
         # jacobian = BK.AutoDiffDense()
         jacobian = BK.DenseAnalytical(), 
+        meshadapt = false,
 )
 br_pocoll = @time continuation(
     br2, 1, opts_po_cont,
@@ -89,7 +97,6 @@ br_pocoll = @time continuation(
     alg = PALC(tangent = Bordered()),
     verbosity = 2, plot = true,
     args_po...,
-    # eigsolver = BK.FloquetGEV(DefaultEig(), length(probpo), probpo.N),
     δp = 0.001,
     normC = norminf,
     )
