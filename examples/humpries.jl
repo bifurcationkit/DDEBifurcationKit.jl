@@ -8,7 +8,7 @@ using BifurcationKit
 const DDEBK = DDEBifurcationKit
 
 function humpriesVF(x, xd, p)
-   (; κ1, κ2, γ, c) = p
+   (; κ1, κ2, γ) = p
    [
       -γ * x[1] - κ1 * xd.u[1][1] - κ2 * xd.u[2][1]
    ]
@@ -23,15 +23,10 @@ end
 
 
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
-x0 = zeros(1)
-
-prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
-
+prob = SDDDEBifProblem(humpriesVF, delaysF, zeros(1), pars, (@optic _.κ1))
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 25, )
-
-br = continuation(prob, PALC(), opts; plot = true)
-
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, nev = 25, )
+br = continuation(prob, PALC(), opts)
 plot(br)
 
 get_normal_form(br, 2)
@@ -51,8 +46,8 @@ plot(brhopf, vars = (:κ1, :κ2))
 
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20)
-@reset opts_po_cont.newton_options.tol = 1e-9
+nev = 20, tol_stability = 1e-3, plot_every_step = 20)
+@reset opts_po_cont.newton_options.tol = 1e-10
 @reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
@@ -66,7 +61,7 @@ args_po = (
 
 probpo = Collocation(200, 2; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense())
 br_pocoll = @time continuation(
-    br, 1, opts_po_cont,
+    br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 2),
     probpo;
     alg = PALC(tangent = Bordered()),
     # regular continuation options
@@ -76,9 +71,9 @@ br_pocoll = @time continuation(
     callback_newton = (state; k...) -> begin
         xtt = DDEBK.get_periodic_orbit(probpo,state.x,nothing)
         m1,m2 = extrema(xtt[:,:])
-        printstyled(color=:red, "amp = ", m2-m1,"\n")
-        printstyled(color=:green, "T = ", (state.x[end]),"\n")
-        @show state.x[end]
+        # printstyled(color=:red, "amp = ", m2-m1,"\n")
+        # printstyled(color=:green, "T = ", (state.x[end]),"\n")
+        # @show state.x[end]
         state.step < 15 && DDEBK.BifurcationKit.cbMaxNorm(10.0)(state; k...)
     end
     )

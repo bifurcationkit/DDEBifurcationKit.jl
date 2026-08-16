@@ -59,7 +59,6 @@ br_pocoll = @time continuation(
 		br, 1, opts_po_cont,
 		probpo;
 		verbosity = 2,	plot = true,
-		eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-10, σ = 1e-4), length(probpo), 1),
 		args_po...,
 		ampfactor = 2,
 		δp = 0.01,

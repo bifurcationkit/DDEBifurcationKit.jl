@@ -23,7 +23,6 @@ prob = ConstantDDEBifProblem(neuron2VF, delaysF, zeros(2), pars, (@optic _.c))
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 1.0, p_min = 0.25, newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.05, n_inversion = 8)
 br = continuation(prob, PALC(), opts; bothside = true)
-
 plot(br)
 
 hpnf = BK.get_normal_form(br, 2)
@@ -56,5 +55,4 @@ br_pocoll = @time continuation(
             # verbosity = 2,
             plot = true,
             args_po...,
-            # eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=100, tol = 1e-12, σ = 1e-3)),
             )

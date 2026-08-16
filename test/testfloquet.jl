@@ -15,15 +15,16 @@ function sinusvf(X, xd, p)
         -xτ + (x^2 + xτ^2 - A^2)^2 * x
     ]
 end
-delaysF(par) = [pi/2]
+delaysF(par) = [par.T]
 
 function plot_solution_po(x, p; k...)
     xtt = BK.get_periodic_orbit(p.prob, x, nothing)
     plot!(xtt.t, xtt[1,:]; label = "V1", k...)
 end
 
+# case delays < period
 let
-pars = (A = 0.5, ω = 1.0, r = -0.1) 
+pars = (A = 0.5, ω = 1.0, r = -0.1, T = pi/2) 
 x0 = [0.01,]
 
 prob = ConstantDDEBifProblem(sinusvf, delaysF, x0, pars, (@optic _.A))
@@ -57,10 +58,10 @@ br_pocoll = @time continuation(
 
 # the floquet exponents are analytical
 # using LambertW#, SparseArrays, RecursiveArrayTools
-# λs = [2*pars.ω/pi * lambertw(complex(-pi/2,0), k) for k in -0:7]
+# λs = [pars.ω/pars.T * lambertw(complex(-pars.T,0), k) for k in -0:7]
 # μs = exp.(λs*2pi)
 
-# log.(μs) gives
+# log.(μs) # gives
 # 8-element Vector{ComplexF64}:
 #  2.999519565323715e-32 - 2.4492935982947064e-16im
 #     -6.417163653792045 - 0.8271574313995605im
@@ -97,7 +98,7 @@ _J2 = DDEBK.analytical_jacobian_dde_floquet(BK.get_discretization(br_pocoll.prob
 # (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf
 
 # computation of Floquet exponents based in GEV: it works!
-res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol = 1e-12, σ = 1e-2)), br_pocoll.prob, _po, _pars, 15)[1]
+@time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol = 1e-12, σ = 1e-2)), br_pocoll.prob, _po, _pars, 15)[1]
 
 # computation of Floquet exponents based Verheyden, Lust 2005
 # it should be close to log.(μs), the analytical exponents of ẏ = -y(t-π/2)

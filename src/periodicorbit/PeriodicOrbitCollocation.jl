@@ -308,9 +308,9 @@ end # for-loop end
     pj = BK.get_tmp(coll.cache.gi, u)
     In = coll.cache.In
     interp = BK.POInterpolation(coll, u)
-    VF = coll.prob_vf
+    prob_vf = coll.prob_vf
 
-    delays_v = delays(VF, u[1:n], pars) # reference delays (at t = 0)
+    delays_v = delays(prob_vf, u[1:n], pars) # reference delays (at t = 0)
 
     J  = zeros(𝒯, nJ, nJ)
     J0 = zeros(𝒯, n, n)
@@ -332,13 +332,13 @@ end # for-loop end
             _rgX = rgNx .+ (l-1)*n
             τ = BK.τj(σs[l], mesh, j)
             # state-dependent delays evaluated at the collocation point
-            delays_l = delays(VF, pj[:, l], pars)
+            delays_l = delays(prob_vf, pj[:, l], pars)
             udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays_l])
-            JacDDE = jacobian(VF, pj[:, l], udj, pars)
+            JacDDE = jacobian(prob_vf, pj[:, l], udj, pars)
             J0 .= JacDDE.J0
             # delay-derivative correction: B₀ = J₀ - Σⱼ (Aⱼ·ẋ*(t-τⱼ))·cⱼ
             for (ind, d) in enumerate(delays_l)
-                cj = ForwardDiff.gradient(z -> delays(VF, z, pars)[ind], pj[:, l])
+                cj = ForwardDiff.gradient(z -> delays(prob_vf, z, pars)[ind], pj[:, l])
                 ẋd = interp(Val(:der), τ * period - d)
                 J0 .-= (JacDDE.Jd[ind] * ẋd) * cj'
             end
@@ -360,7 +360,7 @@ end # for-loop end
                 end
             end
             # derivative w.r.t. the period
-            J[_rgX, nJ] .= VF.VF.F(pj[:, l], udj, pars) .* (-dτj)
+            J[_rgX, nJ] .= prob_vf.VF.F(pj[:, l], udj, pars) .* (-dτj)
             for (ind, d) in enumerate(delays_l)
                 J[_rgX, nJ] .+= -(α * d / period) .* (JacDDE.Jd[ind] * interp(Val(:der), τ * period - d))
             end
