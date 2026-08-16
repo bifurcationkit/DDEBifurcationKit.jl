@@ -12,8 +12,8 @@ module DDEBifurcationKit
     include("NormalForms.jl")
     include("EigSolver.jl")
     include("codim2/codim2.jl")
-    include("codim2/Hopf.jl")
     include("codim2/Fold.jl")
+    include("codim2/HopfMA.jl")
 
     include("periodicorbit/PeriodicOrbits.jl")
     include("periodicorbit/Floquet.jl")

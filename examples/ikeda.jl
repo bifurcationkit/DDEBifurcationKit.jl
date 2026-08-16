@@ -32,7 +32,7 @@ plot(br)
 BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 ################################################################################
 # computation periodic orbit
-opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40, nev = 10, tol_stability = 1e-8, detect_bifurcation = 2, plot_every_step = 1)
+opts_po_cont = ContinuationPar(dsmax = 0.2, ds= -0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 40, nev = 10, tol_stability = 1e-8, detect_bifurcation = 2)
 
 # arguments for periodic orbits
 args_po = (    

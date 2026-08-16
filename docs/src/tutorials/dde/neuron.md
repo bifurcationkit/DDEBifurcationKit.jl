@@ -61,17 +61,18 @@ We follow the Hopf points in the parameter plane $(a_{21}, \tau_s)$. We tell the
 ```@example TUTneuron
 # continuation of the first Hopf point
 brhopf = continuation(br, 3, (@optic _.a21),
-         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.04, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.05, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
          detect_codim2_bifurcation = 2,
          # bothside = true,
          start_with_eigen = true)
 
 # continuation of the second Hopf point
 brhopf2 = continuation(br, 2, (@optic _.a21),
-         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.1, max_steps = 56, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
+         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.05, max_steps = 100, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
          detect_codim2_bifurcation = 2,
          start_with_eigen = true,
-         bothside=true)
+         bothside=true
+         )
 
 scene = plot(brhopf, brhopf2, legend = :top)
 ```

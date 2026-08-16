@@ -98,6 +98,18 @@ function BK.re_make(𝐌𝐚::HopfDDEFormulation;
     new_prob = BK.re_make(𝐌𝐚.prob_vf; params)
     return (@set 𝐌𝐚.prob_vf = new_prob)
 end
+
+################################################################################
+struct JacobianCodim2DDE{T1,T2,T3,T4}
+    prob::T1
+    J::T2
+    x::T3
+    p::T4
+end
+
+(l::BK.DefaultLS)(J::JacobianCodim2DDE, args...; kw...) = l(J.J, args...; kw...)
+
+BK.jacobian(hopfpb::BK.HopfMAProblem{Tprob, BK.AutoDiff, Tl, Tplot, Trecord}, x, p) where {Tprob <: HopfDDEFormulation, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
 ################################################################################
 """
 $(SIGNATURES)

@@ -31,7 +31,7 @@ opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01
 br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
 
 plot(br)
-hopfpt = BK.getNormalForm(br, 1)
+hopfpt = BK.get_normal_form(br, 1)
 ################################################################################
 # case where we specify the jacobian
 function JacHutchinson(u, p)
