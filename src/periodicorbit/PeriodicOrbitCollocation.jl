@@ -465,21 +465,32 @@ function _dde_coll_jac_extended(coll::Collocation{Tprob},
     interp = BK.POInterpolation(coll, u)
     ddeprob = coll.prob_vf
 
-    # maximum delay along the orbit (in units of the period)
-    τmax = zero(𝒯)
+    # leftmost history fine index reached by the delayed contributions. It is computed
+    # with the same wrap / interval-locating logic as in the assembly loop below, so
+    # that it is exact on the (possibly adapted, non-uniform) mesh: the delayed
+    # contribution is interpolated with the fine nodes of the coarse interval
+    # containing the delayed time, whose left edge can lie up to one coarse interval
+    # width left of the delayed time.
+    fmin = 0
     rg = UnitRange(1, m+1)
     for j in 1:Ntst
         LA.mul!(pj, uc[:, rg], L)
         for l in 1:m
+            τ = BK.τj(gauss[l], mesh, j)
             for d in delays(ddeprob, pj[:, l], pars)
-                τmax = max(τmax, d / period)
+                t = τ - d / period   # scaled delayed time (may be < 0 or < -1)
+                p = floor(Int, t)    # whole periods before t (≤ 0)
+                t0 = t - p           # wrapped into [0, 1)
+                iw = clamp(searchsortedfirst(mesh, t0) - 2, 0, Ntst - 1)
+                fmin = min(fmin, (iw + p * Ntst) * m)
             end
         end
         rg = rg .+ m
     end
-    # history steps covering [−τ_max, 0]; +m accounts for the interpolation stencil
-    # extending to the left edge of the coarse interval containing −τ_max
-    n_history = max(1, ceil(Int, τmax * N) + m)
+    # history fine steps covering the delayed contributions: the columns are addressed
+    # by coarse interval (see `_col`), so the leftmost fine index fmin determines the
+    # required history length
+    n_history = max(1, -fmin)
 
     s1 = N * n
     # jacobian columns: [history (n_history·n) | u₀ (n) | current (N·n)]
@@ -517,9 +528,16 @@ function _dde_coll_jac_extended(coll::Collocation{Tprob},
             # delayed contributions
             for (ind, d) in enumerate(delays_l)
                 t = τ - d / period   # scaled delayed time (may be < 0 or < -1)
-                # coarse interval (0-based, possibly negative)
-                ic = floor(Int, t * Ntst)
-                σ = 2 * (t * Ntst - ic) - 1
+                # Locate the coarse interval containing the delayed time on the actual
+                # (possibly adapted, non-uniform) mesh: wrap t into [0,1) — the orbit is
+                # periodic —, find the interval in the mesh via searchsortedfirst, then
+                # shift back by the integer number of whole periods. Using floor(t·Ntst)
+                # would only be valid on a uniform mesh, which mesh adaptation breaks.
+                p = floor(Int, t)                    # whole periods before t (≤ 0)
+                t0 = t - p                           # wrapped into [0, 1)
+                iw = clamp(searchsortedfirst(mesh, t0) - 2, 0, Ntst - 1)
+                ic = iw + p * Ntst                   # coarse interval (0-based, possibly negative)
+                σ = BK.σj(t0, mesh, iw + 1)
                 for l2 in 1:m+1
                     f = ic * m + l2 - 1
                     col = _col(f, n_history, n)
