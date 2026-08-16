@@ -19,7 +19,7 @@ function BK.get_normal_form1d(prob::ConstantDDEBifProblem,
     # parameters for normal form
     kwargs_nf = (;nev, verbose, lens, scaleζ)
     @warn "Computation of normal form based on a little hack ;)"
-    Fode = (x,p) -> prob.VF.F(x, VectorOfArray([x for _ in eachindex(prob.delays0)]),p)
+    Fode = (x,p) -> prob.VF.F(x, VectorOfArray([x for _ in eachindex(prob.delays0)]), p)
     prob_ode = BK.BifurcationProblem(Fode, prob.u0, prob.params, prob.lens; record_from_solution = prob.recordFromSolution)
     br_ode = @set br.contparams.newton_options.eigsolver = BK.DefaultEig()
     BK.get_normal_form1d(prob_ode, br_ode, ind_bif; kwargs_nf...)

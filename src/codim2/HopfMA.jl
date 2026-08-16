@@ -40,7 +40,7 @@ end
 # This method handles both HopfMinimallyAugmentedFormulation (from BK) and
 # HopfDDEFormulation (from DDEBifurcationKit) which share the same field structure.
 # function BK.__compute_bordered_vectors(𝐇::BK.HopfMinimallyAugmentedFormulation, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯) where 𝒯
-function BK.__compute_bordered_vectors(linbdsolver, linbdsolver_adjoint, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
+function BK.__compute_bordered_vectors_hopf(linbdsolver, linbdsolver_adjoint, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
     # consistent with BK.hopf_ma_test: solve (A(iω) - iωI)v + aσ = 0
     Δω = -Δ(J_at_xp, Complex{𝒯}(0, ω))
     Δω_adj = JAd_at_xp isa JacobianDDE ? -Δ(JAd_at_xp, Complex{𝒯}(0, ω)) : JAd_at_xp
