@@ -21,11 +21,14 @@ pars = (A = 0.5, ω = 1.0, r = -0.1)
 x0 = [0.01,]
 
 prob = ConstantDDEBifProblem(sinusvf, delaysF, x0, pars, (@optic _.A))
+
+function plot_solution_po(x, p; k...)
+    xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+    plot!(xtt.t, xtt[1,:]; label = "V1", k...)
+end
+
 args_po = (
-    plot_solution = (x, p; k...) -> begin
-        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-        plot!(xtt.t, xtt[1,:]; label = "V1", k...)
-        end,
+    plot_solution = plot_solution_po,
     normC = norminf)
 
 # continuation parameters

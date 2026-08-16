@@ -335,6 +335,28 @@ function BK.d3F(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p
     ForwardDiff.derivative(t -> BK.d2F(prob, x .+ t .* dx3, p, dx1, dx2), zero(𝒯))
 end
 
+# intrinsic (delay-frozen) derivatives of the SD-DDE functional along functions.
+# These are needed for the Hopf normal form computation: they provide the derivatives
+# of F(φ(0), φ(-τ₁(x*)), ..., φ(-τ_m(x*))) w.r.t. the discrete function values.
+function _F_voa_sdde(prob::SDDDEBifProblem, xd::VectorOfArray, p)
+    prob.VF.F(xd.u[1], VectorOfArray(xd.u[2:end]), p)
+end
+
+function BK.dF(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, xd::VectorOfArray, p, dx) where {Tf, TFinp}
+    𝒯 = real(BK.VI.scalartype(xd.u[1]))
+    return ForwardDiff.derivative(t -> _F_voa_sdde(prob, xd .+ t .* dx, p), zero(𝒯))
+end
+
+function BK.d2F(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, xd::VectorOfArray, p, dx1, dx2) where {Tf, TFinp}
+    𝒯 = real(BK.VI.scalartype(xd.u[1]))
+    return ForwardDiff.derivative(t -> BK.dF(prob, xd .+ t .* dx2, p, dx1), zero(𝒯))
+end
+
+function BK.d3F(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, xd::VectorOfArray, p, dx1, dx2, dx3) where {Tf, TFinp}
+    𝒯 = real(BK.VI.scalartype(xd.u[1]))
+    return ForwardDiff.derivative(t -> BK.d2F(prob, xd .+ t .* dx3, p, dx1, dx2), zero(𝒯))
+end
+
 function BK.jacobian(prob::SDDDEBifProblem, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
