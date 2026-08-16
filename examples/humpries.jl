@@ -34,7 +34,6 @@ optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, nev = 25, )
 br = continuation(prob, PALC(), opts)
 plot(br)
-
 get_normal_form(br, 2)
 ################################################################################
 brh = continuation(BifurcationKit.re_make(prob; params = @set pars.κ2=3.), PALC(), opts; plot = true)

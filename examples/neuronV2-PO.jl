@@ -43,7 +43,7 @@ args_po = (  ;
     plot_solution,
     normC = norminf)
 
-probpo = Collocation(20, 5, 
+probpo = Collocation(20, 4, 
             # jacobian = BK.AutoDiffDense(),
             # jacobian = BK.DenseAnalytical(),
             jacobian = BK.DenseAnalyticalInplace(),

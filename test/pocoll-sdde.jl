@@ -34,7 +34,7 @@ BK.get_normal_form(br, 1)
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.1, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 10,
      nev = 10, tol_stability = 1e-8, detect_bifurcation = 0)
-@reset opts_po_cont.newton_options.verbose = true
+# @reset opts_po_cont.newton_options.verbose = true
 
 for ma in (false)
     probpo = Collocation(100, 4; N = 1, jacobian = BK.AutoDiffDense(), meshadapt = ma, K = 100)
@@ -43,7 +43,7 @@ for ma in (false)
         probpo;
         alg = PALC(tangent = Bordered()),
         # regular continuation options
-        verbosity = 3,
+      #   verbosity = 3,
         ampfactor = 1.0,
         δp = 0.2,
         normC = norminf,

@@ -27,9 +27,6 @@ where `prob` is a bifurcation problem. `br` is a branch computed after a call to
 !!! info "Note"
     You should not need to call `get_normal_form` except if you need the full information about the branch point.
 
-!!! danger "SD-DDE"
-    The normal form is not implemented for state dependant DDE.
-
 ## References
 
 [^Haragus]: > Haragus, Mariana, and Gérard Iooss. Local Bifurcations, Center Manifolds, and Normal Forms in Infinite-Dimensional Dynamical Systems. London: Springer London, 2011. https://doi.org/10.1007/978-0-85729-112-7.

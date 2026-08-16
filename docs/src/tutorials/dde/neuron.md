@@ -37,7 +37,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs), record_from_solution = (x,p;k...)->x[1])
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit = 200))
-opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 15, dsmax = 0.2, n_inversion = 4)
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, nev = 15, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob, PALC(), opts; bothside = true, normC = norminf)
 ```
 
@@ -82,7 +82,8 @@ We change the continuation parameter and study the bifurcations as function of $
 
 ```@example TUTneuron
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.a21))
-br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 3., n_inversion = 4); verbosity = 0, plot = false, normC = norminf)
+br2 = BK.continuation(prob2, PALC(), ContinuationPar(opts, ds = 0.1, p_max = 3., n_inversion = 4); normC = norminf)
+br3 = BK.continuation(br2, 2)
 ```
 
 We then compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation.
@@ -93,10 +94,10 @@ opts_po_cont = ContinuationPar(ds = 1e-3, p_max = 3., max_steps = 100, tol_stabi
 
 br_pocoll = @time continuation(
 	br2, 1, opts_po_cont,
-	Collocation(30, 5; jacobian = BK.AutoDiffDense());
+	Collocation(30, 5; jacobian = BK.DenseAnalytical());
 	normC = norminf,
 	)
-scene = plot(br2, br_pocoll)
+scene = plot(br2, br3, br_pocoll)
 ```
 
 We can plot the periodic orbit as they approach the homoclinic point.

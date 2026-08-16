@@ -101,21 +101,22 @@ function BK.compute_eigenvalues(eig::FloquetColl,
                                 state, 
                                 u0, 
                                 par, 
-                                nev = iter.contparams.nev; k...) where {Tprob <: AbstractDDEBifurcationProblem}
+                                nev = iter.contparams.nev; use_GEV = false, k...) where {Tprob <: AbstractDDEBifurcationProblem}
     wrapcoll = BK.get_wrap_po(iter)
-    return __floquet_coll(eig, BK.get_discretization(wrapcoll), u0, par, nev)
+    return __floquet_coll(eig, BK.get_discretization(wrapcoll), u0, par, nev; use_GEV)
 end
 
 function __floquet_coll(::FloquetColl,
                         coll,
                         u::AbstractVector{𝒯},
                         par,
-                        nev = 3
+                        nev = 3;
+                        use_GEV = false
                     ) where {𝒯}
     # Floquet multipliers via the collocation Jacobian of the DDE linearized around a T-periodic orbit.
     # The delayed contributions are placed at their true delayed times (which may span
     # several periods) by _dde_coll_jac_extended, so delays larger than the period are
-    # supported; the generalized pencil (Cbc, C) then yields the multipliers μ.
+    # supported.
     C, n_history, period = _dde_coll_jac_extended(coll, u, par)
     n, m, Ntst = size(coll)
     N = m * Ntst
@@ -123,18 +124,45 @@ function __floquet_coll(::FloquetColl,
     seg = n_history + 1
     dn = seg * n
     # current period length (u₁,...,u_N)
-    s2 = N * n
-    Cbc = vcat(zero(C), zeros(eltype(C), dn, size(C, 2)))
-    C = vcat(C, zeros(eltype(C), dn, size(C, 2)))
-    for i in 1:dn
-        Cbc[s2+i, s2+i] = 1
-        C[s2+i, i] = 1
+    s1 = N * n
+
+    if use_GEV
+        # Legacy: solve directly the generalized pencil (Cbc, C) built from the
+        # extended collocation Jacobian C. Its (finite) eigenvalues are the
+        # Floquet multipliers, but the GEV (QZ) is noticeably slower than the
+        # reduced standard eigenvalue problem below.
+        Cbc = vcat(zero(C), zeros(eltype(C), dn, size(C, 2)))
+        CC = vcat(C, zeros(eltype(C), dn, size(C, 2)))
+        for i in 1:dn
+            Cbc[s1+i, s1+i] = 1
+            CC[s1+i, i] = 1
+        end
+        vals = LA.eigvals(Matrix(Cbc), Matrix(CC))
+    else
+        # Verheyden-Lust reduction to a standard eigenvalue problem:
+        # the columns of C are [segment (dn) | current (s1)] and the collocation
+        # system C_seg·x_seg + C_cur·x_cur = 0 with x_cur = μ·x_seg (periodicity)
+        # yields the monodromy Mₜ = -C_cur\C_seg whose (finite) eigenvalues are
+        # the Floquet multipliers. The rectangular Mₜ is completed with identity
+        # blocks so that its eigenvalues coincide with those of the generalized
+        # pencil (Cbc, C), but at a fraction of the cost (standard EVP vs GEV).
+        C_seg = @view C[:, 1:dn]
+        C_cur = @view C[:, dn+1:end]
+        Mₜ = -(C_cur \ C_seg)        # s1 × dn
+        if dn <= s1
+            # keep the last dn rows of Mₜ
+            M = Mₜ[end-dn+1:end, :]
+        else
+            # prepend [0  I] to square the matrix up
+            𝒯M = eltype(Mₜ)
+            Iblk = Matrix{𝒯M}(LA.I, dn - s1, dn - s1)
+            M = vcat(hcat(zeros(𝒯M, dn - s1, s1), Iblk), Mₜ)
+        end
+        vals = LA.eigvals(M)
     end
-    # TODO: this is super-slow. Use EV instead of GEV
-    vals = LA.eigvals(Matrix(Cbc), Matrix(C))
 
     # computation of eigenvalues
     logvals = log.(complex.(vals))
-    I = sortperm(logvals, by = real, rev = true)
-    return logvals[I[1:min(nev, length(I))]], nothing, true, 1
+    perm = sortperm(logvals, by = real, rev = true)
+    return logvals[perm[1:min(nev, length(perm))]], nothing, true, 1
 end
