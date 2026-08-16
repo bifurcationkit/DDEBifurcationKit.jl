@@ -52,7 +52,7 @@ for m in (3,4,5), Ntst in (99, 100)
     _J = BK.jacobian(br_pocoll.prob, _po, _pars)
     _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
     @test norminf(_J-_J2) ≈ 0 atol = 1e-12
-    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetcoll(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_floquet(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
     @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-12
     _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
     @test (_J2.J0 + sum(_J2.Jd) -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-12

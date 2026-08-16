@@ -91,7 +91,7 @@ _J2 = DDEBK.analytical_jacobian_dde_cst_floquetgev(BK.get_discretization(br_poco
 # plotH(iszero.(_J2.Jd[1]))
 # (_J2.J0 + _J2.Jd[1] -_J)[1:end-1,1:end-1] |> norminf
 
-_J2 = DDEBK.analytical_jacobian_dde_cst_floquetcoll(BK.get_discretization(br_pocoll.prob), _po, _pars)
+_J2 = DDEBK.analytical_jacobian_dde_floquet(BK.get_discretization(br_pocoll.prob), _po, _pars)
 # plotH(iszero.(_J2.J0))
 # plotH(iszero.(_J2.Jd))
 # (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf

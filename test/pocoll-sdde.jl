@@ -1,4 +1,5 @@
 # using Revise, Plots
+using Test
 using DDEBifurcationKit, LinearAlgebra
 using BifurcationKit
 const BK = BifurcationKit
@@ -73,4 +74,17 @@ _J = BK.jacobian(br_pocoll.prob, _po, _pars);
 
 _J2 = DDEBK.analytical_jacobian_dde_cst(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
 # @test norm(_J - _J2, Inf) < 1e-10
+
+# SD-DDE Floquet collocation jacobian: must match the ForwardDiff jacobian of the residual,
+# i.e. it correctly captures the state-dependent delays and the delay-derivative coupling.
+_J3 = DDEBK.analytical_jacobian_dde_floquet(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
+@test norm(_J3.J0 + _J3.Jd - _J, Inf) < 1e-9
+
+# DenseAnalytical uses the analytical jacobian (same as the Floquet one, full matrix)
+J_da = BK._jacobian_po(br_pocoll.prob, BK.DenseAnalytical(), _po, _pars)
+@test norm(J_da - _J, Inf) < 1e-8
+
+# Floquet exponents (Verheyden-Lust monodromy)
+vals = DDEBK.__floquet_coll(BK.FloquetColl(), BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars, 6)[1]
+@test length(vals) == 6
 end

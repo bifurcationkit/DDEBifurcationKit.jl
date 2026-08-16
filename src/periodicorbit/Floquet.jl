@@ -24,7 +24,9 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     n, _, _ = size(coll)
     period = BK.getperiod(coll, u0, nothing)
     J = analytical_jacobian_dde_cst_floquetgev(coll, u0, par)
-    @assert coll.prob_vf isa ConstantDDEBifProblem
+    if !(coll.prob_vf isa ConstantDDEBifProblem)
+        error("FloquetGEV (Generalized Eigenvalue / NEP) requires constant delays.\nUse `FloquetColl` (Verheyden-Lust monodromy) for state-dependent delays.")
+    end
     _delays = delays(coll.prob_vf, nothing, par)
 
     # λ⋅B * p + D * p - J0 * p - exp(-λ⋅τ) * Jd1 * p = 0
@@ -116,7 +118,7 @@ function __floquet_coll(::FloquetColl,
                             nev = 3
                         ) where {𝒯}
     n, _, _ = size(coll)
-    J = analytical_jacobian_dde_cst_floquetcoll(coll, u0, par)
+    J = analytical_jacobian_dde_floquet(coll, u0, par) # J0/Jd split, dispatches on the delay type
 
     # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]
     # we then find the closest coarse mesh point

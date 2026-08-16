@@ -64,9 +64,9 @@ Mesh adaptation can be turned on like in the case of [ODEs](https://bifurcationk
 ## Jacobians
 
 - the jacobian `BifurcationKit.AutoDiffDense()` is available for constant delays and state-dependent delays.
+- the jacobian `BifurcationKit.DenseAnalytical()` is available for constant delays and state-dependent delays.
 
 Only for constant delays:
-- the jacobian `BifurcationKit.DenseAnalytical()` is available.
 - the jacobian `BifurcationKit.FullSparse()` is available.
 
 > All [jacobians](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/periodicOrbitCollocation/#Mesh-adaptation) of the ODE case will be made available in the future.
@@ -79,7 +79,7 @@ Only for constant delays:
 
 ## Floquet multipliers computation
 
-This part is specific to delay differential equations. Let's explain it in the simple case 
+This part is specific to delay differential equations. Let's explain it in the simple case of constant delays
 
 $$\frac{dx(t)}{dt} = F(x(t), x(t-\tau)).$$
 
@@ -97,7 +97,7 @@ Recall that they are related to the Floquet coefficients $\mu$ by the relation $
 We provide one method(s) to compute the Floquet coefficients.
 
 1. The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
-2. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here but this can be used to check the results of the previous method.
+2. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here, but this can be used to check the results of the previous method.
 
 ## References
 

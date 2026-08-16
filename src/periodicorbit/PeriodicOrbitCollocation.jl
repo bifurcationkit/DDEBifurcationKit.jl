@@ -87,12 +87,30 @@ function BK._generate_jacobian(coll::BK.Collocation{ <: ConstantDDEBifProblem},
     return (BK.DenseAnalyticalInplace(), _Jcoll_matrix)
 end
 
+function BK._generate_jacobian(coll::BK.Collocation{ <: SDDDEBifProblem}, 
+                                J::BK.DenseAnalyticalInplace,
+                                orbitguess,
+                                pars; 
+                                Jcoll_matrix = nothing,
+                                k...)
+    _Jcoll_matrix = isnothing(Jcoll_matrix) ? analytical_jacobian_dde(coll, orbitguess, pars) : Jcoll_matrix
+    return (BK.DenseAnalyticalInplace(), _Jcoll_matrix)
+end
+
 function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: ConstantDDEBifProblem}}, 
                 ::BK.DenseAnalytical,
                 x, 
                 p)
     coll = BK.get_discretization(wrap)
     return analytical_jacobian_dde_cst(coll, x, p)
+end
+
+function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: SDDDEBifProblem}}, 
+                ::BK.DenseAnalytical,
+                x, 
+                p)
+    coll = BK.get_discretization(wrap)
+    return analytical_jacobian_dde(coll, x, p)
 end
 
 function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: ConstantDDEBifProblem}}, 
@@ -104,12 +122,29 @@ function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation
     return analytical_jacobian_dde_cst(coll, x, p; Jcoll = _Jcoll_matrix)
 end
 
+function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: SDDDEBifProblem}}, 
+                J::Tuple{BK.DenseAnalyticalInplace, Tj},
+                x, 
+                p) where {Tj}
+    _Jcoll_matrix = J[2]
+    coll = BK.get_discretization(wrap)
+    return analytical_jacobian_dde(coll, x, p; Jcoll = _Jcoll_matrix)
+end
+
 function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: ConstantDDEBifProblem}}, 
                 ::BK.FullSparse,
                 x, 
                 p)
     coll = BK.get_discretization(wrap)
     return analytical_jacobian_dde_cst(coll, x, p)
+end
+
+function BK._jacobian_po(wrap::BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{ <: SDDDEBifProblem}}, 
+                ::BK.FullSparse,
+                x, 
+                p)
+    coll = BK.get_discretization(wrap)
+    return analytical_jacobian_dde(coll, x, p)
 end
 
 """
@@ -124,7 +159,7 @@ end
 # analytical jacobians for constant DDE
 for (fname, floquet) in ((:analytical_jacobian_dde_cst, false), 
                          (:analytical_jacobian_dde_cst_floquetgev, true),
-                         (:analytical_jacobian_dde_cst_floquetcoll, true),
+                         (:analytical_jacobian_dde_floquet, true),
                          )
     @eval begin
     @views function $fname(coll::Collocation{Tprob}, 
@@ -177,7 +212,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
             # arrays to store the jacobian of the delayed terms
             Jd = [zeros(𝒯, length(coll)+1, length(coll)+1) for _ in 1:length(delays_v)]
-        elseif $(fname == :analytical_jacobian_dde_cst_floquetcoll)
+        elseif $(fname == :analytical_jacobian_dde_floquet)
             # this part contains the times t - d/period which are negative
             Jd = zeros(𝒯, length(coll)+1, length(coll)+1)
         end
@@ -216,7 +251,7 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
 
                         if $(fname == :analytical_jacobian_dde_cst_floquetgev)
                             Jd[idelay][_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
-                        elseif ($(fname == :analytical_jacobian_dde_cst_floquetcoll) && t0 < 0)
+                        elseif ($(fname == :analytical_jacobian_dde_floquet) && t0 < 0)
                             rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t - 1))
                             Jd[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[idelay] .* β
                         else # case analytical_jacobian_dde_cst
@@ -248,3 +283,121 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
 
     end # begin
 end # for-loop end
+########################################################################################
+# Floquet collocation Jacobian for state-dependent delays.
+# The linearization of an SD-DDE around a T-periodic orbit x* reads
+#   ẏ(t) = [A₀(t) - Σⱼ Aⱼ(t)·ẋ*(t-τⱼ*(t))·cⱼ(t)]·y(t) + Σⱼ Aⱼ(t)·y(t-τⱼ*(t))
+# with τⱼ*(t) = τⱼ(x*(t), p) and cⱼ(t) = ∇τⱼ(x*(t)). Here the delays are evaluated at
+# each collocation point and the delay-derivative (state-dependence) correction
+# -Σⱼ (Aⱼ·ẋ*(t-τⱼ))·cⱼ is added to the undelayed coefficient. The returned JacobianDDE
+# has the same J0 / Jd split as analytical_jacobian_dde_floquet for constant delays
+# (Jd holds the delayed contributions with t0 < 0), so the Verheyden-Lust monodromy applies.
+@views function analytical_jacobian_dde_floquet(coll::Collocation{Tprob},
+                                                u::AbstractVector{𝒯},
+                                                pars;
+                                                Jcoll = nothing) where {Tprob <: SDDDEBifProblem, 𝒯}
+    n, m, Ntst = size(coll)
+    nJ = length(coll) + 1
+    L, ∂L = BK.get_Ls(coll.mesh_cache)
+    mesh = BK.getmesh(coll)
+    σs = _get_gauss_nodes(coll)
+    ω = coll.mesh_cache.gauss_weight
+    period = BK.getperiod(coll, u, nothing)
+    phase = zero(𝒯)
+    uc = BK.get_time_slices(coll, u)
+    pj = BK.get_tmp(coll.cache.gi, u)
+    In = coll.cache.In
+    interp = BK.POInterpolation(coll, u)
+    VF = coll.prob_vf
+
+    delays_v = delays(VF, u[1:n], pars) # reference delays (at t = 0)
+
+    J  = zeros(𝒯, nJ, nJ)
+    J0 = zeros(𝒯, n, n)
+    # history part (delayed terms reaching into the previous period), single matrix
+    Jd = zeros(𝒯, nJ, nJ)
+
+    # periodic boundary condition
+    J[nJ-n:nJ-1, nJ-n:nJ-1] .= In
+    J[nJ-n:nJ-1, 1:n] .= (-1) .* In
+
+    rg = UnitRange(1, m+1)
+    rgNx = UnitRange(1, n)
+    rgNy = UnitRange(1, n)
+    for j in 1:Ntst
+        LA.mul!(pj, uc[:, rg], L)
+        dτj = (mesh[j+1] - mesh[j]) / 2
+        α = period * dτj
+        for l in 1:m
+            _rgX = rgNx .+ (l-1)*n
+            τ = BK.τj(σs[l], mesh, j)
+            # state-dependent delays evaluated at the collocation point
+            delays_l = delays(VF, pj[:, l], pars)
+            udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays_l])
+            JacDDE = jacobian(VF, pj[:, l], udj, pars)
+            J0 .= JacDDE.J0
+            # delay-derivative correction: B₀ = J₀ - Σⱼ (Aⱼ·ẋ*(t-τⱼ))·cⱼ
+            for (ind, d) in enumerate(delays_l)
+                cj = ForwardDiff.gradient(z -> delays(VF, z, pars)[ind], pj[:, l])
+                ẋd = interp(Val(:der), τ * period - d)
+                J0 .-= (JacDDE.Jd[ind] * ẋd) * cj'
+            end
+            for l2 in 1:m+1
+                J[_rgX, rgNy .+ (l2-1)*n] .+= @. (-α * L[l2, l]) * J0 + (∂L[l2, l]) * In
+                for (ind, d) in enumerate(delays_l)
+                    # find interval where t-τ/period belongs
+                    t0 = τ * period - d
+                    τd = mod(t0, period) / period
+                    index_t = clamp(searchsortedfirst(mesh, τd) - 1, 1, Ntst)
+                    rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t - 1))
+                    σ = BK.σj(τd, mesh, index_t)
+                    β = BK.lagrange(l2, σ, BK.get_mesh_coll(coll))
+                    if t0 < 0
+                        Jd[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[ind] .* β
+                    else
+                        J[_rgX, rgNy_delay .+ (l2-1)*n] .+= -α .* JacDDE.Jd[ind] .* β
+                    end
+                end
+            end
+            # derivative w.r.t. the period
+            J[_rgX, nJ] .= VF.VF.F(pj[:, l], udj, pars) .* (-dτj)
+            for (ind, d) in enumerate(delays_l)
+                J[_rgX, nJ] .+= -(α * d / period) .* (JacDDE.Jd[ind] * interp(Val(:der), τ * period - d))
+            end
+            phase += LA.dot(pj[:, l], coll.∂ϕ[:, (j-1)*m + l]) * ω[l]
+        end
+        rg = rg .+ m
+        rgNx = rgNx .+ (m * n)
+        rgNy = rgNy .+ (m * n)
+    end
+    return JacobianDDE(missing, missing, J, Jd, delays_v)
+end
+
+# full analytical jacobian for the DDE collocation (constant or state-dependent delays).
+# It is the Floquet jacobian (J0 + Jd) completed with the phase condition row, so that
+# it can be used as a Newton jacobian. The phase condition code stays in the generated
+# constant-delay jacobian (analytical_jacobian_dde_cst); it is added here for the Floquet
+# version (whose monodromy extraction ignores the last n+1 rows anyway).
+@views function analytical_jacobian_dde(coll::Collocation{ <: AbstractDDEBifurcationProblem},
+                                        u::AbstractVector,
+                                        pars;
+                                        Jcoll = nothing)
+    Jdde = analytical_jacobian_dde_floquet(coll, u, pars; Jcoll)
+    M = Jdde.J0 + Jdde.Jd
+    nJ = size(M, 1)
+    period = BK.getperiod(coll, u, nothing)
+    Ls = BK.get_Ls(coll.mesh_cache)
+    phase = BK.phase_condition(coll, BK.get_time_slices(coll, u), Ls, period)
+    M[end, begin:end-1] .= coll.cache.∇phase ./ period
+    M[nJ, nJ] = -phase / period^2
+    return M
+end
+########################################################################################
+# BK.jacobian on a DDE collocation: use the analytical jacobian when the collocation is
+# configured with DenseAnalytical, otherwise fall back to automatic differentiation.
+function BK.jacobian(coll::BK.Collocation{<:AbstractDDEBifurcationProblem}, u, par)
+    return _jacobian_dde_coll(coll, coll.jacobian, u, par)
+end
+
+_jacobian_dde_coll(coll, ::BK.DenseAnalytical, u, par) = analytical_jacobian_dde(coll, u, par)
+_jacobian_dde_coll(coll, ::BK.AutoDiffDense, u, par) = ForwardDiff.jacobian(z -> BK.po_residual(coll, z, par), u)

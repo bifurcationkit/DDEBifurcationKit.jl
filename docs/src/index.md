@@ -38,19 +38,12 @@ The examples which follow have not **all** been written with the goal of perform
 
 ### Capabilities related to equilibria
 - detection of Branch, Fold, Hopf bifurcation point of stationary solutions and computation of their normal form.
-```@raw html
-<ul> 
-<li><del>Automatic branch switching at branch points (whatever the dimension of the kernel)</del></li></ul>
-```
+- Automatic branch switching at branch points (whatever the dimension of the kernel)
 - **Automatic bifurcation diagram computation of equilibria**
 - Fold / Hopf continuation.
 ```@raw html
 <ul> 
-<li>detection all codim 2 bifurcations of equilibria and <del>computation of the normal forms of Bogdanov-Takens, Bautin and Cusp</del></li>
 <li><del>Branching from Bogdanov-Takens points to Fold / Hopf curve</del></li>
-<li>Periodic orbit computation and continuation using <del>Shooting, Finite Differences or </del>Orthogonal Collocation.</li>
-<li><del>detection of Branch, Fold, Neimark-Sacker, Period Doubling bifurcation point of periodic orbits.</del></li>
-<li><del>Continuation of Fold of periodic orbits</del></li>
 </ul>
 ```
 
@@ -66,11 +59,11 @@ Type of delay: Constant (C), state-dependent (SD), nested (N)
 | Fold Point continuation |C/SD | Y |  |  |
 | Hopf Point continuation | C/SD |  | `AbstractArray` | | |
 | Branch point / Fold form | C/SD | |  | |  | |
-| Hopf normal form | C | |  | |  | |
+| Hopf normal form | C/SD | |  | |  | |
 | Branch switching at Branch / Hopf points | C/SD |  | `AbstractArray` |  |  |
 | Automatic bifurcation diagram computation of equilibria | C/SD| Y| `AbstractArray` |  | |
 | Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | NA | |  |  |
+| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD | |  |  |
 
 ### Capabilities related to Periodic orbits (PO)
 
@@ -84,8 +77,8 @@ Type of delay: Constant (C), state-dependent (SD), nested (N)
 |Features| delay type | Matrix Free|Custom state| [Tutorials](https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/tutorials/tutorials/) | GPU |
 |---|---|---|---|---|---|
 | Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| Floquet exponents |C| | `AbstractVector` |  | |
-| Fold, Neimark-Sacker, Period doubling detection |C| | `AbstractVector` |  | |
+| Floquet exponents |C/SD| | `AbstractVector` |  | |
+| Fold, Neimark-Sacker, Period doubling detection |C/SD| | `AbstractVector` |  | |
 
 
 ## Requested methods for Custom State
