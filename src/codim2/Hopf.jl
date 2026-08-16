@@ -227,7 +227,7 @@ function BK.continuation_hopf(prob_vf::AbstractDDEBifurcationProblem, alg::BK.Ab
     return correctBifurcation(br)
 end
 
-function BK.continuation_hopf(prob::AbstractDDEBifurcationProblem,
+function __continuation_hopf(prob::AbstractDDEBifurcationProblem,
                         br::BK.AbstractBranchResult, ind_hopf::Int64,
                         lens2::BK.AllOpticTypes,
                         options_cont::ContinuationPar = br.contparams;

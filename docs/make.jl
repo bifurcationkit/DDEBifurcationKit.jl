@@ -3,11 +3,12 @@ cd(@__DIR__)
 pkg" activate ."
 
 pkg"dev DDEBifurcationKit BifurcationKit"
+pkg"dev DocumenterCodeBlocks"
 # using DocThemeIndigo
 ENV["GKSwstype"] = "100"
 
 using Documenter, DDEBifurcationKit, BifurcationKit
-
+using DocumenterCodeBlocks
 # to display progress
 ENV["JULIA_DEBUG"] = Documenter
 
@@ -19,6 +20,7 @@ makedocs(
 	warnonly = true,
 	draft = false,
 	authors = "Romain Veltz",
+	plugins = [CodeBlocks()],
 	format = Documenter.HTML(
 		collapselevel = 1,
 		assets=[
