@@ -56,69 +56,48 @@ end
 #       [ ∂F/∂x    ∂F/∂p      0    ]
 # J =   [ Re(σx)   Re(σp)  Re(σω)  ]
 #       [ Im(σx)   Im(σp)  Im(σω)  ]
-# where the state is X = (x; p; ω)
-function BK.jacobian(pdpb::BK.HopfMAProblem{<:AbstractDDEBifurcationProblem, BK.MinAugMatrixBased},
+# where the state is X = (x; p; ω) and σ is the bordered variable of the functional.
+# The σ rows are computed by finite differences of the functional σ (hopf_ma_test),
+# which is guaranteed to be consistent with the functional used by the continuation.
+function BK.jacobian(pdpb::BK.HopfMAProblem{<:BK.HopfMinimallyAugmentedFormulation{<:AbstractDDEBifurcationProblem}, BK.MinAugMatrixBased},
                      X::AbstractVector{𝒯}, par) where 𝒯
-    @assert false
     𝐇 = BK.get_formulation(pdpb)
-    @assert false
     lens = BK.getlens(𝐇)
     n = length(X) - 2
     x = @view X[begin:n]
     p = X[n+1]
     ω = X[n+2]
 
-    par0 = BK.set(par, lens, p)
     δ = BK.getdelta(𝐇.prob_vf)
     ϵ = 𝒯(δ)
 
-    # Jacobians at the equilibrium (both may be JacobianDDE)
-    J_at_xp  = BK.jacobian(𝐇.prob_vf, x, par0)
-    JAd_at_xp = BK.has_adjoint(𝐇) ? BK.jacobian_adjoint(𝐇.prob_vf, x, par0) : LA.adjoint(J_at_xp)
-
-    # full matrix form of the equilibrium Jacobian (for the top-left block of Jhopf)
+    # top-left block: ∂F/∂x = Jall, ∂F/∂p via finite differences
+    J_at_xp = BK.jacobian(𝐇.prob_vf, x, BK.set(par, lens, p))
     Jmat = J_at_xp isa JacobianDDE ? J_at_xp.Jall : J_at_xp
+    dₚF = (BK.residual(𝐇.prob_vf, x, BK.set(par, lens, p + ϵ)) -
+           BK.residual(𝐇.prob_vf, x, BK.set(par, lens, p - ϵ))) / (2ϵ)
 
-    # Bordered vectors: solve Δ(iω)·v + a·σ = 0, b'·v = 1
-    Δω = Δ(J_at_xp, Complex{𝒯}(0, ω))
-    v, σ1, cv1, itv = 𝐇.linbdsolver(Δω, 𝐇.a, 𝐇.b, zero(𝒯), 𝐇.zero, one(𝒯))
-    ~cv1 && @debug "[DDE Hopf MA Jac] Bordered solver for Δ(iω) did not converge."
+    # σ(x, p, ω): bordered variable of the functional, with the current vectors a, b
+    σf(xl, pl, ωl) = begin
+        Jl = BK.jacobian(𝐇.prob_vf, xl, BK.set(par, lens, pl))
+        _, σl, _, _ = BK.hopf_ma_test(𝐇, Jl, 𝐇.a, 𝐇.b, zero(𝒯), 𝐇.zero, one(𝒯), ωl)
+        σl
+    end
 
-    # Adjoint: solve Δ(iω)'·w + b·σ̃ = 0, a'·w = 1
-    Δω_adj = JAd_at_xp isa JacobianDDE ? Δ(JAd_at_xp, Complex{𝒯}(0, ω)) : JAd_at_xp
-    w, σ2, cv2, itw = 𝐇.linbdsolverAdjoint(Δω_adj, 𝐇.b, 𝐇.a, zero(𝒯), 𝐇.zero, one(𝒯))
-    ~cv2 && @debug "[DDE Hopf MA Jac] Bordered solver for Δ(iω)' did not converge."
+    # ∂σ/∂x, ∂σ/∂p, ∂σ/∂ω by finite differences of the functional
+    σx = zeros(Complex{𝒯}, n)
+    for j in 1:n
+        ej = zeros(𝒯, n); ej[j] = ϵ
+        σx[j] = (σf(x .+ ej, p, ω) - σf(x .- ej, p, ω)) / (2ϵ)
+    end
+    σp = (σf(x, p + ϵ, ω) - σf(x, p - ϵ, ω)) / (2ϵ)
+    σω = (σf(x, p, ω + ϵ) - σf(x, p, ω - ϵ)) / (2ϵ)
 
-    cw = LA.conj(w)
-    vr = real(v); vi = imag(v)
-
-    # ∂F/∂p via finite differences
-    Fp_plus  = BK.residual(𝐇.prob_vf, x, BK.set(par, lens, p + ϵ))
-    Fp_minus = BK.residual(𝐇.prob_vf, x, BK.set(par, lens, p - ϵ))
-    dₚF = (Fp_plus - Fp_minus) / (2ϵ)
-
-    # σₚ = -⟨w, ∂(Jv)/∂p⟩ via finite differences
-    Jp_plus  = BK.jacobian(𝐇.prob_vf, x, BK.set(par, lens, p + ϵ))
-    Jp_minus = BK.jacobian(𝐇.prob_vf, x, BK.set(par, lens, p - ϵ))
-    dₚJv_num = (BK.apply(Jp_plus, v) - BK.apply(Jp_minus, v)) / (2ϵ)
-    σₚ = -BK.VI.inner(w, dₚJv_num)
-
-    # σω = i·⟨w, v⟩
-    σω = Complex{𝒯}(0, 1) * BK.VI.inner(w, v)
-
-    # σₓ via finite differences on the adjoint Jacobian
-    u1r = BK.apply_jacobian(𝐇.prob_vf, x + ϵ * vr, par0, cw, true)
-    u1i = BK.apply_jacobian(𝐇.prob_vf, x + ϵ * vi, par0, cw, true)
-    u2r = BK.apply(JAd_at_xp, cw)
-    σxv2r = @. -(u1r - u2r) / ϵ
-    σxv2i = @. -(u1i - u2r) / ϵ
-    σₓ = @. σxv2r + Complex{𝒯}(0, 1) * σxv2i
-
-    # Assemble the full 3×3-block Jacobian
+    # assemble the (n+2)×(n+2) Jacobian
     z = BK.VI.zerovector(dₚF)
     Jhopf = hcat(Jmat, dₚF, z)
-    Jhopf = vcat(Jhopf, vcat(real(σₓ), real(σₚ), real(σω))')
-    Jhopf = vcat(Jhopf, vcat(imag(σₓ), imag(σₚ), imag(σω))')
+    Jhopf = vcat(Jhopf, vcat(real(σx), real(σp), real(σω))')
+    Jhopf = vcat(Jhopf, vcat(imag(σx), imag(σp), imag(σω))')
     return Jhopf
 end
 

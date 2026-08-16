@@ -67,7 +67,7 @@ scene = plot(br)
 ```
 
 ## Performance improvements
-The previous implementation being simple, it leaves a lot performance on the table. For example, the jacobian is dense because it is computed with automatic differentiation without sparsity detection. 
+The previous implementation being simple, it leaves a lot of performance on the table. For example, the jacobian is dense because it is computed with automatic differentiation without sparsity detection. 
 
 We show how to specify the jacobian and speed up the code a lot.
 
@@ -99,11 +99,12 @@ get_normal_form(br, 1)
 
 ```@example TUTHut
 brhopfs = [continuation(br, i, (@optic _.d),
-         ContinuationPar(br.contparams, detect_bifurcation = 3, p_min = 0.1, p_max = 2.5, max_steps = 1000);
+         ContinuationPar(br.contparams, detect_bifurcation = 2, p_min = 0.1, p_max = 2.5, max_steps = 1000);
          verbosity = 2,
          detect_codim2_bifurcation = 2,
          plot = true,
          bothside = true,
+         jacobian_ma = BK.MinAugMatrixBased(),
          ) for i = 1:3]
 
 plot(brhopfs..., title = "Hopf curves")
