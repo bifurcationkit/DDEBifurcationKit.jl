@@ -17,9 +17,11 @@ function LA.adjoint(J::JacobianDDE)
 end
 
 # Dispatch hopf_ma_test for JacobianDDE.
-# The standard MA formulation from BifurcationKit solves (J - iωI)v + aσ = 0.
-# For DDEs, we build Δ(iω) = iωI - J₀ - Σ exp(-iωτⱼ)·Jⱼ and solve Δ(iω)v + aσ = 0.
+# The standard MA formulation from BifurcationKit solves (J - iωI)v + aσ = 0
+# For DDEs, we build Δ(iω) = iωI - J₀ - Σ exp(-iωτⱼ)·Jⱼ and solve Δ(iω)v + aσ = 0
 function BK.hopf_ma_test(𝐇, J::JacobianDDE, a, b, J22, _zero, n, ω::𝒯) where 𝒯
+    # -(iωI - J₀ - Σ exp(-iωτⱼ)Jⱼ) = J₀ + Σ exp(-iωτⱼ)Jⱼ - iωI = A(iω) - iωI,
+    # i.e. the DDE analogue of the ODE operator (J - iωI).
     Δω = -Δ(J, Complex{𝒯}(0, ω))
     return 𝐇.linbdsolver(Δω, a, b, J22, _zero, n)
 end
@@ -51,22 +53,12 @@ end
 # HopfDDEFormulation (from DDEBifurcationKit) which share the same field structure.
 # function BK.__compute_bordered_vectors(𝐇::BK.HopfMinimallyAugmentedFormulation, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯) where 𝒯
 function BK.__compute_bordered_vectors(linbdsolver, linbdsolver_adjoint, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
-    Δω = Δ(J_at_xp, Complex{𝒯}(0, ω))
-    Δω_adj = JAd_at_xp isa JacobianDDE ? Δ(JAd_at_xp, Complex{𝒯}(0, ω)) : JAd_at_xp
+    # consistent with BK.hopf_ma_test: solve (A(iω) - iωI)v + aσ = 0
+    Δω = -Δ(J_at_xp, Complex{𝒯}(0, ω))
+    Δω_adj = JAd_at_xp isa JacobianDDE ? -Δ(JAd_at_xp, Complex{𝒯}(0, ω)) : JAd_at_xp
     v, _, cv1, itv = linbdsolver(Δω, a, b, zero(𝒯), _zero, one(𝒯))
     ~cv1 && @debug "Bordered linear solver for Δ(iω) did not converge."
     w, _, cv2, itw = linbdsolver_adjoint(Δω_adj, b, a, zero(𝒯), _zero, one(𝒯))
-    ~cv2 && @debug "Bordered linear solver for Δ(iω)' did not converge."
-    return (; v, w, itv, itw)
-end
-
-function BK._compute_bordered_vectors(𝐇::HopfDDEFormulation, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯) where 𝒯
-    @assert false
-    Δω = Δ(J_at_xp, Complex{𝒯}(0, ω))
-    Δω_adj = JAd_at_xp isa JacobianDDE ? Δ(JAd_at_xp, Complex{𝒯}(0, ω)) : JAd_at_xp
-    v, _, cv1, itv = 𝐇.linbdsolver(Δω, 𝐇.a, 𝐇.b, zero(𝒯), 𝐇.zero, one(𝒯))
-    ~cv1 && @debug "Bordered linear solver for Δ(iω) did not converge."
-    w, _, cv2, itw = 𝐇.linbdsolverAdjoint(Δω_adj, 𝐇.b, 𝐇.a, zero(𝒯), 𝐇.zero, one(𝒯))
     ~cv2 && @debug "Bordered linear solver for Δ(iω)' did not converge."
     return (; v, w, itv, itw)
 end

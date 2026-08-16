@@ -35,12 +35,13 @@ The examples which follow have not **all** been written with the goal of perform
 - Monitoring user functions along curves computed by continuation, see [events](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/EventCallback/).
 - Continuation methods: PALC, Moore-Penrose, etc. See [methods](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/IntroContinuation/).
 - Bifurcation points are located using a bisection algorithm
+
+### Capabilities related to equilibria
 - detection of Branch, Fold, Hopf bifurcation point of stationary solutions and computation of their normal form.
 ```@raw html
 <ul> 
 <li><del>Automatic branch switching at branch points (whatever the dimension of the kernel)</del></li></ul>
 ```
-- Automatic branch switching at simple Hopf points to periodic orbits
 - **Automatic bifurcation diagram computation of equilibria**
 - Fold / Hopf continuation.
 ```@raw html
@@ -64,20 +65,39 @@ Type of delay: Constant (C), state-dependent (SD), nested (N)
 | Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | |
 | Fold Point continuation |C/SD | Y |  |  |
 | Hopf Point continuation | C/SD |  | `AbstractArray` | | |
-| Branch point / Fold / Hopf normal form | C/SD | Y|  | |  | |
-| Branch switching at Branch / Hopf points | C/SD | Y | `AbstractArray` |  |  |
+| Branch point / Fold form | C/SD | |  | |  | |
+| Hopf normal form | C | |  | |  | |
+| Branch switching at Branch / Hopf points | C/SD |  | `AbstractArray` |  |  |
 | Automatic bifurcation diagram computation of equilibria | C/SD| Y| `AbstractArray` |  | |
 | Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD| Y|  |  |
+| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | NA | |  |  |
+
+### Capabilities related to Periodic orbits (PO)
+
+- PO computation and continuation Orthogonal Collocation (mesh adaptive).
+- Computation of Floquet exponents
+- Automatic branch switching at simple Hopf points (DDE, SD-DDE) to periodic orbits
+- Detection of Branch, Fold, Neimark-Sacker (NS), Period Doubling (PD) bifurcation points of PO.
+- Assisted branch switching from simple Period-Doubling points to PO
+- Assisted branch switching from simple Branch points to PO
+
+|Features| delay type | Matrix Free|Custom state| [Tutorials](https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/tutorials/tutorials/) | GPU |
+|---|---|---|---|---|---|
+| Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
+| Floquet exponents |C| | `AbstractVector` |  | |
+| Fold, Neimark-Sacker, Period doubling detection |C| | `AbstractVector` |  | |
+
 
 ## Requested methods for Custom State
-Needless to say, if you use regular arrays, you don't need to worry about what follows.
 
-We make the same requirements as `KrylovKit.jl`. Hence, we refer to its [docs](https://jutho.github.io/KrylovKit.jl/stable/#Package-features-and-alternatives-1) for more information. We additionally require the following methods to be available:
+If you use standard arrays, you can skip this section.
 
-- `Base.length(x)`: it is used in the constraint equation of the pseudo arclength continuation method (see [`continuation`](@ref) for more details). If `length` is not available for your "vector", define it `length(x) = 1` and adjust tuning the parameter `theta` in `ContinuationPar`.
-- `Base.copyto!(dest, in)` this is required to reduce the allocations by avoiding too many copies
-- `Base.eltype` must be extended to your vector type. It is mainly used for branching.
+We make the same requirements as `KrylovKit.jl`. Hence, we refer to its [docs](https://jutho.github.io/KrylovKit.jl/stable/#Package-features-and-alternatives-1) and the package [VectorInterface.jl](https://github.com/Jutho/VectorInterface.jl?tab=readme-ov-file) for more information. We additionally require the following methods to be available:
+
+- `Base.length(x)`: it is used in the constraint equation of the pseudo arclength continuation method (see [`continuation`](@ref) for more details). If `length` is not available for your "vector" type, define `length(x) = 1` and adjust the parameter `θ` in `PALC`.
+- `Base.copyto!(dest, in)` this is used to reduce the allocations.
+- `real` this is used to compute normal forms.
+- `conj` this is used to compute normal forms.
 
 ## Citations
 Papers citing this work are collected on [Zotero](https://www.zotero.org/groups/6097154/citations_of_bifurcationkit/library).
