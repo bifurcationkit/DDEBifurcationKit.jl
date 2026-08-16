@@ -93,7 +93,7 @@ opts_po_cont = ContinuationPar(ds = 1e-3, p_max = 3., max_steps = 100, detect_bi
 
 br_pocoll = @time continuation(
 	br2, 1, opts_po_cont,
-	PeriodicOrbitOCollProblem(20, 5; jacobian = BK.AutoDiffDense());
+	Collocation(20, 5; jacobian = BK.AutoDiffDense());
 	normC = norminf,
 	)
 scene = plot(br2, br_pocoll)

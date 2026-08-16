@@ -1,4 +1,4 @@
-BK.jacobian(hopfpb::BK.FoldMAProblem{Tprob, BK.AutoDiff, Tl, Tplot, Trecord}, x, p) where {Tprob <: BK.FoldMinimallyAugmentedFormulation{ <: ConstantDDEBifProblem}, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
+BK.jacobian(hopfpb::BK.FoldMAProblem{Tprob, BK.AutoDiff, Tu0, Tl, Tplot, Trecord}, x, p) where {Tprob <: BK.FoldMinimallyAugmentedFormulation{ <: ConstantDDEBifProblem}, Tu0, Tl <: Union{BK.AllOpticTypes, Nothing}, Tplot, Trecord} = JacobianCodim2DDE(hopfpb, ForwardDiff.jacobian(z -> hopfpb.prob(z, p), x), x, p)
 
 
 function (eig::BK.FoldEig)(Jdde::JacobianCodim2DDE, nev; kwargs...)

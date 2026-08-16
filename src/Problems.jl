@@ -67,6 +67,11 @@ function Base.show(io::IO, prob::ConstantDDEBifProblem; prefix = "")
     printstyled(io, BK.get_lens_symbol(getlens(prob)), color=:cyan, bold = true)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Constructor.
+"""
 function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
                 J! = nothing,
@@ -84,17 +89,14 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 save_solution = BK.save_solution_default,
                 inplace = false,
                 R01 = BK.FiniteDifferences(),
-                δ = convert(eltype(u0), 1e-8),
+                R02 = BK.FiniteDifferences(),
+                R11 = BK.FiniteDifferences(),
+                delta = BK._getprecision(u0),
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
     # type unstable but simplifies the types a lot
-    jet = if (isempty(kwargs_jet) && R01 === BK.AutoDiff()) 
-        nothing 
-    else
-        R01Trait = R01 === BK.FiniteDifferences() ? R01 : nothing
-        BK.Jet(;δ, R01Trait, kwargs_jet...)
-    end
+    jet = BK.Jet(;δ = delta, R01 , R02, R11, kwargs_jet...)
 
     VF = BifFunction(F,
                     F!,
@@ -108,7 +110,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                     d2Fc,
                     d3Fc,
                     issymmetric,
-                    δ,
+                    delta,
                     inplace,
                     jet) ## TODO: it requires a specific DDEBifFunction
     return ConstantDDEBifProblem(VF,
@@ -120,7 +122,7 @@ function ConstantDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                                  plot_solution,
                                  record_from_solution,
                                  save_solution,
-                                 δ)
+                                 delta)
 end
 
 function F_voa(prob::ConstantDDEBifProblem, x, p)
@@ -196,6 +198,7 @@ function BK.d3F(prob::ConstantDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}
     𝒯 = BK.VI.scalartype(x)
     ForwardDiff.derivative(t -> BK.d2F(prob, x .+ t .* dx3, p, dx1, dx2), zero(𝒯))
 end
+
 ####################################################################################################
 """
 $(TYPEDEF)
@@ -251,6 +254,11 @@ BK.getdelta(prob::SDDDEBifProblem) = prob.δ
 BK.save_solution(prob::SDDDEBifProblem, x, p) = prob.save_solution(x, p)
 @inline delays(prob::SDDDEBifProblem, x, pars) = prob.delays(x, pars)
 
+"""
+$(TYPEDSIGNATURES)
+
+Constructor.
+"""
 function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 F! = nothing,
                 jvp = nothing,
@@ -267,18 +275,15 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                 plot_solution = BK.plot_default,
                 save_solution = BK.save_solution_default,
                 inplace = false,
-                δ = convert(eltype(u0), 1e-8),
                 R01 = BK.FiniteDifferences(),
+                R02 = BK.FiniteDifferences(),
+                R11 = BK.FiniteDifferences(),
+                delta = BK._getprecision(u0),
                 kwargs_jet...
                 )
     @assert lens isa Int || lens isa BK.AllOpticTypes
-    jet = if (isempty(kwargs_jet) && R01 === BK.AutoDiff()) 
-        nothing 
-    else
-        R01Trait = R01 === BK.FiniteDifferences() ? R01 : nothing
-        BK.Jet(;δ, R01Trait, kwargs_jet...)
-    end
-    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, δ, inplace, jet)
+    jet = BK.Jet(;δ = delta, R01 , R02, R11, kwargs_jet...)
+    VF = BifFunction(F, F!, jvp, vjp, J, Jᵗ, nothing, d2F, d3F, d2Fc, d3Fc, issymmetric, delta, inplace, jet)
     return SDDDEBifProblem(VF,
                            delayF,
                            u0,
@@ -288,7 +293,7 @@ function SDDDEBifProblem(F, delayF, u0, parms, lens = (@optic _);
                            plot_solution,
                            record_from_solution,
                            save_solution,
-                           δ)
+                           delta)
 end
 
 BK.update!(prob::SDDDEBifProblem, args...; kwargs...) = BK.update_default(args...; kwargs...)
@@ -315,6 +320,21 @@ function BK.residual!(prob::SDDDEBifProblem, o, x, p)
     o
 end
 
+function BK.dF(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p, dx) where {Tf, TFinp}
+    𝒯 = BK.VI.scalartype(x)
+    return ForwardDiff.derivative(t -> BK.residual(prob, x .+ t .* dx, p), zero(𝒯))
+end
+
+function BK.d2F(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p, dx1, dx2) where {Tf, TFinp}
+    𝒯 = BK.VI.scalartype(x)
+    ForwardDiff.derivative(t -> BK.dF(prob, x .+ t .* dx2, p, dx1), zero(𝒯))
+end
+
+function BK.d3F(prob::SDDDEBifProblem{ <: BifFunction{Tf, TFinp, Nothing}}, x, p, dx1, dx2, dx3) where {Tf, TFinp}
+    𝒯 = BK.VI.scalartype(x)
+    ForwardDiff.derivative(t -> BK.d2F(prob, x .+ t .* dx3, p, dx1, dx2), zero(𝒯))
+end
+
 function BK.jacobian(prob::SDDDEBifProblem, x, p)
     xd = VectorOfArray([x for _ in eachindex(prob.delays0)])
     J0 = ForwardDiff.jacobian(z -> prob.VF.F(z, xd, p), x)
@@ -327,3 +347,8 @@ function jacobian(prob::SDDDEBifProblem, x, xd, p)
     Jd = [ ForwardDiff.jacobian(z -> prob.VF.F(x, (@set xd.u[ii] = z), p), xd.u[ii]) for ii in eachindex(prob.delays0)]
     return JacobianDDE(prob, missing, J0, Jd, prob.delays(x, p))
 end
+
+R01(prob::AbstractDDEBifurcationProblem, x, p) = BK.R01(BK.has_R01_trait(prob.VF.jet), prob, x, p)
+BK.R01(::BK.TraitUserPassed, prob::AbstractDDEBifurcationProblem, x, p) = prob.VF.jet.R01(x, p)
+
+BK.has_hessian(prob::AbstractDDEBifurcationProblem) = BK.has_hessian(prob.VF)

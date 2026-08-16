@@ -23,11 +23,16 @@ function expθ(J::JacobianDDE, x, λ::T) where T
     VectorOfArray(buffer)
 end
 
+"""
+$(SIGNATURES)
+
+Evaluate Δ(λ) = λI - J₀ - exp(-λτ)J₁
+"""
 function Δ(J::JacobianDDE, λ)
     n = size(J.Jall, 1)
     res = λ .* LA.I(n) .- J.J0
     for (ind, A) in pairs(J.Jd)
-        res .+= (-exp(-λ * J.delays[ind])) .* A
+        res .+= (- exp(-λ * J.delays[ind])) .* A
     end
     res
 end

@@ -15,10 +15,7 @@ function neuron2VF(x, xd, p)
    ]
 end
 
-function delaysF(par)
-   [par.τ1, par.τ2]
-end
-
+delaysF(par) = [par.τ1, par.τ2]
 pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
 
@@ -32,19 +29,21 @@ plot(br)
 
 hpnf = BK.get_normal_form(br, 1)
 ################################################################################
+cont_hopf = br.contparams
+@reset cont_hopf.newton_options.verbose = true
 brhopf = continuation(br, 1, (@optic _.c),
-         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
-         verbosity = 0, plot = true,
-         detect_codim2_bifurcation = 2,
+         ContinuationPar(cont_hopf, detect_bifurcation = 3, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
+         verbosity = 3, plot = true,
+         jacobian_ma = BK.AutoDiff(),
          bothside = true,
-         start_with_eigen = true)
+         normC = BK.norminf,
+         start_with_eigen = false)
 
 brhopf2 = continuation(br, 2, (@optic _.c),
-         ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
+         ContinuationPar(br.contparams, detect_bifurcation = 3, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 2, plot = true,
-         detect_codim2_bifurcation = 2,
          bothside = true,
-         start_with_eigen = true)
+         start_with_eigen = false)
 
 plot(brhopf,   vars = (:a, :c), xlims = (0, 0.7), ylims = (0, 1))
 plot!(brhopf2, vars = (:a, :c), xlims = (-0, 0.7), ylims = (-0.1, 1))
@@ -62,7 +61,7 @@ opts_fold = br.contparams
 brfold = continuation(br2, 3, (@optic _.a),
          ContinuationPar(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.5,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
-         detect_codim2_bifurcation = 2,
+         detect_codim2_bifurcation = 1,
          bothside = false,
          start_with_eigen = true)
 

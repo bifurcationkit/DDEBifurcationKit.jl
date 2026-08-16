@@ -102,4 +102,4 @@ res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol
 
 # computation of Floquet exponents based Verheyden, Lust 2005
 # it does not work !!
-vals = @time DDEBK.__floquet_coll(BK.FloquetColl(), br_pocoll.prob.prob, _po, _pars, 15)[1]
+vals = @time DDEBK.__floquet_coll(BK.FloquetColl(), BK.get_discretization(br_pocoll.prob), _po, _pars, 15)[1]

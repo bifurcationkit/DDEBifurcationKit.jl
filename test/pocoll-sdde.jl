@@ -29,6 +29,7 @@ opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.0
 
 alg = PALC()
 br = continuation(prob, alg, opts; verbosity = 0, plot = false, bothside = true)
+BK.get_normal_form(br, 2)
 
 # plot(br)
 ################################################################################

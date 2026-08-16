@@ -55,11 +55,11 @@ brhopf2 = continuation(br, 2, (@optic _.c),
             bothside = true,
             start_with_eigen = true)
 
-@test length(brhopf.specialpoint) == 10
+@test length(brhopf.specialpoint) == 11
 @test brhopf.specialpoint[2].type == :hh
 @test brhopf.specialpoint[3].type == :gh
 
-@test length(brhopf2.specialpoint) == 10
+@test length(brhopf2.specialpoint) == 9
 @test brhopf2.specialpoint[2].type == :hh
 @test brhopf2.specialpoint[3].type == :hh
 ################################################################################

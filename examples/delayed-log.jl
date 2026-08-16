@@ -36,7 +36,6 @@ plot(br)
 get_normal_form(br, 1)
 ################################################################################
 # computation periodic orbit
-
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 130,
     nev = 5, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step=1)

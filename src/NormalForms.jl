@@ -25,11 +25,11 @@ function BK.get_normal_form1d(prob::ConstantDDEBifProblem,
     BK.get_normal_form1d(prob_ode, br_ode, ind_bif; kwargs_nf...)
 end
 
-function BK.hopf_normal_form(prob::ConstantDDEBifProblem, 
+function BK.__hopf_normal_form(prob::AbstractDDEBifurcationProblem, 
                             pt::BK.Hopf, 
                             ls::BK.AbstractLinearSolver; # for dispatch from BK 
-                            autodiff = true,
-                            verbose::Bool = false)    
+                            verbose::Bool = false,
+                            L = nothing)
     x0 = pt.x0
     p = pt.p
     lens = pt.lens
@@ -39,7 +39,10 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     δ = BK.getdelta(prob)
 
     # jacobian at the bifurcation point
-    L = BK.jacobian(prob, x0, parbif)
+    # do not recompute it if passed
+    if isnothing(L)
+        L = BK.jacobian(prob, x0, parbif)
+    end
     Δ0  = Δ(L, 0λ0)
     Δ2ω = Δ(L, 2λ0)
 
@@ -62,34 +65,29 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     R3 = BK.TrilinearMap((dx1, dx2, dx3) -> BK.d3F(prob, x0c, parbif, dx1, dx2, dx3) ./6 )
 
     # −LΨ001 = R01
-    if autodiff
-        R01 = ForwardDiff.derivative(z -> BK.residual(prob, x0, set(parbif, lens, z)), p)
-    else
-        R01 = (BK.residual(prob, x0, set(parbif, lens, p + δ)) .- 
-               BK.residual(prob, x0, set(parbif, lens, p - δ))) ./ (2δ)
-    end
-    Ψ001, cv, it = ls(Δ0, -R01)
+    r01 = R01(prob, x0, parbif)
+    Ψ001, cv, it = ls(Δ0, -r01)
     ~cv && @debug "[Hopf Ψ001] Linear solver for J did not converge. it = $it"
     Ψ001θ = Complex.(expθ(L, Ψ001, 0))
 
     # (2iω−L)Ψ200 = R20(ζ, ζ)
-    R20 = R2(ζθ, ζθ)
-    Ψ200, cv, it = ls(Δ2ω, R20)
+    r20 = R2(ζθ, ζθ)
+    Ψ200, cv, it = ls(Δ2ω, r20)
     ~cv && @debug "[Hopf Ψ200] Linear solver for J did not converge. it = $it"
     Ψ200θ = expθ(L, Ψ200, 2λ0)
     # @assert Ψ200 ≈ (Complex(0, 2ω)*I - L) \ R20
 
     # −LΨ110 = 2R20(ζ,cζ)
-    R20 = 2 .* R2(ζθ, ζθc)
-    Ψ110, cv, it = ls(Δ0, R20)
+    r20 = 2 .* R2(ζθ, ζθc)
+    Ψ110, cv, it = ls(Δ0, r20)
     ~cv && @debug "[Hopf Ψ110] Linear solver for J did not converge. it = $it"
     Ψ110θ = Complex.(expθ(L, Ψ110, 0))
 
     # a = ⟨R11(ζ) + 2R20(ζ,Ψ001), ζ∗⟩
     _Jp = BK.jacobian(prob, x0, set(parbif, lens, p + δ))
     _Jm = BK.jacobian(prob, x0, set(parbif, lens, p - δ))
-    av = (A(_Jp, ζ, λ0) .- A(_Jm, ζ, λ0)) ./ (2δ)
-    av .+= 2 .* R2(ζθ, Ψ001θ)
+    r11 = (A(_Jp, ζ, λ0) .- A(_Jm, ζ, λ0)) ./ (2δ)
+    av = r11 .+ 2 .* R2(ζθ, Ψ001θ)
     a = LA.dot(ζ★, av)
 
     # b = ⟨2R20(ζ,Ψ110) + 2R20(cζ,Ψ200) + 3R30(ζ,ζ,cζ), ζ∗⟩)
@@ -120,11 +118,11 @@ function BK.hopf_normal_form(prob::ConstantDDEBifProblem,
     return pt
 end
 
-function BK.hopf_normal_form(prob::SDDDEBifProblem, 
-                        pt::BK.Hopf, 
-                        ls::BK.AbstractLinearSolver; # for dispatch from BK
-                        autodiff = true,
-                        verbose::Bool = false)
+function BK.__hopf_normal_form(prob::SDDDEBifProblem, 
+                         pt::BK.Hopf, 
+                        ls::BK.AbstractLinearSolver; # for dispatch from BK 
+                        verbose::Bool = false,
+                        L = nothing)
     @error "Hopf normal form computation for SD-DDE is not implemented"
     x0 = pt.x0
     @reset pt.nf = (a = missing, b = missing,
@@ -142,7 +140,6 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
                              nev::Int = length(BK.eigenvalsfrombif(br, ind_hopf)),
                              verbose::Bool = false,
                              lens = BK.getlens(br),
-                             autodiff = true,
                              detailed::Val{detailed_type} = Val(true),
                              start_with_eigen::Val{start_with_eigen_type} = Val(true),
                              scaleζ = LA.norm,
@@ -202,5 +199,5 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
     if ~detailed_type
         return hopfpt
     end
-    return BK.hopf_normal_form(prob, hopfpt, options.linsolver ; verbose, autodiff)
+    return BK.__hopf_normal_form(prob, hopfpt, options.linsolver ; verbose)
 end

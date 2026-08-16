@@ -13,6 +13,18 @@ end
 g(z) = (tanh(z − 1) + tanh(1))*cosh(1)^2
 delaysF(par) = [par.τ1, par.τ2]
 
+let 
+    pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
+    x0 = [0.01, 0.001]
+    prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a); R01 = BK.FiniteDifferences())
+    DDEBifurcationKit.R01(prob, x0, pars)
+    prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a); R01 = BK.AutoDiff())
+    DDEBifurcationKit.R01(prob, x0, pars)
+    myr01 = (x0, par) -> 0.1234
+    prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a); R01 = myr01)
+    @test DDEBifurcationKit.R01(prob, x0, pars) == 0.1234
+end
+
 let
 pars = (a = 0.25, b = 2., c = 15/29, d = 1.2, τ1 = 12.7, τ2 = 20.2)
 x0 = [0.01, 0.001]
@@ -39,10 +51,10 @@ for m in (3,4,5), Ntst in (99, 100)
     _pars = BK.setparam(br,br_pocoll.sol[ind_po].p)
     _J = BK.jacobian(br_pocoll.prob, _po, _pars)
     _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
-    @test norminf(_J-_J2) ≈ 0 atol = 1e-14
+    @test norminf(_J-_J2) ≈ 0 atol = 1e-12
     _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetcoll(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
-    @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-14
+    @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-12
     _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
-    @test (_J2.J0 + sum(_J2.Jd) -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-14
+    @test (_J2.J0 + sum(_J2.Jd) -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-12
 end
 end

@@ -86,7 +86,6 @@ opts_br = ContinuationPar(p_max = 3.5, p_min = 0.025,
 
 # optional arguments for continuation
 kwargsC = (verbosity = 2, plot = true, normC = norminf)
-
 br = continuation(prob, PALC(), opts_br; kwargsC...)
 
 get_normal_form(br, 1)

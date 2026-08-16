@@ -97,8 +97,7 @@ opts_bp = br.contparams
 index_bp = findfirst(x -> x.type == :bp, br2.specialpoint)
 brbp = continuation(br2, index_bp, (@optic _.a),
          ContinuationPar(opts_bp; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6, ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
-         verbosity = 0,
-         plot = true,
+         # verbosity = 3, plot = true,
          detect_codim2_bifurcation = 2,
          bothside = false,
          start_with_eigen = true)
@@ -123,7 +122,7 @@ br3 = continuation(prob3, PALC(), ContinuationPar(opts, p_max = 1.0);)
 ```@example TUTneuron2
 opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.001, max_steps = 185, nev = 10, tol_stability = 1e-4)
 
-probpo = PeriodicOrbitOCollProblem(20, 5; N = 2, 
+probpo = Collocation(20, 5; N = 2, 
             jacobian = BK.AutoDiffDense(),)
 
 br_po = continuation(

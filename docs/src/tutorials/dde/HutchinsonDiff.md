@@ -114,7 +114,7 @@ plot(brhopfs..., title = "Hopf curves")
 ```@example TUTHut
 br_pocoll = @time continuation(
             br, 1, ContinuationPar(br.contparams; detect_bifurcation = 0, max_steps = 3, newton_options = NewtonPar(eigsolver = DDE_DefaultEig(), verbose = true), plot_every_step = 1),
-            PeriodicOrbitOCollProblem(20, 4; jacobian = BK.FullSparse());
+            Collocation(20, 4; jacobian = BK.FullSparse());
             verbosity = 2,
             plot = true,
             normC = norminf,
