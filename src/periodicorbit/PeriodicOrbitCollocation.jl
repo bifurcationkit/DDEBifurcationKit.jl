@@ -274,6 +274,8 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             return JacobianDDE(missing, missing, J, Jd, delays_v)
         else
             J[end, begin:end-1] .= coll.cache.∇phase ./ period
+            # here `phase` is the undivided accumulation P = Σ<u', ϕ'>ω (the phase
+            # condition is P/T), so ∂(P/T)/∂T = -P/T² = -phase/period²
             J[nJ, nJ] = -phase / period^2
             return J
         end
@@ -388,7 +390,8 @@ end
     Ls = BK.get_Ls(coll.mesh_cache)
     phase = BK.phase_condition(coll, BK.get_time_slices(coll, u), Ls, period)
     M[end, begin:end-1] .= coll.cache.∇phase ./ period
-    M[nJ, nJ] = -phase / period^2
+    # the phase condition is P(u)/T with P independent of T, so ∂/∂T = -P/T² = -phase/T
+    M[nJ, nJ] = -phase / period
     return M
 end
 ########################################################################################
@@ -450,7 +453,7 @@ function _dde_coll_jac_extended(coll::Collocation{Tprob},
                                 u::AbstractVector{𝒯},
                                 pars) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯}
     n, m, Ntst = size(coll)
-    N = m * Ntst              # fine steps per period
+    N = m * Ntst # fine steps per period
     L, ∂L = BK.get_Ls(coll.mesh_cache)
     mesh = BK.getmesh(coll)
     gauss = _get_gauss_nodes(coll)         # m Gauss nodes

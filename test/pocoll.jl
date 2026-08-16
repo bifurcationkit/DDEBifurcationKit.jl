@@ -35,10 +35,10 @@ opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01
 br = continuation(prob, PALC(), opts, bothside = false)
 #######################################################
 # hopf aBS
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 5, nev = 10, tol_stability = 1e-8, detect_bifurcation = 0)
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 15, nev = 10, tol_stability = 1e-8, detect_bifurcation = 0)
 
-for m in (3,4,5), Ntst in (99, 100)
-    probpo = Collocation(Ntst, m; N = 2, jacobian = BK.AutoDiffDense())
+for m in (3,4,5), Ntst in (99, 100), ma in (true, false)
+    probpo = Collocation(Ntst, m; N = 2, jacobian = BK.AutoDiffDense(), meshadapt = ma)
     br_pocoll = continuation(
             br, 1, opts_po_cont,
             probpo;
@@ -46,15 +46,18 @@ for m in (3,4,5), Ntst in (99, 100)
             normC = norminf,
             )
     # test anaytical jacobian
-    ind_po = 5
-    _po = br_pocoll.sol[ind_po].x
-    _pars = BK.setparam(br,br_pocoll.sol[ind_po].p)
-    _J = BK.jacobian(br_pocoll.prob, _po, _pars)
-    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
-    @test norminf(_J-_J2) ≈ 0 atol = 1e-12
-    _J2 = DDEBifurcationKit.analytical_jacobian_dde_floquet(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
+    ind_po = 10
+    _po_saved = br_pocoll.sol[ind_po].x
+    _pars = @set pars.a = br_pocoll.sol[ind_po].p
+    _wrap = BK.getprob(br_pocoll)
+    BK.restore_problem!(_wrap, _po_saved, _pars)
+    _po = BK.saved_solution(_po_saved)
+    _J  = BK.jacobian(_wrap, _po, _pars)
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst(BK.get_discretization(_wrap), _po, _pars)
+    @test norminf(_J - _J2) ≈ 0 atol = 1e-12
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_floquet(BK.get_discretization(_wrap), _po, _pars)
     @test (_J2.J0 + _J2.Jd -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-12
-    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
+    _J2 = DDEBifurcationKit.analytical_jacobian_dde_cst_floquetgev(BK.get_discretization(_wrap), _po, _pars)
     @test (_J2.J0 + sum(_J2.Jd) -_J)[1:end-1,1:end-1] |> norminf ≈ 0 atol = 1e-12
 end
 end
