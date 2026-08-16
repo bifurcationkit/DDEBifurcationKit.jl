@@ -13,6 +13,9 @@ In this page, we explain how to perform continuation of Fold / Hopf points and d
 
 In a nutshell, all you have to do (see below) is to call `continuation(br, ind_bif, lens2)` to continue the bifurcation point stored in `br.specialpoint[ind_bif]` and set proper options.
 
+!!! info "Implementation"
+    The continuation of Fold / Hopf points is not implemented from scratch. It relies on BifurcationKit from which we call "regular" Fold / Hopf continuation methods.
+
 ## Fold continuation
 
 The continuation of Fold bifurcation points is based on a **Minimally Augmented**[^Govaerts] formulation which is an efficient way to detect singularities. See [docs in BifurcationKit](https://bifurcationkit.github.io/BifurcationKitDocs.jl/stable/codim2Continuation/) for more information.
@@ -39,6 +42,9 @@ You can detect the following codim 2 bifurcation points by using the option `det
 - the detection of Hopf-Hopf (HH) is performed by monitoring the eigenvalues.
 
 > The continuation of Hopf points is stopped at BT and when $\omega<100\epsilon$ where $\epsilon$ is the newton tolerance.
+
+!!! danger "Bautin"
+    Bautin points are not detected for SD-DDE as the normal form is not implemented.
 
 
 ## Codim 2 continuation

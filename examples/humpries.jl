@@ -2,12 +2,13 @@ cd(@__DIR__)
 using Pkg, LinearAlgebra, Test
 pkg"activate ."
 
-# https://ddebiftool.sourceforge.net/demos/neuron/html/demo1_stst.html
+# Humphries et al ( A. R. Humphries, O. A. DeMasi, F. M. G. Magpantay, F. Upham (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701)
 using Revise, DDEBifurcationKit, Plots
+using BifurcationKit
 const DDEBK = DDEBifurcationKit
 
 function humpriesVF(x, xd, p)
-   (; κ1, κ2, γ, a1, a2, c) = p
+   (; κ1, κ2, γ, c) = p
    [
       -γ * x[1] - κ1 * xd.u[1][1] - κ2 * xd.u[2][1]
    ]
@@ -27,21 +28,22 @@ x0 = zeros(1)
 prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 25, )
 
-br = continuation(prob, PALC(), opts; plot = true, bothside = true)
+br = continuation(prob, PALC(), opts; plot = true)
 
 plot(br)
 
 get_normal_form(br, 2)
 ################################################################################
-brhopf = continuation(br, 2, (@optic _.κ2),
-         ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
+brh = continuation(BifurcationKit.re_make(prob; params = @set pars.κ2=3.), PALC(), opts; plot = true)
+brhopf = [continuation(brh, ii, (@optic _.κ2),
+         ContinuationPar(br.contparams, detect_bifurcation = 3, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
         #  verbosity = 2, 
          plot = true,
-         detect_codim2_bifurcation = 0,
+         detect_codim2_bifurcation = 2,
          bothside = true,
-         start_with_eigen = true)
+         start_with_eigen = true) for ii in eachindex(brh.specialpoint) if (brh.specialpoint[ii].type == :hopf) ]
 
 plot(brhopf, vars = (:κ1, :κ2))
 ################################################################################
@@ -64,7 +66,7 @@ args_po = (
 
 probpo = Collocation(200, 2; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense())
 br_pocoll = @time continuation(
-    br, 2, opts_po_cont,
+    br, 1, opts_po_cont,
     probpo;
     alg = PALC(tangent = Bordered()),
     # regular continuation options

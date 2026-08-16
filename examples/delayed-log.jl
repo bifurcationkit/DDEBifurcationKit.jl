@@ -28,17 +28,15 @@ x0 = [1.]
 
 prob = ConstantDDEBifProblem(delayedlogVF, delaysF, x0, pars, (@optic _.λ), record_from_solution=(x,p;k...)-> (x=x[1], _x=1))
 
-optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 6, n_inversion = 6 )
-br = BK.continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
+optn = NewtonPar(eigsolver = DDE_DefaultEig())
+opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, nev = 6, n_inversion = 6 )
+br = BK.continuation(prob, PALC(), opts)
 plot(br)
-
-get_normal_form(br, 1)
 ################################################################################
 # computation periodic orbit
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 130,
-    nev = 5, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2, save_sol_every_step=1)
+    nev = 5, tol_stability = 1e-8, detect_bifurcation = 2, plot_every_step = 2)
 @reset opts_po_cont.newton_options.tol = 1e-8
 @reset opts_po_cont.newton_options.verbose = true
 
@@ -56,7 +54,7 @@ args_po = (    record_from_solution = (x, p;k...) -> begin
 		end,
 	normC = norminf)
 
-probpo = Collocation(100, 4; N = 1, jacobian = BifurcationKit.DenseAnalyticalInplace())
+probpo = Collocation(20, 4; N = 1, jacobian = BifurcationKit.DenseAnalyticalInplace())
 br_pocoll = @time continuation(
 		br, 1, opts_po_cont,
 		probpo;

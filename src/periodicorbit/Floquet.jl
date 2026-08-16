@@ -4,7 +4,7 @@ import SparseArrays as SA
 # dispatch on the following constructor to pass options specific to DDE
 BK.FloquetGEV(eig::AbstractDDEEigenSolver; ntot = 0, n = 0, k...) = BK.FloquetGEV(eig, ntot, n; k...)
 ########################################################################################
-# compute the Floquet exponents based on GEV. Seem online documentation.
+# Compute the Floquet exponents based on Generalized eigenvalue Problem. See online documentation.
 function BK.compute_eigenvalues(eig::FloquetGEV{ <: AbstractDDEEigenSolver}, 
                                 iter::BK.ContIterable{Tkind}, 
                                 state, 
@@ -90,8 +90,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     return λ, nothing, true, 1
 end
 ########################################################################################
-# blockdiag(a,b) = cat(a,b, dims=(1,2))
-
+# Compute the Floquet exponents based on
 # A Newton-Picard Collocation Method for Periodic Solutions of Delay Differential Equations,
 # author = Verheyden, Koen and Lust, Kurt,
 	

@@ -27,7 +27,7 @@ prob = ConstantDDEBifProblem(ikedaVF, delaysF, x0, pars, (@optic _.Λ), record_f
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 2., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
-br = continuation(prob, PALC(), opts; verbosity = 1, plot = true, bothside = false)
+br = continuation(prob, PALC(), opts)
 plot(br)
 BK.get_normal_form(br, 1) # l1=  -0.17303896777173428 - 0.16016002741084542im
 ################################################################################

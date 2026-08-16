@@ -24,33 +24,11 @@ get_normal_form(br::ContResult, ind_bif::Int ;
 
 where `prob` is a bifurcation problem. `br` is a branch computed after a call to `continuation` with detection of bifurcation points enabled and `ind_bif` is the index of the bifurcation point on the branch `br`. The above call returns a point with information needed to compute the bifurcated branch. For more information about the optional parameters, we refer to [`get_normal_form`](@ref). The above call returns a point with information needed to compute the bifurcated branch.
 
-```julia
-mutable struct Hopf{Tv, T, Tω, Tevr, Tevl, Tnf} <: BifurcationPoint
-	"Hopf point"
-	x0::Tv
-
-	"Parameter value at the Hopf point"
-	p::T
-
-	"Frequency of the Hopf point"
-	ω::Tω
-
-	"Right eigenvector"
-	ζ::Tevr
-
-	"Left eigenvector"
-	ζstar::Tevl
-
-	"Normal form coefficient (a = 0., b = 1 + 1im)"
-	nf::Tnf
-
-	"Type of Hopf bifurcation"
-	type::Symbol
-end
-```
-
 !!! info "Note"
-    You should not need to call `get_normal_form ` except if you need the full information about the branch point.
+    You should not need to call `get_normal_form` except if you need the full information about the branch point.
+
+!!! danger "SD-DDE"
+    The normal form is not implemented for state dependant DDE.
 
 ## References
 
