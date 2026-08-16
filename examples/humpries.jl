@@ -72,8 +72,6 @@ br_pocoll = @time continuation(
     # regular continuation options
     verbosity = 1, plot = true,
     args_po...,
-    ampfactor = 0.2,
-    use_normal_form = false,
     δp = 0.01,
     callback_newton = (state; k...) -> begin
         xtt = DDEBK.get_periodic_orbit(probpo,state.x,nothing)

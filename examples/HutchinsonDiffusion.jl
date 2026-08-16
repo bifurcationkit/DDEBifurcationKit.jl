@@ -47,3 +47,4 @@ prob2 = ConstantDDEBifProblem(Hutchinson, delaysF, x0, pars, (@optic _.a); J = J
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 10., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
 br = continuation(prob2, PALC(), opts; verbosity = 1, plot = true, normC = norminf)
+hopfpt = BK.get_normal_form(br, 1)

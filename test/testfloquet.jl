@@ -17,15 +17,16 @@ function sinusvf(X, xd, p)
 end
 delaysF(par) = [pi/2]
 
-pars = (A = 0.5, ω = 1.0, r = -0.1) 
-x0 = [0.01,]
-
-prob = ConstantDDEBifProblem(sinusvf, delaysF, x0, pars, (@optic _.A))
-
 function plot_solution_po(x, p; k...)
     xtt = BK.get_periodic_orbit(p.prob, x, nothing)
     plot!(xtt.t, xtt[1,:]; label = "V1", k...)
 end
+
+let
+pars = (A = 0.5, ω = 1.0, r = -0.1) 
+x0 = [0.01,]
+
+prob = ConstantDDEBifProblem(sinusvf, delaysF, x0, pars, (@optic _.A))
 
 args_po = (
     plot_solution = plot_solution_po,
@@ -36,8 +37,7 @@ opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.01, dsmin = 1e-4, p_max = 0.9
 
 # build the po functional
 probpo = Collocation(20, 5; N = 1, 
-    jacobian = BK.AutoDiffDense(),
-    # jacobian = BK.DenseAnalytical(), 
+    jacobian = BK.AutoDiffDense(), 
     prob_vf = prob, xπ = zeros(1), ϕ = zeros(2))
 @reset probpo.xπ = zeros(length(probpo))
 @reset probpo.ϕ = zeros(length(probpo))
@@ -47,14 +47,10 @@ BK.po_residual(probpo, ci, pars) |> BK.norminf
 
 br_pocoll = @time continuation(
             probpo, ci, BK.PALC(), ContinuationPar(opts_po_cont; detect_bifurcation = 0);
-            # verbosity = 2,
-            # plot = true,
             args_po...,
-            # eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=200, tol = 1e-10, σ = 1e-3)),
             normC = norminf,
             )
 
-# plot(br_pocoll)
 # variational equation
 # ∂p = (a(t)- λ)⋅p(t) + exp(-λ⋅τ)⋅b(t)⋅p(t-τ)
 # we find a = 0 and b = -ω
@@ -104,5 +100,14 @@ _J2 = DDEBK.analytical_jacobian_dde_cst_floquetcoll(BK.get_discretization(br_poc
 res = @time DDEBK.__floquet_coll_gev(BK.FloquetGEV(DDE_DefaultEig(maxit=300, tol = 1e-12, σ = 1e-2)), br_pocoll.prob, _po, _pars, 15)[1]
 
 # computation of Floquet exponents based Verheyden, Lust 2005
-# it does not work !!
+# it should be close to log.(μs), the analytical exponents of ẏ = -y(t-π/2)
 vals = @time DDEBK.__floquet_coll(BK.FloquetColl(), BK.get_discretization(br_pocoll.prob), _po, _pars, 15)[1]
+Is = sortperm(real.(vals), rev = true)
+# analytical exponents: roots of λ e^{λπ/2} = -1, principal log of e^{λ 2π}
+@test vals[Is[3]] ≈ (-6.417163653792045 - 0.8271574313995605im) atol = 1e-4
+@test vals[Is[5]] ≈ (-8.793370519927757 - 0.623834539656118im) atol = 1e-4
+@test vals[Is[7]] ≈ (-10.266815687546782 - 0.503218647834753im) atol = 1e-3
+@test vals[Is[9]] ≈ (-11.339508661193713 - 0.42473619559681874im) atol = 1e-2
+@test vals[Is[11]] ≈ (-12.183953392697111 - 0.3693428703906798im) atol = 5e-2
+@test vals[Is[13]] ≈ (-12.88060245239543 - 0.32795127295702187im) atol = 1e-1
+end

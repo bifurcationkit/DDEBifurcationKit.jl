@@ -33,18 +33,6 @@ function BK.apply(J::JacobianDDE, x)
 end
 
 ###################################################################################################
-# MA formulation call operator for DDEs (Δ(iω)-based)
-# This dispatches (𝐇)(x, p, ω, params) when the prob_vf is a DDE problem.
-# function (𝐇::BK.HopfMinimallyAugmentedFormulation{<:AbstractDDEBifurcationProblem})(x, p::𝒯, ω::𝒯, params) where 𝒯
-#     a = 𝐇.a
-#     b = 𝐇.b
-#     par = BK.set(params, BK.getlens(𝐇), p)
-#     J = BK.jacobian(𝐇.prob_vf, x, par)
-#     _, σ1, cv = BK.hopf_ma_test(𝐇, J, a, b, zero(𝒯), 𝐇.zero, one(𝒯), ω)
-#     ~cv && @debug "[Hopf DDE MA] Linear solver for Δ(iω) did not converge."
-#     return BK.residual(𝐇.prob_vf, x, par), real(σ1), imag(σ1)
-# end
-###################################################################################################
 # Compute bordered vectors using Δ(iω) for DDEs.
 # Overrides _compute_bordered_vectors from BifurcationKit when J_at_xp is a JacobianDDE.
 # The standard ODE version passes shift = ±iω to the linear solver, which doesn't work

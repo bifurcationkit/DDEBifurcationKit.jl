@@ -127,9 +127,13 @@ function __floquet_coll(::FloquetColl,
     B = @views J.J0[1:end-1-n, 1:end-1]
     A = @views J.Jd[1:end-1-n, a_left:end-1]
 
-    # the part corresponding to t = 0 must be in A
-    ii = n # ii = m * n
-    A = hcat(A[:, 1:end-ii], B[:, 1:ii]) # replace the last columns of A with the first ones of B
+    # the part corresponding to t = 0 must be in A.
+    # The last columns of A and the first columns of B both refer to the same point
+    # (t = T ≡ t = 0 by periodicity), so the delayed (history) and undelayed
+    # contributions must be ADDED, otherwise the coupling to the last history point
+    # is lost and the monodromy only converges at first order.
+    ii = n
+    A = hcat(A[:, 1:end-ii], A[:, end-ii+1:end] .+ B[:, 1:ii])
     B = B[:, ii+1:end]
 
     @assert size(A, 1) == size(B, 1)

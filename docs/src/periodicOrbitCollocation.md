@@ -91,13 +91,13 @@ where $A,B$ are periodic functions. The Floquet $\lambda$ exponents are solution
 
 $$\left(\lambda + \frac{d}{dt}\right) z(t) = A(t)\cdot z(t) + e^{-\lambda\tau} B(t) z(t-\tau)\tag{1}$$
 
-Recall that they are related to the FLoquet coefficients $\mu$ by the relation $\mu=\exp(\lambda T)$.
+Recall that they are related to the Floquet coefficients $\mu$ by the relation $\mu=\exp(\lambda T)$.
 
 
 We provide one method(s) to compute the Floquet coefficients.
 
-1. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here but this can be used to check the results of the previous method.
-2. 🚧 🚧 🚧 🚧 DO NOT USE THIS ONE YET 🚧 🚧 🚧 🚧 The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
+1. The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
+2. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here but this can be used to check the results of the previous method.
 
 ## References
 

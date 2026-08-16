@@ -129,7 +129,6 @@ br_po = continuation(
             br3, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 3),
             probpo;
             normC = norminf,
-            eigsolver = BK.FloquetGEV(DDE_DefaultEig(maxit=100, tol = 1e-12, σ = 1e-3)),
             )
 plot(br_po, vars = (:param, :amplitude))
 ```

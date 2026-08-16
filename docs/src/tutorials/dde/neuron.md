@@ -63,7 +63,6 @@ We follow the Hopf points in the parameter plane $(a_{21}, \tau_s)$. We tell the
 brhopf = continuation(br, 3, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.05, max_steps = 230, p_max = 15., p_min = -1.,ds = -0.02);
          detect_codim2_bifurcation = 2,
-         # bothside = true,
          start_with_eigen = true)
 
 # continuation of the second Hopf point
@@ -71,7 +70,7 @@ brhopf2 = continuation(br, 2, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.05, max_steps = 100, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
          detect_codim2_bifurcation = 2,
          start_with_eigen = true,
-         bothside=true
+         bothside = true
          )
 
 scene = plot(brhopf, brhopf2, legend = :top)
@@ -90,11 +89,11 @@ We then compute the branch of periodic orbits from the Hopf bifurcation points u
 
 ```@example TUTneuron
 # continuation parameters
-opts_po_cont = ContinuationPar(ds = 1e-3, p_max = 3., max_steps = 100, detect_bifurcation = 0)
+opts_po_cont = ContinuationPar(ds = 1e-3, p_max = 3., max_steps = 100, tol_stability = 1e-3)
 
 br_pocoll = @time continuation(
 	br2, 1, opts_po_cont,
-	Collocation(20, 5; jacobian = BK.AutoDiffDense());
+	Collocation(30, 5; jacobian = BK.AutoDiffDense());
 	normC = norminf,
 	)
 scene = plot(br2, br_pocoll)

@@ -59,10 +59,7 @@ We tell the solver to consider br.specialpoint[2] and continue it.
 ```@example TUTHumphries
 brhopf = continuation(br, 2, (@optic _.κ2),
          ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
-         verbosity = 0, plot = false,
-         # we disable detection of Bautin bifurcation as the
-         # Hopf normal form is not implemented for SD-DDE
-         detect_codim2_bifurcation = 0,
+         detect_codim2_bifurcation = 2,
          bothside = true,
          start_with_eigen = true)
 
@@ -73,7 +70,7 @@ scene = plot(brhopf, vars = (:κ1, :κ2))
 
 We compute the branch of periodic orbits from the Hopf bifurcation points using orthogonal collocation. We use a lot of time sections $N_{tst}=200$ to have enough precision to resolve the sophisticated branch of periodic solutions especially near the first Fold point around $\kappa_1\approx 10$.
 
-```julia
+```@example TUTHumphries
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds = 0.001, dsmin = 1e-4, p_max = 12., max_steps = 3000, detect_bifurcation = 0, plot_every_step = 20)
 
@@ -90,22 +87,15 @@ probpo = Collocation(100, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = continuation(
 	br, 2, opts_po_cont,
 	probpo;
-	alg = PALC(tangent = Bordered()),
 	# regular continuation options
-	verbosity = 2, plot = true,
+	alg = PALC(tangent = Bordered()),
 	args_po...,
-	ampfactor = 0.4,
 	δp = 0.05,
-	use_normal_form = false,
 	callback_newton = BK.cbMaxNorm(10.0),
 	)
 
-plot(br, br_pocoll)
+scene = plot(br, br_pocoll)
 ```
-
-which gives
-
-![](humphries.png)
 
 ## References
 [^Hum]: > Humphries et al. (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701)

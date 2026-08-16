@@ -205,8 +205,10 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
                         # find interval where t-τ/period belongs
                         t0 = τ * period - d
                         τd = mod(t0, period) / period
-                        index_t = searchsortedfirst(mesh, τd) - 1
-                        @assert 1 <= index_t <= Ntst "We have index_t = $index_t, which is out of bounds for mesh of size $(length(mesh)) and τd = $τd. Please open an issue on the website of BifurcationKit.jl"
+                        # the delayed time may fall exactly on t = 0 (τd = 0) which is
+                        # the left boundary of the first interval
+                        index_t = max(searchsortedfirst(mesh, τd) - 1, 1)
+                        @assert index_t <= Ntst "We have index_t = $index_t, which is out of bounds for mesh of size $(length(mesh)) and τd = $τd. Please open an issue on the website of BifurcationKit.jl"
 
                         rgNy_delay = UnitRange(1, n) .+ ((m * n) * (index_t - 1))
                         σ = BK.σj(τd, mesh, index_t)
