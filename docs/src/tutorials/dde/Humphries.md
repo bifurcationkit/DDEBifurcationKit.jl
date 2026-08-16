@@ -72,7 +72,7 @@ We compute the branch of periodic orbits from the Hopf bifurcation points using 
 
 ```@example TUTHumphries
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds = 0.001, dsmin = 1e-4, p_max = 12., max_steps = 3000, detect_bifurcation = 0, plot_every_step = 20)
+opts_po_cont = ContinuationPar(dsmax = 0.1, ds = 0.001, dsmin = 1e-4, p_max = 12., max_steps = 3000, detect_bifurcation = 3, plot_every_step = 20, tol_stability = 4e-3)
 
 # arguments for periodic orbits
 args_po = (
@@ -83,7 +83,7 @@ args_po = (
 		end,
 	normC = norminf)
 
-probpo = Collocation(100, 4; N = 1, jacobian = BK.AutoDiffDense())
+probpo = Collocation(30, 5; N = 1, jacobian = BK.DenseAnalytical(), meshadapt = true, K = 400.)
 br_pocoll = continuation(
 	br, 2, opts_po_cont,
 	probpo;
@@ -98,4 +98,4 @@ scene = plot(br, br_pocoll)
 ```
 
 ## References
-[^Hum]: > Humphries et al. (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701)
+[^Hum]: > Humphries et al. (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701
