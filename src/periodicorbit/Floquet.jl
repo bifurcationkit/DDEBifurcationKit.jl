@@ -87,8 +87,7 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
     # indeed, if λ is in the spectrum, so is λ + 2πZ
     mytol = 1e-5
     λ = filter(x -> -pi + mytol < imag(x) < pi + mytol, λ)
-    λ =  unique(round.(λ; digits = abs(Int(log10(mytol)))) .+ (0+0im) ) # this trick is for -0 ≈ 0
-
+    λ =  unique(round.(λ; digits = abs(Int(log10(mytol)))) .+ (0 + 0im) ) # this trick is for -0 ≈ 0
     return λ, nothing, true, 1
 end
 ########################################################################################
@@ -96,10 +95,6 @@ end
 # A Newton-Picard Collocation Method for Periodic Solutions of Delay Differential Equations,
 # author = Verheyden, Koen and Lust, Kurt,
 	
-# select the last K component of vector of length L
-Itilde(K, L) = [zeros(K, L-K)  LA.I(K)]
-isnonzero(x) = !iszero(x)
-
 # compute the Floquet multipliers based on monodromy. See online documentation.
 function BK.compute_eigenvalues(eig::FloquetColl, 
                                 iter::BK.ContIterable{BK.PeriodicOrbitCont, <: BK.PeriodicOrbitFunctionalColl{ <: BK.Collocation{Tprob}}}, 
@@ -112,71 +107,34 @@ function BK.compute_eigenvalues(eig::FloquetColl,
 end
 
 function __floquet_coll(::FloquetColl,
-                            coll,
-                            u0::AbstractVector{𝒯},
-                            par,
-                            nev = 3
-                        ) where {𝒯}
-    n, _, _ = size(coll)
-    J = analytical_jacobian_dde_floquet(coll, u0, par) # J0/Jd split, dispatches on the delay type
-
-    # let's find the effective of Jd, ie the number of mesh points in [-tau_max, 0]
-    # we then find the closest coarse mesh point
-    Jdnz = vec(sum(isnonzero, J.Jd; dims = 1))
-    a_left = findfirst(isnonzero, Jdnz)
-
-    # remove the phase/periodicity condition and derivative wrt period
-    B = @views J.J0[1:end-1-n, 1:end-1]
-    A = @views J.Jd[1:end-1-n, a_left:end-1]
-
-    # the part corresponding to t = 0 must be in A.
-    # The last columns of A and the first columns of B both refer to the same point
-    # (t = T ≡ t = 0 by periodicity), so the delayed (history) and undelayed
-    # contributions must be ADDED, otherwise the coupling to the last history point
-    # is lost and the monodromy only converges at first order.
-    ii = n
-    A = hcat(A[:, 1:end-ii], A[:, end-ii+1:end] .+ B[:, 1:ii])
-    B = B[:, ii+1:end]
-
-    @assert size(A, 1) == size(B, 1)
-
-    # C   = [A B; I 0]
-    # Cbc = [0 0; 0 I]
-    if true
-        # using ii does not change the following
-        C = hcat(A, B)
-        dn = size(C, 2) - size(C, 1)
-        dn = size(A, 2)
-        # matrix to ensure periodicity boundary condition
-        Cbc = vcat(zero(C), zeros(𝒯, dn, size(C, 2)))
-        C = vcat(C, zeros(𝒯, dn, size(C, 2)))
-        s2 = size(B, 2)
-        for i in 1:dn
-            Cbc[s2+i, s2+i] = 1
-            C[s2+i, i] = 1
-        end
-        # return Cbc, C
-        vals  = LA.eigvals(Cbc, C) # (Cbc - λC)x = 0
-        logvals = log.(complex.(vals))
-        return sort(logvals, by = real, rev = true)[1:nev], nothing, true, 1
+                        coll,
+                        u::AbstractVector{𝒯},
+                        par,
+                        nev = 3
+                    ) where {𝒯}
+    # Floquet multipliers via the collocation Jacobian of the DDE linearized around a T-periodic orbit.
+    # The delayed contributions are placed at their true delayed times (which may span
+    # several periods) by _dde_coll_jac_extended, so delays larger than the period are
+    # supported; the generalized pencil (Cbc, C) then yields the multipliers μ.
+    C, n_history, period = _dde_coll_jac_extended(coll, u, par)
+    n, m, Ntst = size(coll)
+    N = m * Ntst
+    # segment length (history + u₀), in components: seg·n
+    seg = n_history + 1
+    dn = seg * n
+    # current period length (u₁,...,u_N)
+    s2 = N * n
+    Cbc = vcat(zero(C), zeros(eltype(C), dn, size(C, 2)))
+    C = vcat(C, zeros(eltype(C), dn, size(C, 2)))
+    for i in 1:dn
+        Cbc[s2+i, s2+i] = 1
+        C[s2+i, i] = 1
     end
-    Mₜ = -B\A
-    Nₜ, N = size(Mₜ)
+    # TODO: this is super-slow. Use EV instead of GEV
+    vals = LA.eigvals(Matrix(Cbc), Matrix(C))
 
-    if N <= Nₜ
-        It = Itilde(N, Nₜ)
-        M = It * Mₜ # same as Mₜ[end-N+1:end, :]
-    else
-        It = Itilde(N - Nₜ, N)
-        M = vcat(It, Mₜ)
-    end
-
-    vals = LA.eigvals(M)
+    # computation of eigenvalues
     logvals = log.(complex.(vals))
-    I = sortperm(logvals, by = real, rev = true)[1:min(nev, length(logvals))]
-    # floquet exponents
-    σ = logvals[I]
-    # remove the trivial multiplier
-    # deleteat!(σ, findmin(abs, σ)[2])
-    return σ, nothing, true, 1
+    I = sortperm(logvals, by = real, rev = true)
+    return logvals[I[1:min(nev, length(I))]], nothing, true, 1
 end

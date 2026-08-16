@@ -122,7 +122,7 @@ br3 = continuation(prob3, PALC(), ContinuationPar(opts, p_max = 1.0);)
 ```@example TUTneuron2
 opts_po_cont = ContinuationPar(dsmax = 0.02, ds = -0.001, max_steps = 185, nev = 10, tol_stability = 1e-4)
 
-probpo = Collocation(20, 5; N = 2, 
+probpo = Collocation(30, 4; N = 2, 
             jacobian = BK.AutoDiffDense(),)
 
 br_po = continuation(

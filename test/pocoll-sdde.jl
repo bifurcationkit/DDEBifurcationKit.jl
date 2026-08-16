@@ -23,26 +23,26 @@ let
 pars = (κ1=0.,κ2=2.3,a1=1.3,a2=6,γ=4.75,c1=1.,c2=1.234)
 prob = SDDDEBifProblem(humpriesVF, delaysF, zeros(1), pars, (@optic _.κ1))
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
-opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, nev = 20, )
+opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = 0.01, nev = 20, )
 
 alg = PALC()
-br = continuation(prob, alg, opts; bothside = true)
-@test br.specialpoint[2].type == :hopf
-BK.get_normal_form(br, 2)
+br = continuation(prob, alg, opts)
+@test br.specialpoint[1].type == :hopf
+BK.get_normal_form(br, 1)
 ################################################################################
 # computation of periodic orbit
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3,
+opts_po_cont = ContinuationPar(dsmax = 0.2, ds= 0.1, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3,
     nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 20,)
 
 probpo = Collocation(100, 4; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
-    br, 2, opts_po_cont,
+    br, 1, opts_po_cont,
     probpo;
     alg = PALC(tangent = Bordered()),
     # regular continuation options
-    ampfactor = 0.2,
-    δp = 0.01,
+    ampfactor = 1.0,
+    δp = 0.2,
     normC = norminf,
     )
 
@@ -61,6 +61,7 @@ _J2 = DDEBK.analytical_jacobian_dde_cst(BK.get_discretization(BK.getprob(br_poco
 
 # SD-DDE Floquet collocation jacobian: must match the ForwardDiff jacobian of the residual,
 # i.e. it correctly captures the state-dependent delays and the delay-derivative coupling.
+# (the Floquet jacobian has no phase-condition row, so we compare the collocation rows only)
 _J3 = DDEBK.analytical_jacobian_dde_floquet(BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars)
 @test norm(_J3.J0 + _J3.Jd - _J, Inf) < 1e-9
 
@@ -68,6 +69,6 @@ _J3 = DDEBK.analytical_jacobian_dde_floquet(BK.get_discretization(BK.getprob(br_
 J_da = BK._jacobian_po(br_pocoll.prob, BK.DenseAnalytical(), _po, _pars)
 @test norm(J_da - _J, Inf) < 1e-8
 
-# Floquet exponents (Verheyden-Lust monodromy)
+# Floquet exponents (extended monodromy)
 vals = DDEBK.__floquet_coll(BK.FloquetColl(), BK.get_discretization(BK.getprob(br_pocoll)), _po, _pars, 15)[1]
 end

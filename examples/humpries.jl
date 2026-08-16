@@ -21,6 +21,12 @@ function delaysF(x, par)
    ]
 end
 
+function plotSolution(x, p; k...)
+    xtt = DDEBK.get_periodic_orbit(p.prob, x, nothing)
+    plot!(xtt.t, xtt[1,:]; label = "x", marker = :d, markersize = 1, k...)
+    plot!(br; subplot = 1, putspecialptlegend = false)    
+end
+
 
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
 prob = SDDDEBifProblem(humpriesVF, delaysF, zeros(1), pars, (@optic _.κ1))
@@ -40,23 +46,16 @@ brhopf = [continuation(brh, ii, (@optic _.κ2),
          bothside = true,
          start_with_eigen = true) for ii in eachindex(brh.specialpoint) if (brh.specialpoint[ii].type == :hopf) ]
 
-plot(brhopf, vars = (:κ1, :κ2))
+plot(brhopf..., vars = (:κ1, :κ2))
 ################################################################################
 # computation periodic orbit
-
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, dsmin = 1e-4, p_max = 12., p_min=-5., max_steps = 3000,
-nev = 20, tol_stability = 1e-3, plot_every_step = 20)
-@reset opts_po_cont.newton_options.tol = 1e-10
-@reset opts_po_cont.newton_options.verbose = true
+nev = 20, tol_stability = 1e-3, plot_every_step = 4, newton_options = NewtonPar(tol = 1e-10, verbose = true))
 
 # arguments for periodic orbits
 args_po = (    
-    plot_solution = (x, p; k...) -> begin
-        xtt = DDEBK.get_periodic_orbit(p.prob, x, nothing)
-        plot!(xtt.t, xtt[1,:]; label = "x", k...)
-        plot!(br; subplot = 1, putspecialptlegend = false)
-        end,
+    plot_solution = plotSolution,
     normC = norminf)
 
 probpo = Collocation(200, 2; N = 1, jacobian = DDEBK.BifurcationKit.AutoDiffDense())
@@ -68,14 +67,6 @@ br_pocoll = @time continuation(
     verbosity = 1, plot = true,
     args_po...,
     δp = 0.01,
-    callback_newton = (state; k...) -> begin
-        xtt = DDEBK.get_periodic_orbit(probpo,state.x,nothing)
-        m1,m2 = extrema(xtt[:,:])
-        # printstyled(color=:red, "amp = ", m2-m1,"\n")
-        # printstyled(color=:green, "T = ", (state.x[end]),"\n")
-        # @show state.x[end]
-        state.step < 15 && DDEBK.BifurcationKit.cbMaxNorm(10.0)(state; k...)
-    end
     )
 
 plot(br);plot!(br_pocoll, plotfold=false, ylabel = "amplitude")

@@ -217,8 +217,6 @@ for (fname, floquet) in ((:analytical_jacobian_dde_cst, false),
             Jd = zeros(𝒯, length(coll)+1, length(coll)+1)
         end
 
-        # !!!!!  SD-DDE  luzyanina_computing_2002
-
         for j in 1:Ntst
             LA.mul!(pj, uc[:, rg], L) # pj ≈ (L * uj')'
             τj = mesh[j]
@@ -292,6 +290,7 @@ end # for-loop end
 # -Σⱼ (Aⱼ·ẋ*(t-τⱼ))·cⱼ is added to the undelayed coefficient. The returned JacobianDDE
 # has the same J0 / Jd split as analytical_jacobian_dde_floquet for constant delays
 # (Jd holds the delayed contributions with t0 < 0), so the Verheyden-Lust monodromy applies.
+# !!!!!  SD-DDE  luzyanina_computing_2002
 @views function analytical_jacobian_dde_floquet(coll::Collocation{Tprob},
                                                 u::AbstractVector{𝒯},
                                                 pars;
@@ -401,3 +400,133 @@ end
 
 _jacobian_dde_coll(coll, ::BK.DenseAnalytical, u, par) = analytical_jacobian_dde(coll, u, par)
 _jacobian_dde_coll(coll, ::BK.AutoDiffDense, u, par) = ForwardDiff.jacobian(z -> BK.po_residual(coll, z, par), u)
+########################################################################################
+"""
+Map a fine index f (scaled time f·h) to a column of the extended jacobian:
+  f = 0      -> u₀ (last component of the segment)
+  f < 0      -> history (segment, first n_history·n components)
+  f ∈ [1, N] -> current period u₁..u_N (last N·n components)
+The negative branch is what makes delays larger than the period T work: a delayed
+time t - τ(t) < 0 may lie several periods before t, so it must address history
+columns (f < -N) and not wrap back into the current period.
+"""
+_col(f, n_history, n) = f == 0 ? n_history * n + 1 : (f < 0 ? (f + n_history) * n + 1 : (n_history + f) * n + 1)
+
+"""
+Build the collocation Jacobian of the DDE linearized around a T-periodic orbit.
+
+# Arguments
+- `coll`: the DDE collocation discretization (`Ntst` coarse intervals, `m` Gauss nodes).
+- `u`: the periodic orbit (mesh unknowns, period as last component).
+- `pars`: the parameters.
+
+# Description
+The linearized (variational) DDE reads
+`δ'(t) = A₀(t)δ(t) + Σⱼ Aⱼ(t)δ(t−τⱼ(t))` and, for state-dependent delays, contains the
+delay-derivative correction `−Σⱼ (Aⱼ(t)ẋ*(t−τⱼ(t)))·cⱼ(t)` (with `cⱼ = ∇τⱼ(x*(t))`) so
+that the phase mode `δ = ẋ*` is in the null space up to the orbit's residual. This
+function assembles the RECTANGULAR collocation Jacobian `J` of this variational
+equation:
+
+- size `s1 × (s1 + (n_history+1)·n)` with `s1 = N·n`, `N = Ntst·m` fine steps per
+  period and `n` the state dimension;
+- the `s1` rows are the linearized collocation equations over one period;
+- the columns are `[history (n_history·n) | u₀ (n) | current u₁..u_N (s1)]`, so the
+  "segment" `[history ; u₀]` covers the scaled times `[−n_history/N, 0]` and may span
+  several periods, while the `current` block covers `(0, 1]`.
+
+The delayed contributions are placed at their TRUE delayed times `t − τⱼ(t)`, which
+may lie several periods before `t` and are therefore addressed through the history
+columns (see `_col`). Contrary to a single-period wrap, this is what makes delays
+larger than the period T supported.
+
+# Returns
+`(J, n_history, period)`: the Jacobian `J`, the number `n_history` of history fine
+steps covering `[−τ_max/T, 0]` (with `τ_max` the largest delay along the orbit), and
+the period. `_dde_monodromy` turns `J` into a generalized eigenvalue problem whose
+eigenvalues are the Floquet multipliers.
+"""
+function _dde_coll_jac_extended(coll::Collocation{Tprob},
+                                u::AbstractVector{𝒯},
+                                pars) where {Tprob <: AbstractDDEBifurcationProblem, 𝒯}
+    n, m, Ntst = size(coll)
+    N = m * Ntst              # fine steps per period
+    L, ∂L = BK.get_Ls(coll.mesh_cache)
+    mesh = BK.getmesh(coll)
+    gauss = _get_gauss_nodes(coll)         # m Gauss nodes
+    σmesh = BK.get_mesh_coll(coll)         # m+1 points -1 = σ₁ < ... < σₘ₊₁ = 1
+    period = BK.getperiod(coll, u, nothing)
+    uc = BK.get_time_slices(coll, u)
+    pj = BK.get_tmp(coll.cache.gi, u)
+    In = coll.cache.In
+    interp = BK.POInterpolation(coll, u)
+    ddeprob = coll.prob_vf
+
+    # maximum delay along the orbit (in units of the period)
+    τmax = zero(𝒯)
+    rg = UnitRange(1, m+1)
+    for j in 1:Ntst
+        LA.mul!(pj, uc[:, rg], L)
+        for l in 1:m
+            for d in delays(ddeprob, pj[:, l], pars)
+                τmax = max(τmax, d / period)
+            end
+        end
+        rg = rg .+ m
+    end
+    # history steps covering [−τ_max, 0]; +m accounts for the interpolation stencil
+    # extending to the left edge of the coarse interval containing −τ_max
+    n_history = max(1, ceil(Int, τmax * N) + m)
+
+    s1 = N * n
+    # jacobian columns: [history (n_history·n) | u₀ (n) | current (N·n)]
+    # the segment = [history (n_history·n) ; u₀] has (n_history+1)·n components, the current = u₁..u_N
+    J = zeros(𝒯, s1, (n_history + 1 + N) * n)
+
+    rg = UnitRange(1, m+1)
+    rgNx = UnitRange(1, n)
+    for j in 1:Ntst
+        LA.mul!(pj, uc[:, rg], L)
+        dτj = (mesh[j+1] - mesh[j]) / 2
+        α = period * dτj
+        for l in 1:m
+            _rgX = rgNx .+ (l-1)*n
+            τ = BK.τj(gauss[l], mesh, j)
+            # state-dependent delays evaluated at the collocation point
+            delays_l = delays(ddeprob, pj[:, l], pars)
+            udj = VectorOfArray([interp(mod(τ * period - d, period)) for d in delays_l])
+            JacDDE = jacobian(ddeprob, pj[:, l], udj, pars)
+            J0 = copy(JacDDE.J0)
+            if ddeprob isa SDDDEBifProblem
+                # delay-derivative correction: B₀ = J₀ - Σⱼ (Aⱼ·ẋ*(t-τⱼ))·cⱼ
+                for (ind, d) in enumerate(delays_l)
+                    cj = ForwardDiff.gradient(z -> delays(ddeprob, z, pars)[ind], pj[:, l])
+                    ẋd = interp(Val(:der), τ * period - d)
+                    J0 .-= (JacDDE.Jd[ind] * ẋd) * cj'
+                end
+            end
+            # undelayed + derivative operator, on the current period columns
+            for l2 in 1:m+1
+                f = (j-1)*m + l2 - 1
+                col = _col(f, n_history, n)
+                J[_rgX, col:col+n-1] .+= @. (-α * L[l2, l]) * J0 + (∂L[l2, l]) * In
+            end
+            # delayed contributions
+            for (ind, d) in enumerate(delays_l)
+                t = τ - d / period   # scaled delayed time (may be < 0 or < -1)
+                # coarse interval (0-based, possibly negative)
+                ic = floor(Int, t * Ntst)
+                σ = 2 * (t * Ntst - ic) - 1
+                for l2 in 1:m+1
+                    f = ic * m + l2 - 1
+                    col = _col(f, n_history, n)
+                    β = BK.lagrange(l2, σ, σmesh)
+                    J[_rgX, col:col+n-1] .-= α .* JacDDE.Jd[ind] .* β
+                end
+            end
+        end
+        rg = rg .+ m
+        rgNx = rgNx .+ (m * n)
+    end
+    return J, n_history, period
+end
