@@ -89,3 +89,39 @@ BK.has_adjoint(prob)
 BK.getdelta(prob)
 show(prob)
 end
+##########################################################################################
+# Hopf normal form, coefficient a = dμ/dp when the parameter moves the equilibrium (R01 ≠ 0)
+# The equilibrium x* = (ρ/(1-ρ), ρ) depends on ρ but J(x, p) does not depend on ρ at fixed x.
+function movingEqVF(x, xd, p)
+    (;a, b, ρ) = p
+    [
+        x[2] - x[1] / (1 + x[1]),
+        a * (ρ - x[2]) - b * (xd.u[1][1] - ρ / (1 - ρ))
+    ]
+end
+movingEqDelays(par) = [par.τ0]
+movingEqDelays(x, par) = [par.τ0 + par.χ * (1 + x[1])]
+
+# characteristic function f(μ) = (μ + c)(μ + a) + b⋅exp(-μτ) with c = (1-ρ)² and τ = τ0 + χ/(1-ρ)
+# at the equilibrium, hence dμ/dρ = -∂ρf / ∂μf
+function movingEq_dμdρ(par, μ)
+    (;a, b, ρ, τ0, χ) = par
+    c = (1 - ρ)^2
+    τ = τ0 + χ / (1 - ρ)
+    ∂μf = 2μ + a + c - b * τ * exp(-μ * τ)
+    ∂ρf = -2(1 - ρ) * (μ + a) - b * μ * exp(-μ * τ) * χ / (1 - ρ)^2
+    return -∂ρf / ∂μf
+end
+
+let
+optn = NewtonPar(eigsolver = DDE_DefaultEig(), tol = 1e-11)
+opts = ContinuationPar(p_min = 0.3, p_max = 0.75, ds = 0.002, dsmax = 0.01, newton_options = optn, detect_bifurcation = 3, nev = 6, n_inversion = 8)
+for (pars, Prob) in (((a = 0.1, b = 0.1, ρ = 0.40, τ0 = 5.0, χ = 0.0), ConstantDDEBifProblem),
+                     ((a = 0.1, b = 0.1, ρ = 0.55, τ0 = 0.0, χ = 1.0), SDDDEBifProblem))
+    x0 = [pars.ρ / (1 - pars.ρ), pars.ρ]
+    prob = Prob(movingEqVF, movingEqDelays, x0, pars, (@optic _.ρ))
+    br = continuation(prob, PALC(), opts)
+    hp = BifurcationKit.get_normal_form(br, findfirst(sp -> sp.type == :hopf, br.specialpoint))
+    @test isapprox(hp.nf.a, movingEq_dμdρ(merge(pars, (ρ = hp.p,)), Complex(0, hp.ω)); rtol = 1e-4)
+end
+end
