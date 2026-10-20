@@ -43,7 +43,8 @@ end
 function BK.__compute_bordered_vectors_hopf(linbdsolver, linbdsolver_adjoint, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
     # consistent with BK.hopf_ma_test: solve (A(iω) - iωI)v + aσ = 0
     Δω = -Δ(J_at_xp, Complex{𝒯}(0, ω))
-    Δω_adj = JAd_at_xp isa JacobianDDE ? -Δ(JAd_at_xp, Complex{𝒯}(0, ω)) : JAd_at_xp
+    # adjoint: (A(iω) - iωI)ᴴ = J₀ᵀ + Σ exp(iωτⱼ)Jⱼᵀ + iωI = -Δ(Jᵀ, -iω), the DDE analogue of (J - iωI)ᴴ
+    Δω_adj = JAd_at_xp isa JacobianDDE ? -Δ(JAd_at_xp, Complex{𝒯}(0, -ω)) : JAd_at_xp
     v, _, cv1, itv = linbdsolver(Δω, a, b, zero(𝒯), _zero, one(𝒯))
     ~cv1 && @debug "Bordered linear solver for Δ(iω) did not converge."
     w, _, cv2, itw = linbdsolver_adjoint(Δω_adj, b, a, zero(𝒯), _zero, one(𝒯))
