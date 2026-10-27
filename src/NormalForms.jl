@@ -64,9 +64,9 @@ function BK.__hopf_normal_form(prob::AbstractDDEBifurcationProblem,
     R2 = BK.BilinearMap( (dx1, dx2)      -> BK.d2F(prob, x0c, parbif, dx1, dx2) ./2)
     R3 = BK.TrilinearMap((dx1, dx2, dx3) -> BK.d3F(prob, x0c, parbif, dx1, dx2, dx3) ./6 )
 
-    # −LΨ001 = R01
+    # −LΨ001 = R01, with Δ0 = −L
     r01 = R01(prob, x0, parbif)
-    Ψ001, cv, it = ls(Δ0, -r01)
+    Ψ001, cv, it = ls(Δ0, r01)
     ~cv && @debug "[Hopf Ψ001] Linear solver for J did not converge. it = $it"
     Ψ001θ = Complex.(expθ(L, Ψ001, 0))
 
@@ -224,9 +224,9 @@ function BK.__hopf_normal_form(prob::SDDDEBifProblem,
     _R2(φ, λφ, ψ, λψ) = R2_int(φ, ψ) .+ _sdde_corr2(L.Jd, dτ, φ, λφ, ψ, λψ) ./ 2
     _R3(φ, λφ, ψ, λψ, χ, λχ) = R3_int(φ, ψ, χ) .+ _sdde_corr3(m, R2_int, L.Jd, dτ, dτ2, φ, λφ, ψ, λψ, χ, λχ) ./ 6
 
-    # −LΨ001 = R01
+    # −LΨ001 = R01, with Δ0 = −L
     r01 = R01(prob, x0, parbif)
-    Ψ001, cv, it = ls(Δ0, -r01)
+    Ψ001, cv, it = ls(Δ0, r01)
     ~cv && @debug "[Hopf Ψ001] Linear solver for J did not converge. it = $it"
     Ψ001θ = Complex.(expθ(L, Ψ001, 0))
 
