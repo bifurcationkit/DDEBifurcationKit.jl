@@ -18,7 +18,7 @@ prob = ConstantDDEBifProblem(wrightVF, delaysF, x0, pars, (@optic _.a), record_f
 
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 9., p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 4, n_inversion = 12 )
-br = continuation(prob, PALC(), opts; verbosity = 0, plot = false, bothside = false)
+br = continuation(prob, PALC(), opts; verbosity = 0, plot = false, bothside = Val(false))
 plot(br)
 
 get_normal_form(br, 1)

@@ -42,7 +42,7 @@ We then compute the branch
 ```@example TUTHumphries
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
-br = continuation(prob, PALC(), opts; verbosity = 0, bothside = true)
+br = continuation(prob, PALC(), opts; verbosity = 0, bothside = Val(true))
 ```
 
 and plot it
@@ -60,7 +60,7 @@ We tell the solver to consider br.specialpoint[2] and continue it.
 brhopf = continuation(br, 2, (@optic _.κ2),
          ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 230, p_max = 5., p_min = -1.,ds = -0.02);
          detect_codim2_bifurcation = 2,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = true)
 
 scene = plot(brhopf, vars = (:κ1, :κ2))

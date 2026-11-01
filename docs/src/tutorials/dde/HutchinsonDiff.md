@@ -103,7 +103,7 @@ brhopfs = [continuation(br, i, (@optic _.d),
          verbosity = 2,
          detect_codim2_bifurcation = 2,
          plot = true,
-         bothside = true,
+         bothside = Val(true),
          jacobian_ma = BK.MinAugMatrixBased(),
          ) for i = 1:3]
 

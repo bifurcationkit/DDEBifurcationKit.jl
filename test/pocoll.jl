@@ -32,7 +32,7 @@ x0 = [0.01, 0.001]
 prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit = 100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, nev = 10, dsmax = 0.2, n_inversion = 8)
-br = continuation(prob, PALC(), opts, bothside = false)
+br = continuation(prob, PALC(), opts, bothside = Val(false))
 #######################################################
 # hopf aBS
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds= -0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 15, nev = 10, tol_stability = 1e-8, detect_bifurcation = 0)

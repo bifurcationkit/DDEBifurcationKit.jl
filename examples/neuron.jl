@@ -22,7 +22,7 @@ prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs); record
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(σ = 1e-1 ))
 opts = ContinuationPar(p_max = 5., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = true, normC = norminf)
+br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = Val(true), normC = norminf)
 plot(br)
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.a21); record_from_solution = prob.recordFromSolution)
@@ -42,8 +42,8 @@ brhopf = continuation(br, 2, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 100, p_max = 15., p_min = -1.,ds = -0.02);
          verbosity = 0, plot = true,
          detect_codim2_bifurcation = 2,
-         # bothside = true,
-         bothside = true,
+         # bothside = Val(true),
+         bothside = Val(true),
          start_with_eigen = true)
 
 plot(brhopf, vars = (:a21, :τs))
@@ -59,7 +59,7 @@ hopf_from_hh = [continuation(brhopf, ii, bropts;
          plot = true,
          detect_codim2_bifurcation = 0,
          detailed = Val(false),
-         bothside=true,
+         bothside=Val(true),
          normC = norminf,
          nev = 20,
          ) for ii in (3,4)]

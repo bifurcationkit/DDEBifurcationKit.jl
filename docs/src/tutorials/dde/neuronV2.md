@@ -67,14 +67,14 @@ brhopf = continuation(br, 1, (@optic _.c),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 0,
          detect_codim2_bifurcation = 2,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = true)
 
 brhopf2 = continuation(br, 2, (@optic _.c),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 0,
          detect_codim2_bifurcation = 2,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = true)
 
 scene = plot(brhopf,  vars = (:a, :c))
@@ -99,7 +99,7 @@ brbp = continuation(br2, index_bp, (@optic _.a),
          ContinuationPar(opts_bp; detect_bifurcation = 1, dsmax = 0.01, max_steps = 70, p_max = 0.6, p_min = -0.6, ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          # verbosity = 3, plot = true,
          detect_codim2_bifurcation = 2,
-         bothside = false,
+         bothside = Val(false),
          start_with_eigen = true)
 
 scene = plot(brbp, vars = (:a, :c), branchlabel = "Branch points")

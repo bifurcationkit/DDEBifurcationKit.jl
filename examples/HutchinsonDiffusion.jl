@@ -39,7 +39,7 @@ brhopf = continuation(br, 1, (@optic _.d),
          detect_codim2_bifurcation = 2,
          jacobian_ma = BK.MinAugMatrixBased(),
          plot = true,
-         bothside = true,
+         bothside = Val(true),
          )
 ################################################################################
 # case where we specify the jacobian
@@ -63,6 +63,6 @@ brhopf = continuation(br, 1, (@optic _.d),
          verbosity = 2,
          detect_codim2_bifurcation = 2,
          plot = true,
-         bothside = true,
+         bothside = Val(true),
          jacobian_ma = BK.MinAugMatrixBased(),
          )

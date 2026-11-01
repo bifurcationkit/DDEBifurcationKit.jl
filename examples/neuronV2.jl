@@ -23,7 +23,7 @@ prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, nev = 9, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = false)
+br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = Val(false))
 plot(br)
 ################################################################################
 cont_hopf = br.contparams
@@ -32,14 +32,14 @@ brhopf = continuation(br, 1, (@optic _.c),
          ContinuationPar(cont_hopf, detect_bifurcation = 3, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = 0.01, n_inversion = 2);
          verbosity = 3, plot = true,
          jacobian_ma = BK.AutoDiff(),
-         bothside = true,
+         bothside = Val(true),
          normC = BK.norminf,
          start_with_eigen = false)
 
 brhopf2 = continuation(br, 2, (@optic _.c),
          ContinuationPar(br.contparams, detect_bifurcation = 3, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
          verbosity = 2, plot = true,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = false)
 
 plot(brhopf,   vars = (:a, :c), xlims = (0, 0.7), ylims = (0, 1))
@@ -47,7 +47,7 @@ plot!(brhopf2, vars = (:a, :c), xlims = (-0, 0.7), ylims = (-0.1, 1))
 
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@optic _.c))
-br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = false)
+br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = Val(false))
 
 plot(br2)
 
@@ -59,7 +59,7 @@ brfold = continuation(br2, 3, (@optic _.a),
          ContinuationPar(opts_fold; detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 0.6, p_min = -0.5,ds = -0.01, n_inversion = 2, tol_stability = 1e-6);
          verbosity = 1, plot = true,
          detect_codim2_bifurcation = 1,
-         bothside = false,
+         bothside = Val(false),
          start_with_eigen = true)
 
 plot(brfold)

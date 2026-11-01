@@ -24,10 +24,10 @@ prob = ConstantDDEBifProblem(vdp, delaysF, [1.01, 0.001], pars, (@optic _.ϵ); r
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(tol = 1e-8))
 opts = ContinuationPar(p_max = 2., p_min = 0.2, newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 5, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 2, plot = true, bothside = true, normC = norminf)
+br = continuation(prob, PALC(), opts; verbosity = 2, plot = true, bothside = Val(true), normC = norminf)
 plot(br)
 
-br2 = continuation(br, 2, bothside = true, normC = norminf)
+br2 = continuation(br, 2, bothside = Val(true), normC = norminf)
 plot(br,br2)
 ################################################################################
 brhopf = continuation(br2, 2, (@optic _.τ),
@@ -35,7 +35,7 @@ brhopf = continuation(br2, 2, (@optic _.τ),
          verbosity = 1, plot = true,
          detect_codim2_bifurcation = 2,
          update_minaug_every_step = 1,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = false)
 
 plot(brhopf, vars=(:ϵ, :τ))
@@ -45,7 +45,7 @@ brfold = continuation(br2, 4, (@optic _.τ),
          verbosity = 1, plot = true,
          detect_codim2_bifurcation = 2,
          update_minaug_every_step = 1,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = false)
 
 plot(brfold, vars=(:ϵ, :τ)); plot!(brhopf, vars=(:ϵ, :τ), plotspecialpoints= false)

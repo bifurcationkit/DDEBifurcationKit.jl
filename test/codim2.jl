@@ -30,7 +30,7 @@ BK._getvectortype(prob)
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts, bothside = false)
+br = continuation(prob, PALC(), opts, bothside = Val(false))
 
 hpnf = BK.get_normal_form(br, 2)
 ################################################################################
@@ -39,7 +39,7 @@ brhopf = continuation(br, 1, (@optic _.c),
             verbosity = 0, plot = false,
             # update_minaug_every_step = 1,
             detect_codim2_bifurcation = 2,
-            bothside = true,
+            bothside = Val(true),
             start_with_eigen = true)
 
 BK.isinplace(brhopf.prob)
@@ -52,7 +52,7 @@ brhopf2 = continuation(br, 2, (@optic _.c),
             setproperties(br.contparams, detect_bifurcation = 1, dsmax = 0.01, max_steps = 100, p_max = 1.1, p_min = -0.1,ds = -0.01);
             verbosity = 0, plot = false,
             detect_codim2_bifurcation = 2,
-            bothside = true,
+            bothside = Val(true),
             start_with_eigen = true)
 
 @test length(brhopf.specialpoint) == 11
@@ -64,7 +64,7 @@ brhopf2 = continuation(br, 2, (@optic _.c),
 @test brhopf2.specialpoint[3].type == :hh
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (BK.@set pars.a = 0.12), (@optic _.c))
-br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22); verbosity = 0, plot = false, bothside = false)
+br2 = continuation(prob2, PALC(), setproperties(opts, p_max = 1.22); verbosity = 0, plot = false, bothside = Val(false))
 
 # change tolerance for avoiding error computation of the EV
 opts_fold = br.contparams
@@ -75,7 +75,7 @@ brfold = continuation(br2, 3, (@optic _.a),
             verbosity = 0, plot = false,
             detect_codim2_bifurcation = 1,
             jacobian_ma = BK.AutoDiff(),
-            bothside = false,
+            bothside = Val(false),
             start_with_eigen = true)
 
 @test brfold.specialpoint[2].type == :zh

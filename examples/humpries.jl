@@ -41,7 +41,7 @@ brhopf = [continuation(brh, ii, (@optic _.κ2),
         #  verbosity = 2, 
          plot = true,
          detect_codim2_bifurcation = 2,
-         bothside = true,
+         bothside = Val(true),
          start_with_eigen = true) for ii in eachindex(brh.specialpoint) if (brh.specialpoint[ii].type == :hopf) ]
 
 plot(brhopf..., vars = (:κ1, :κ2))

@@ -38,7 +38,7 @@ prob = ConstantDDEBifProblem(neuronVF, delaysF, x0, pars, (@optic _.τs), record
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit = 200))
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, nev = 15, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; bothside = true, normC = norminf)
+br = continuation(prob, PALC(), opts; bothside = Val(true), normC = norminf)
 ```
 
 We then plot the branch
@@ -70,7 +70,7 @@ brhopf2 = continuation(br, 2, (@optic _.a21),
          ContinuationPar(br.contparams, detect_bifurcation = 1, dsmax = 0.05, max_steps = 100, p_max = 15., p_min = -1.,ds = -0.01, n_inversion = 4);
          detect_codim2_bifurcation = 2,
          start_with_eigen = true,
-         bothside = true
+         bothside = Val(true)
          )
 
 scene = plot(brhopf, brhopf2, legend = :top)
@@ -84,7 +84,7 @@ brhopf3 = continuation(brhopf, 3, ContinuationPar(brhopf.contparams; ds = 0.005,
          verbosity = 2, 
          detect_codim2_bifurcation = 0,
          detailed = Val(false),
-         bothside = true,
+         bothside = Val(true),
          # normC = norminf,
          nev = 20,
          )

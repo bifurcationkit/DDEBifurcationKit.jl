@@ -78,7 +78,7 @@ x0 = zeros(1)
 prob = SDDDEBifProblem(humpriesVF, delaysF, x0, pars, (@optic _.κ1))
 optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, ds = -0.01, detect_bifurcation = 3, nev = 3, )
-br = continuation(prob, PALC(), opts; verbosity = 0, bothside = true)
+br = continuation(prob, PALC(), opts; verbosity = 0, bothside = Val(true))
 BifurcationKit.get_normal_form(br, 2)
 
 BK.isinplace(prob)
