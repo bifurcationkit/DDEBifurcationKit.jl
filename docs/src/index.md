@@ -21,7 +21,8 @@ There are several good softwares already available.
 
 - For large scale problems, there is very little.
 
-In Julia, the present package seems to be the only one.
+In Julia, the present package seems to be the only one together with:
+- [PeriodicNormalizationDDEs.jl](https://github.com/mmbosschaert/PeriodicNormalizationDDEs)
 
 ## A word on performance
 

@@ -78,7 +78,7 @@ end
 end
 
 function BK._generate_jacobian(coll::BK.Collocation{ <: ConstantDDEBifProblem}, 
-                                J::BK.DenseAnalyticalInplace,
+                                ::BK.DenseAnalyticalInplace,
                                 orbitguess,
                                 pars; 
                                 Jcoll_matrix = nothing,
@@ -88,7 +88,7 @@ function BK._generate_jacobian(coll::BK.Collocation{ <: ConstantDDEBifProblem},
 end
 
 function BK._generate_jacobian(coll::BK.Collocation{ <: SDDDEBifProblem}, 
-                                J::BK.DenseAnalyticalInplace,
+                                ::BK.DenseAnalyticalInplace,
                                 orbitguess,
                                 pars; 
                                 Jcoll_matrix = nothing,
@@ -152,7 +152,7 @@ using DifferentiationInterface to automatically derive the sparse jacobian.
 """
 struct AutoSparseDI <: BK.AbstractJacobianSparseMatrix end
 
-function BK._generate_jacobian(coll::Collocation{Tprob}, ::AutoSparseDI, orbitguess, pars; k...) where {Tprob <: AbstractDDEBifurcationProblem}
+function BK._generate_jacobian(::Collocation{Tprob}, ::AutoSparseDI, orbitguess, pars; k...) where {Tprob <: AbstractDDEBifurcationProblem}
     error("You need to import `DifferentiationInterface, SparseConnectivityTracer, SparseMatrixColorings` in order to use this jacobian")
 end
 ########################################################################################

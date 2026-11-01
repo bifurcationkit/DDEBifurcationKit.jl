@@ -2,7 +2,7 @@ cd(@__DIR__)
 cd("..")
 # using Pkg, LinearAlgebra, Test
 # pkg"activate ."
-using Revise, DDEBifurcationKit, LinearAlgebra, Plots, Accessors
+using Revise, DDEBifurcationKit, LinearAlgebra, Plots
 using BifurcationKit
 const BK = BifurcationKit
 
@@ -23,7 +23,7 @@ prob = ConstantDDEBifProblem(neuron2VF, delaysF, x0, pars, (@optic _.a))
 
 optn = NewtonPar(eigsolver = DDE_DefaultEig(maxit=100))
 opts = ContinuationPar(p_max = 0.4, p_min = 0., newton_options = optn, ds = 0.01, nev = 9, dsmax = 0.2, n_inversion = 4)
-br = continuation(prob, PALC(), opts; verbosity = 0, plot = true, bothside = Val(false))
+br = continuation(prob, PALC(tangent = Bordered()), opts; verbosity = 0, plot = true, bothside = Val(false))
 plot(br)
 ################################################################################
 cont_hopf = br.contparams
@@ -47,7 +47,7 @@ plot!(brhopf2, vars = (:a, :c), xlims = (-0, 0.7), ylims = (-0.1, 1))
 
 ################################################################################
 prob2 = ConstantDDEBifProblem(neuron2VF, delaysF, x0, (@set pars.a = 0.12), (@optic _.c))
-br2 = continuation(prob2, PALC(), ContinuationPar(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = Val(false))
+br2 = continuation(prob2, PALC(tangent = Bordered()), ContinuationPar(opts, p_max = 1.22); verbosity = 1, plot = true, bothside = Val(false))
 
 plot(br2)
 
@@ -70,46 +70,31 @@ plot!(brhopf2, vars = (:a, :c), branchlabel = "Hopf")
 ################################################################################
 # computation periodic orbit
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.1, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 30, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, plot_every_step = 2)
-@reset opts_po_cont.newton_options.tol = 1e-8
-@reset opts_po_cont.newton_options.verbose = true
-@reset opts_po_cont.newton_options.max_iterations = 28
+opts_po_cont = ContinuationPar(dsmax = 0.01, ds= 0.0001, dsmin = 1e-4, p_max = 10., p_min=-5., max_steps = 60, nev = 3, tol_stability = 1e-8, detect_bifurcation = 0, newton_options = NewtonPar(tol = 1e-8, verbose = false, ))
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p; k...) -> begin
-        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+args_po = (    record_from_solution = (x, p; iter, k...) -> begin
+        xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
         return (max = maximum(xtt[1,:]),
                 min = minimum(xtt[1,:]),
-                period = getperiod(p.prob, x, nothing))
+                period = getperiod(BK.getprob(iter), x, nothing))
     end,
-    plot_solution = (x, p; k...) -> begin
-        xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+    plot_solution = (x, p; iter, k...) -> begin
+        xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
         plot!(xtt.t, xtt[1,:]; label = "V1", k...)
         plot!(xtt.t, xtt[2,:]; label = "V2", k...)
         plot!(br; subplot = 1, putspecialptlegend = false)
         end,
     normC = norminf)
 
-probpo = Collocation(100, 3; N = 2, jacobian = BK.AutoDiffDense())
+probpo = Collocation(100, 3; N = 2, jacobian = jacobian = BK.DenseAnalyticalInplace())
 br_pocoll = @time continuation(
-    br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 0, tol_stability = 1e-5),
+    br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 3, tol_stability = 1e-5, dsmax = 0.05),
     probpo;
-    verbosity = 2,
+    # verbosity = 2,
     plot = true,
     args_po...,
-    # ampfactor = 1/0.24391300209895822 * 0.1,
-    ampfactor = 1,
-    δp = 0.001,
     normC = norminf,
-    callback_newton = (state; k...) -> begin
-        xtt = BK.get_periodic_orbit(probpo,state.x,nothing)
-        m1,m2 = extrema(xtt[:,:])
-        # plot(xtt.t, xtt[1,:], title = "it = 0") |> display
-        printstyled(color=:red, "amp = ", m2-m1,"\n")
-        # @show state.x[end]
-        # @show state.f[end]
-        state.step < 16
-    end
     )
 ################################################################################
 using DifferentialEquations

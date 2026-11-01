@@ -123,7 +123,7 @@ function __floquet_coll(::FloquetColl,
     # segment length (history + u₀), in components: seg·n
     seg = n_history + 1
     dn = seg * n
-    # current period length (u₁,...,u_N)
+    # current period length (u₁, ..., u_N)
     s1 = N * n
 
     if use_GEV
@@ -165,4 +165,48 @@ function __floquet_coll(::FloquetColl,
     logvals = log.(complex.(vals))
     perm = sortperm(logvals, by = real, rev = true)
     return logvals[perm[1:min(nev, length(perm))]], nothing, true, 1
+end
+########################################################################################
+# Right Floquet eigenfunction of a period-doubling point of a DDE periodic orbit, ie
+# the one associated with the multiplier μ = -1.
+#
+# The collocation jacobian `analytical_jacobian_dde_cst` wraps every delayed term into
+# the current period (see `PeriodicOrbitCollocation.jl`). This is correct for the
+# residual of a periodic orbit but NOT for the Floquet eigenfunction: a delayed time
+# t - τ < 0 must be read in the history, with the Floquet multiplier sign. We thus use
+# the extended collocation jacobian `_dde_coll_jac_extended`, whose columns are
+# [history | u₀ | current], and its monodromy reduction (same as in `__floquet_coll`).
+#
+# The returned vector has the layout expected by the period-doubling `predictor`, ie
+# one period of time slices [u₀, u₁, ..., u_N] of length `length(coll)`.
+@views function _pd_floquet_eigenvector(coll::Collocation{Tprob},
+                                        u::AbstractVector,
+                                        par) where {Tprob <: AbstractDDEBifurcationProblem}
+    n, m, Ntst = size(coll)
+    N = m * Ntst
+    C, n_history, _ = _dde_coll_jac_extended(coll, u, par)
+    s1 = N * n
+    dn = (n_history + 1) * n
+
+    # monodromy reduction: columns of C are [segment (dn) | current (s1)]
+    C_seg = C[:, 1:dn]
+    C_cur = C[:, dn+1:end]
+    Mt = -(C_cur \ C_seg) # s1 × dn
+
+    if dn <= s1
+        M = Mt[end-dn+1:end, :]
+    else
+        𝒯 = eltype(Mt)
+        Iblk = Matrix{𝒯}(LA.I, dn - s1, dn - s1)
+        M = vcat(hcat(zeros(𝒯, dn - s1, s1), Iblk), Mt)
+    end
+
+    vals, vecs = LA.eigen(M)
+    ind = argmin(abs.(vals .+ 1))
+    v = real.(vecs[:, ind])
+
+    # rebuild one period of the eigenfunction: [u₀, u₁, ..., u_N]
+    xcur = Mt * v
+    ζ = vcat(v[end-n+1:end], xcur)
+    return ζ, vals[ind]
 end

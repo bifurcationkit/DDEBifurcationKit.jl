@@ -1,7 +1,7 @@
 function BK.get_normal_form1d(prob::ConstantDDEBifProblem, 
                                 br::BK.AbstractBranchResult,
-                                ind_bif::Int,
-                                Teigvec::Type{𝒯eigvec} = BK._getvectortype(br);
+                                ind_bif::Int;
+                                Teigvec::Type{𝒯eigvec} = BK._getvectortype(br),
                                 nev::Int = length(BK.eigenvalsfrombif(br, ind_bif)),
                                 verbose::Bool = false,
                                 lens = BK.getlens(br),
@@ -13,9 +13,10 @@ function BK.get_normal_form1d(prob::ConstantDDEBifProblem,
 
                                 autodiff::Bool = true,
                                 detailed::Val{detailed_type} = Val(true),
+                                start_with_eigen::Val{start_with_eigen_type} = Val(true),
 
                                 bls = BK.MatrixBLS(),
-                                ) where {𝒯eigvec, detailed_type}
+                                ) where {𝒯eigvec, detailed_type, start_with_eigen_type}
     # parameters for normal form
     kwargs_nf = (;nev, verbose, lens, scaleζ)
     @warn "Computation of normal form based on a little hack ;)"

@@ -65,6 +65,7 @@ Mesh adaptation can be turned on like in the case of [ODEs](https://bifurcationk
 
 - the jacobian `BifurcationKit.AutoDiffDense()` is available for constant delays and state-dependent delays.
 - the jacobian `BifurcationKit.DenseAnalytical()` is available for constant delays and state-dependent delays.
+- the jacobian `BifurcationKit.DenseAnalyticalInplace()` is available for constant delays and state-dependent delays.
 
 Only for constant delays:
 - the jacobian `BifurcationKit.FullSparse()` is available.
@@ -94,7 +95,7 @@ $$\left(\lambda + \frac{d}{dt}\right) z(t) = A(t)\cdot z(t) + e^{-\lambda\tau} B
 Recall that they are related to the Floquet coefficients $\mu$ by the relation $\mu=\exp(\lambda T)$.
 
 
-We provide one method(s) to compute the Floquet coefficients.
+We provide two methods to compute the Floquet coefficients.
 
 1. The algorithm (Default) `FloquetColl` is based on [^Lust] and it computes an approximation of the monodromy operator from the jacobian matrix of the functional.
 2. The algorithm `FloquetGEV` boils down to solving a large generalized eigenvalue problem based on (1). There is clearly room for improvements here, but this can be used to check the results of the previous method.

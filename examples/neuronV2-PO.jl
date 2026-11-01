@@ -32,7 +32,7 @@ hpnf = BK.get_normal_form(br, 2)
     xtt = BK.get_periodic_orbit(p.prob, x, nothing)
     plot!(xtt.t, xtt[1,:]; label = "V1", marker = :d, markersize = 2, k...)
     plot!(xtt.t, xtt[2,:]; label = "V2", k...)
-    plot!(br; subplot = 1, putspecialptlegend = false)
+    # plot!(br; subplot = 1, putspecialptlegend = false)
 end
 
 # continuation parameters
@@ -43,7 +43,7 @@ args_po = (  ;
     plot_solution,
     normC = norminf)
 
-probpo = Collocation(20, 4, 
+probpo = Collocation(30, 5, 
             # jacobian = BK.AutoDiffDense(),
             # jacobian = BK.DenseAnalytical(),
             jacobian = BK.DenseAnalyticalInplace(),
@@ -53,18 +53,38 @@ br_pocoll = @time continuation(
             br, 2, ContinuationPar(opts_po_cont; max_steps = 200, detect_bifurcation = 3),
             probpo;
             # verbosity = 2,
-            plot = true,
+            # plot = true,
             args_po...,
             )
 
 plot(br, br_pocoll)
 
-# - #  1,       ns at c ≈ +0.70955033 ∈ (+0.70955033, +0.71008605), |δp|=5e-04, δ = ( 2,  2), step =  18
-# - #  2,       pd at c ≈ +0.64986821 ∈ (+0.64986821, +0.65094888), |δp|=1e-03, δ = (-1, -1), step =  22
-# - #  3,       bp at c ≈ +0.46191900 ∈ (+0.46191900, +0.46191900), |δp|=2e-09, δ = (-1,  0), step =  44
-# - #  4,       pd at c ≈ +0.46534971 ∈ (+0.46533014, +0.46534971), |δp|=2e-05, δ = (-1, -1), step =  50
-# - #  5,       pd at c ≈ +0.59697038 ∈ (+0.59640882, +0.59697038), |δp|=6e-04, δ = ( 1,  1), step =  92
-# - #  6,       bp at c ≈ +0.61515927 ∈ (+0.61515927, +0.61515953), |δp|=3e-07, δ = ( 1,  0), step = 114
-# - #  7,       pd at c ≈ +0.52169354 ∈ (+0.52169354, +0.52176700), |δp|=7e-05, δ = ( 1,  1), step = 161
-# - #  8,       pd at c ≈ +0.52174066 ∈ (+0.52173603, +0.52174066), |δp|=5e-06, δ = (-1, -1), step = 165
-# - #  9, endpoint at c ≈ +0.61178495,
+# ┌────┬────────────┬─────────────┬────────────────────────────┬───────────┬─────────────┬──────────┬──────┐
+# │ Nb │    type    │      c      │          interval          │ precision │   status    │    δ     │ step │
+# ├────┼────────────┼─────────────┼────────────────────────────┼───────────┼─────────────┼──────────┼──────┤
+# │  1 │         ns │ +0.70997815 │ (+0.70997815, +0.70997822) │     7e-08 │   converged │ ( 2,  2) │   18 │
+# │  2 │         pd │ +0.65042660 │ (+0.65042660, +0.65049435) │     7e-05 │   converged │ (-1, -1) │   22 │
+# │  3 │         bp │ +0.46191911 │ (+0.46191911, +0.46191911) │     2e-09 │   converged │ (-1,  0) │   43 │
+# │  4 │         pd │ +0.46533676 │ (+0.46533668, +0.46533676) │     8e-08 │   converged │ (-1, -1) │   49 │
+# │  5 │         pd │ +0.59672929 │ (+0.59672926, +0.59672929) │     3e-08 │   converged │ ( 1,  1) │   91 │
+# │  6 │         bp │ +0.61515065 │ (+0.61515058, +0.61515065) │     7e-08 │   converged │ ( 1,  0) │  112 │
+# │  7 │         pd │ +0.52173920 │ (+0.52173920, +0.52173924) │     4e-08 │   converged │ ( 1,  1) │  159 │
+# │  8 │         pd │ +0.52174009 │ (+0.52173776, +0.52174009) │     2e-06 │   converged │ (-1, -1) │  163 │
+# │  9 │   endpoint │ +0.61314530 │                            │           │             │          │  201 │
+# └────┴────────────┴─────────────┴────────────────────────────┴───────────┴─────────────┴──────────┴──────┘
+
+BK.get_normal_form(deepcopy(br_pocoll), 2; detailed = Val(false))
+
+br_pd = @time continuation(
+            deepcopy(br_pocoll), 2, ContinuationPar(BK.getcontparams(br_pocoll); max_steps = 12, detect_bifurcation = 0, ds = 0.001,);
+            verbosity = 2,
+            plot = true,
+            args_po...,
+            normal_form_kwargs = (detailed = Val(false),),
+            # δp = 0.001, ampfactor = 0.25, # for #4
+            # δp = 0.001, ampfactor = 0.25, # for #7
+            δp = 0.005, ampfactor = 0.125, bothside = Val(true), # for #2
+            )
+
+plot(br_pocoll);plot!(br_pd, color = :red)
+plot(br);plot!(br_pocoll, br_pd)

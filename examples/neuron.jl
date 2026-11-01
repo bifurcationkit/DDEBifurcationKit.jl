@@ -6,7 +6,7 @@ const DDEBK = DDEBifurcationKit
 using Plots
 
 function neuronVF(x, xd, p)
-   (;κ, β, a12, a21, τs, τ1, τ2) = p
+   (;κ, β, a12, a21,) = p
    [
       -κ * x[1] + β * tanh(xd.u[3][1]) + a12 * tanh(xd.u[2][2]),
       -κ * x[2] + β * tanh(xd.u[3][2]) + a21 * tanh(xd.u[1][1])
@@ -39,7 +39,7 @@ br_pitchfork = continuation(br2, 2, opts_pitch)
 plot(br2, br_pitchfork)
 ################################################################################
 brhopf = continuation(br, 2, (@optic _.a21),
-         ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 100, p_max = 15., p_min = -1.,ds = -0.02);
+         ContinuationPar(br.contparams, detect_bifurcation = 2, dsmax = 0.04, max_steps = 150, p_max = 15., p_min = -1.,ds = -0.02);
          verbosity = 0, plot = true,
          detect_codim2_bifurcation = 2,
          # bothside = Val(true),
@@ -48,8 +48,8 @@ brhopf = continuation(br, 2, (@optic _.a21),
 
 plot(brhopf, vars = (:a21, :τs))
 bt = get_normal_form(brhopf, 2, detailed = Val(false), nev = 10, verbose = false)
+BK.get_normal_form(brhopf, 3; detailed = Val(false), nev = 10, verbose = true)
 BK.get_normal_form(brhopf, 4; detailed = Val(false), nev = 10, verbose = true)
-BK.get_normal_form(brhopf, 5; detailed = Val(false), nev = 10, verbose = true)
 
 bropts = ContinuationPar(brhopf.contparams; ds = 0.005, max_steps = 20)
 @reset bropts.newton_options = NewtonPar(tol = 1e-10, verbose = false)
@@ -57,12 +57,11 @@ hopf_from_hh = [continuation(brhopf, ii, bropts;
          alg = PALC(tangent = Bordered()),
          verbosity = 2,
          plot = true,
-         detect_codim2_bifurcation = 0,
-         detailed = Val(false),
+         detect_codim2_bifurcation = 2,
+         normal_form_kwargs = (detailed = Val(false), nev = 20,),
          bothside=Val(true),
          normC = norminf,
-         nev = 20,
-         ) for ii in (3,4)]
+         ) for ii in (3,4, 5)]
 plot(brhopf, hopf_from_hh...)
 ################################################################################
 # computation periodic orbit

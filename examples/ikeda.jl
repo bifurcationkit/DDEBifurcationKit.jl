@@ -43,7 +43,7 @@ args_po = (
         end,
     normC = norminf)
 
-probpo = Collocation(50, 4; N = 1, jacobian = BK.AutoDiffDense())
+probpo = Collocation(30, 5; N = 1, jacobian = BK.AutoDiffDense())
 br_pocoll = @time continuation(
     br, 1, opts_po_cont,
     probpo;

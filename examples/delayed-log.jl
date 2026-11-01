@@ -36,19 +36,19 @@ plot(br)
 # computation periodic orbit
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.05, ds= 0.001, p_max = 10., p_min=-5., max_steps = 130,
-    nev = 5, tol_stability = 1e-3, plot_every_step = 2)
+    nev = 10, tol_stability = 1e-3, plot_every_step = 2)
 @reset opts_po_cont.newton_options.tol = 1e-11
 # @reset opts_po_cont.newton_options.verbose = true
 
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p;k...) -> begin
-		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+args_po = (    record_from_solution = (x, p; iter, k...) -> begin
+		xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
 		return (max = maximum(xtt[1,:]),
 				min = minimum(xtt[1,:]),
-				period = getperiod(p.prob, x, nothing))
+				period = getperiod(BK.getprob(iter), x, nothing))
 	end,
-	plot_solution = (x, p; k...) -> begin
-		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
+	plot_solution = (x, p; iter, k...) -> begin
+		xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
 		plot!(xtt.t, xtt[1,:]; label = "V1", k...)
 		plot!(br; subplot = 1, putspecialptlegend = false)
 		end,
@@ -56,14 +56,10 @@ args_po = (    record_from_solution = (x, p;k...) -> begin
 
 probpo = Collocation(30, 4; N = 1, jacobian = BifurcationKit.DenseAnalyticalInplace(), meshadapt=true)
 br_pocoll = @time continuation(
-		br, 1, opts_po_cont,
-		probpo;
+		br, 1, opts_po_cont, probpo;
 		alg = PALC(tangent = Bordered()),
-		verbosity = 0,
 		plot = true,
 		args_po...,
-		ampfactor = 2,
-		δp = 0.01,
 		normC = norminf,
 		)
 

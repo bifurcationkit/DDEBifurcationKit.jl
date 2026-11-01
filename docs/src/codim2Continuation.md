@@ -2,6 +2,9 @@
 
 In this page, we explain how to perform continuation of Fold / Hopf points and detect the associated bifurcations.
 
+!!! tip "BifurcationKit.jl"
+    We only highlight what is specific to DDE. For more information go to [BifurcationKit](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/codim2Continuation/).
+
 ### List of detected codim 2 bifurcation points
 |Bifurcation|symbol used|
 |---|---|
@@ -14,7 +17,7 @@ In this page, we explain how to perform continuation of Fold / Hopf points and d
 In a nutshell, all you have to do (see below) is to call `continuation(br, ind_bif, lens2)` to continue the bifurcation point stored in `br.specialpoint[ind_bif]` and set proper options.
 
 !!! info "Implementation"
-    The continuation of Fold / Hopf points is not implemented from scratch. It relies on BifurcationKit from which we call "regular" Fold / Hopf continuation methods.
+    The continuation of Fold / Hopf points is **not implemented** from scratch. It relies on BifurcationKit from which we call "regular" Fold / Hopf continuation methods.
 
 ## Fold continuation
 
@@ -42,19 +45,3 @@ You can detect the following codim 2 bifurcation points by using the option `det
 - the detection of Hopf-Hopf (HH) is performed by monitoring the eigenvalues.
 
 > The continuation of Hopf points is stopped at BT and when $\omega<100\epsilon$ where $\epsilon$ is the newton tolerance.
-
-!!! danger "Bautin"
-    Bautin points are not detected for SD-DDE as the normal form is not implemented.
-
-
-## Codim 2 continuation
-
-To compute the codim 2 curve of Fold / Hopf points, one can call `continuation` with the following options
-
-```@docs
- continuation(br::BifurcationKit.AbstractBranchResult, ind_bif::Int64,
-				lens2, options_cont::ContinuationPar = br.contparams ;
-				kwargs...)
-```
-
-where the options are as above except with have an additional parameter axis `lens2` which is used to locate the bifurcation points.
