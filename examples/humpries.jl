@@ -5,6 +5,7 @@ pkg"activate ."
 # Humphries et al ( A. R. Humphries, O. A. DeMasi, F. M. G. Magpantay, F. Upham (2012), Dynamics of a delay differential equation with multiple state-dependent delays, Discrete and Continuous Dynamical Systems 32(8) pp. 2701-2727 http://dx.doi.org/10.3934/dcds.2012.32.2701)
 using Revise, DDEBifurcationKit, Plots
 using BifurcationKit
+const BK = BifurcationKit
 const DDEBK = DDEBifurcationKit
 
 function humpriesVF(x, xd, p)
@@ -21,10 +22,10 @@ function delaysF(x, par)
    ]
 end
 
-function plotSolution(x, p; k...)
-    xtt = DDEBK.get_periodic_orbit(p.prob, x, nothing)
+function plotSolution(x, p; state, iter, k...)
+    xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
     plot!(xtt.t, xtt[1,:]; label = "x", marker = :d, markersize = 1, k...)
-    plot!(br; subplot = 1, putspecialptlegend = false)
+   #  plot!(br; subplot = 1, putspecialptlegend = false)
 end
 
 pars = (κ1=0., κ2=2.3, a1=1.3, a2=6, γ=4.75, c=1.)
@@ -33,7 +34,7 @@ optn = NewtonPar(verbose = false, eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 13., p_min = 0., newton_options = optn, nev = 25, )
 br = continuation(prob, PALC(), opts)
 plot(br)
-get_normal_form(br, 2)
+# get_normal_form(br, 2)
 ################################################################################
 brh = continuation(BifurcationKit.re_make(prob; params = @set pars.κ2=3.), PALC(), opts; plot = true)
 brhopf = [continuation(brh, ii, (@optic _.κ2),

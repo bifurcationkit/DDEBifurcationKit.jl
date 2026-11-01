@@ -167,8 +167,9 @@ function __floquet_coll(::FloquetColl,
     return logvals[perm[1:min(nev, length(perm))]], nothing, true, 1
 end
 ########################################################################################
-# Right Floquet eigenfunction of a period-doubling point of a DDE periodic orbit, ie
-# the one associated with the multiplier μ = -1.
+# Right Floquet eigenfunction of a DDE periodic orbit for a given multiplier target:
+# μ = -1 for period doubling, the multiplier closest to the unit circle for
+# Neimark-Sacker (`μtarget = nothing`).
 #
 # The collocation jacobian `analytical_jacobian_dde_cst` wraps every delayed term into
 # the current period (see `PeriodicOrbitCollocation.jl`). This is correct for the
@@ -179,9 +180,10 @@ end
 #
 # The returned vector has the layout expected by the period-doubling `predictor`, ie
 # one period of time slices [u₀, u₁, ..., u_N] of length `length(coll)`.
-@views function _pd_floquet_eigenvector(coll::Collocation{Tprob},
+@views function _floquet_eigenvector(coll::Collocation{Tprob},
                                         u::AbstractVector,
-                                        par) where {Tprob <: AbstractDDEBifurcationProblem}
+                                        par;
+                                        μtarget = -1) where {Tprob <: AbstractDDEBifurcationProblem}
     n, m, Ntst = size(coll)
     N = m * Ntst
     C, n_history, _ = _dde_coll_jac_extended(coll, u, par)
@@ -202,11 +204,28 @@ end
     end
 
     vals, vecs = LA.eigen(M)
-    ind = argmin(abs.(vals .+ 1))
-    v = real.(vecs[:, ind])
+    # `μtarget = nothing` selects the multiplier closest to the unit circle, excluding
+    # the trivial multiplier μ = 1 and numerical zeros (Neimark-Sacker); otherwise the
+    # multiplier closest to `μtarget`
+    if isnothing(μtarget)
+        sel = [abs(vals[i] - 1) > 1e-6 && abs(vals[i]) > 1e-4 for i in eachindex(vals)]
+        ind = findall(sel)[argmin(abs.(abs.(vals[sel]) .- 1))]
+    else
+        ind = argmin(abs.(vals .- μtarget))
+    end
+    v = vecs[:, ind]
 
     # rebuild one period of the eigenfunction: [u₀, u₁, ..., u_N]
     xcur = Mt * v
     ζ = vcat(v[end-n+1:end], xcur)
     return ζ, vals[ind]
+end
+
+# Period-doubling specialisation: real part of the eigenfunction for the multiplier
+# μ = -1, with the layout expected by the period-doubling `predictor`.
+@views function _pd_floquet_eigenvector(coll::Collocation{Tprob},
+                                        u::AbstractVector,
+                                        par) where {Tprob <: AbstractDDEBifurcationProblem}
+    ζ, μ = _floquet_eigenvector(coll, u, par; μtarget = -1)
+    return real.(ζ), μ
 end

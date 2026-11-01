@@ -23,14 +23,15 @@ prob = ConstantDDEBifProblem(neuron2VF, delaysF, zeros(2), pars, (@optic _.c))
 optn = NewtonPar(eigsolver = DDE_DefaultEig())
 opts = ContinuationPar(p_max = 1.0, p_min = 0.25, newton_options = optn, ds = 0.01, detect_bifurcation = 3, nev = 9, dsmax = 0.05, n_inversion = 8)
 br = continuation(prob, PALC(), opts; bothside = Val(true))
+br = continuation(prob, PALC(tangent = Bordered()), opts; bothside = Val(true))
 plot(br)
 
 hpnf = BK.get_normal_form(br, 2)
 ################################################################################
 # computation periodic orbit
-@views function plot_solution(x, p; k...)
-    xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-    plot!(xtt.t, xtt[1,:]; label = "V1", marker = :d, markersize = 2, k...)
+@views function plot_solution(x, p; iter, state, k...)
+    xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
+    plot!(xtt.t, xtt[1,:]; label = "V1", marker = :d, markersize = 1, k...)
     plot!(xtt.t, xtt[2,:]; label = "V2", k...)
     # plot!(br; subplot = 1, putspecialptlegend = false)
 end
@@ -77,7 +78,7 @@ BK.get_normal_form(deepcopy(br_pocoll), 2; detailed = Val(false))
 
 br_pd = @time continuation(
             deepcopy(br_pocoll), 2, ContinuationPar(BK.getcontparams(br_pocoll); max_steps = 12, detect_bifurcation = 0, ds = 0.001,);
-            verbosity = 2,
+            # verbosity = 2,
             plot = true,
             args_po...,
             normal_form_kwargs = (detailed = Val(false),),
