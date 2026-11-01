@@ -26,21 +26,24 @@ opts = ContinuationPar(p_max = 1.6, p_min = 1.2, newton_options = optn, ds = -0.
 br = continuation(prob, PALC(), opts)
 plot(br)
 ##########################################################################################
-brhopf = continuation(br, 1, (@optic _.a), ContinuationPar(opts, p_min = -2., ds = 0.001, max_steps = 50); 
+brhopf = continuation(br, 1, (@optic _.a), 
+         ContinuationPar(opts, p_min = -2., ds = 0.001, max_steps = 50); 
          bothside = Val(true))
 plot(brhopf)
 ##########################################################################################
 BK.get_normal_form(br, 1)
 # arguments for periodic orbits
-args_po = (    record_from_solution = (x, p; iter, k...) -> begin
-        xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
-        mi, ma = extrema(xtt[1,:])
-        return (max = ma,
-                min = mi,
-                amp = ma-mi,
-                period = getperiod(BK.getprob(iter), x, nothing))
-    end,
-    plot_solution = (x, p; iter, k...) -> begin
+function recordPO(x, p; iter, state, k...)
+   xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
+   mi, ma = extrema(xtt[1,:])
+   return (max = ma,
+            min = mi,
+            amp = ma-mi,
+            period = x[end])
+end
+
+args_po = (    record_from_solution = recordPO,
+    plot_solution = (x, p; iter, state, k...) -> begin
         xtt = BK.get_periodic_orbit(BK.getprob(iter), x, nothing)
         plot!(xtt.t, xtt[1,:]; label = "V1", k...)
         plot!(br; subplot = 1, putspecialptlegend = false)
@@ -50,11 +53,11 @@ args_po = (    record_from_solution = (x, p; iter, k...) -> begin
 # continuation parameters
 opts_po_cont = ContinuationPar(dsmax = 0.01, ds= 0.001, dsmin = 1e-4, p_max = 1.9, nev = 20, tol_stability = 1e-5, detect_bifurcation = 3, newton_options = NewtonPar(tol = 1e-12), n_inversion = 4)
 
-probpo = Collocation(20, 4; N = 1, jacobian = BK.DenseAnalyticalInplace(), meshadapt = false)
+probpo = Collocation(30, 4; N = 1, jacobian = BK.DenseAnalyticalInplace(), meshadapt = true)
 br_pocoll = @time continuation(
             br, 1, ContinuationPar(opts_po_cont;),
             probpo;
-            verbosity = 3,
+            # verbosity = 3,
             plot = true,
             args_po...,
             normC = norminf,
@@ -86,7 +89,7 @@ plot(br, br_pocoll)
 BK.get_normal_form(br_pocoll, 1; detailed = Val(false))
 
 bo_pd = continuation(deepcopy(br_pocoll), 1;
-               verbosity = 3,
+               # verbosity = 3,
                plot = true,
                args_po...,
                δp = 0.001, ampfactor = 0.1,
@@ -97,7 +100,7 @@ bo_pd = continuation(deepcopy(br_pocoll), 1;
 plot(bo_pd, br_pocoll)
 
 bo_pd2 = continuation(deepcopy(bo_pd), 1;
-               verbosity = 3,
+               # verbosity = 3,
                plot = true,
                args_po...,
                δp = 0.001, ampfactor = 0.1,
@@ -106,3 +109,33 @@ bo_pd2 = continuation(deepcopy(bo_pd), 1;
                )
 
 plot(bo_pd, bo_pd2, br_pocoll)
+#############################################################################
+pds = BK.continuation(deepcopy(br_pocoll), 1, (@optic _.a),
+            ContinuationPar(BK.getcontparams(br_pocoll); ds = -0.001, detect_bifurcation = 0, p_min = -2.);
+            verbosity = 2,
+            plot = true,
+            alg = PALC(tangent = Bordered()),
+            update_minaug_every_step = 1,
+            detect_codim2_bifurcation = 0,
+            jacobian_ma = BK.MinAug(),
+            bothside = Val(true),
+            start_with_eigen = Val(false),
+            callback_newton = BK.cbMaxNorm(1.)
+            )
+
+pds_2 = BK.continuation(deepcopy(bo_pd), 1, (@optic _.a),
+            ContinuationPar(BK.getcontparams(br_pocoll); ds = -0.001, detect_bifurcation = 0, p_min = -2.);
+            verbosity = 2,
+            plot = true,
+            alg = PALC(tangent = Bordered()),
+            update_minaug_every_step = 1,
+            detect_codim2_bifurcation = 0,
+            jacobian_ma = BK.MinAug(),
+            bothside = Val(true),
+            start_with_eigen = Val(false),
+            callback_newton = BK.cbMaxNorm(1.)
+            )
+
+plot(pds, vars = (:b, :period))
+
+plot(brhopf, pds, pds_2, ylims = (0,5))

@@ -3,7 +3,7 @@
 ## Constant delays examples
 
 ```@contents
-Pages = ["dde/neuron.md","dde/neuronV2.md"]
+Pages = ["dde/mackey-glass.md","dde/neuron.md","dde/neuronV2.md"]
 Depth = 1
 ```
 

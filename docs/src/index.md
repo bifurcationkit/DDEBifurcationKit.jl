@@ -54,33 +54,36 @@ Type of delay: Constant (C), state-dependent (SD), nested (N)
 
 |Features| delay type | Matrix Free|Custom state| [Tutorials](https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/tutorials/tutorials/) | GPU |
 |---|---|---|---|---|---|
-| (Deflated) Krylov-Newton| C/SD |  Yes | Yes| | |
-| Continuation PALC (Natural, Secant, Tangent, Polynomial) | C/SD| | | | |
-| Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | |
+| (Deflated) Krylov-Newton| C/SD |  Y | Y| | Y |
+| Continuation | C/SD| | | | Y |
+| Bifurcation / Fold / Hopf point detection | C/SD | Y|   |  | Y |
 | Fold Point continuation |C/SD | Y |  |  |
-| Hopf Point continuation | C/SD |  | `AbstractArray` | | |
-| Branch point / Fold form | C/SD | |  | |  | |
-| Hopf normal form | C/SD | |  | |  | |
-| Branch switching at Branch / Hopf points | C/SD |  | `AbstractArray` |  |  |
+| Hopf Point continuation | C/SD | No | `AbstractArray` | | |
+| Branch point / Fold normal form | C/SD | Y |  | |  | |
+| Hopf normal form | C/SD | No |  | |  | |
+| Branch switching at Branch / Hopf points | C/SD | Y/No | `AbstractArray` |  |  |
 | Automatic bifurcation diagram computation of equilibria | C/SD| Y| `AbstractArray` |  | |
-| Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD | |  |  |
+| Periodic Orbit (Collocation) Newton / continuation | C/SD | No | `AbstractVector` |  | |
+| Bogdanov-Takens / Bautin / Cusp / Zero-Hopf / Hopf-Hopf point detection | C/SD | Yes |  |  |
 
 ### Capabilities related to Periodic orbits (PO)
 
 - PO computation and continuation Orthogonal Collocation (mesh adaptive).
 - Computation of Floquet exponents
 - Automatic branch switching at simple Hopf points (DDE, SD-DDE) to periodic orbits
-- Detection of Branch, Fold, Neimark-Sacker (NS), Period Doubling (PD) bifurcation points of PO.
-- Assisted branch switching from simple Period-Doubling points to PO
-- Assisted branch switching from simple Branch points to PO
 
-|Features| delay type | Matrix Free|Custom state| [Tutorials](https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/tutorials/tutorials/) | GPU |
-|---|---|---|---|---|---|
-| Periodic Orbit (Collocation) Newton / continuation | C/SD |  | `AbstractVector` |  | |
-| Floquet exponents |C/SD| | `AbstractVector` |  | |
-| Fold, Neimark-Sacker, Period doubling detection |C/SD| | `AbstractVector` |  | |
+> Legend for the table: Standard shooting (SS), Poincaré shooting (PS), Orthogonal collocation (OC), trapezoid (T).
 
+|Features| delay type | Method | Matrix Free|Custom state| [Tutorials](https://bifurcationkit.github.io/DDEBifurcationKit.jl/dev/tutorials/tutorials/) | GPU |
+|---|---|---|---|---|---|---|
+| Periodic Orbit Newton / continuation | C/SD | OC | | `AbstractVector` |  | |
+| Floquet exponents |C/SD| OC | | `AbstractVector` |  | |
+| Fold, Neimark-Sacker, Period doubling detection |C/SD| OC | | `AbstractVector` |  | |
+| Branch switching at Branch point (Manual) |C/SD|OC| See each|  |  | |
+| Branch switching at PD point (Manual) |C/SD|OC| See each|  |  | |
+| Continuation of Fold points (Manual) |C/SD|OC| See each| `AbstractVector` | | |
+| Continuation of Period-doubling points |C/SD|OC| | `AbstractVector` | | |
+| Continuation of Neimark-Sacker points |C/SD|OC| | `AbstractVector` | | |
 
 ## Requested methods for Custom State
 

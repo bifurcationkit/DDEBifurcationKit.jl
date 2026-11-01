@@ -40,7 +40,7 @@ end
 # This method handles both HopfMinimallyAugmentedFormulation (from BK) and
 # HopfDDEFormulation (from DDEBifurcationKit) which share the same field structure.
 # function BK.__compute_bordered_vectors(𝐇::BK.HopfMinimallyAugmentedFormulation, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯) where 𝒯
-function BK.__compute_bordered_vectors_hopf(linbdsolver, linbdsolver_adjoint, Mass::BK.IdentityOperator, Mass★, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
+function BK.__compute_bordered_vectors_hopf(linbdsolver, linbdsolver_adjoint, ::BK.IdentityOperator, Mass★, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
     # consistent with BK.hopf_ma_test: solve (A(iω) - iωI)v + aσ = 0
     Δω = -Δ(J_at_xp, Complex{𝒯}(0, ω))
     # adjoint: (A(iω) - iωI)ᴴ = J₀ᵀ + Σ exp(iωτⱼ)Jⱼᵀ + iωI = -Δ(Jᵀ, -iω), the DDE analogue of (J - iωI)ᴴ
@@ -81,7 +81,7 @@ function BK.jacobian(pdpb::BK.HopfMAProblem{<:BK.HopfMinimallyAugmentedFormulati
     # σ(x, p, ω): bordered variable of the functional, with the current vectors a, b
     σf(xl, pl, ωl) = begin
         Jl = BK.jacobian(𝐇.prob_vf, xl, BK.set(par, lens, pl))
-        _, σl, _, _ = BK.hopf_ma_test(𝐇, Jl, 𝐇.a, 𝐇.b, zero(𝒯), 𝐇.zero, one(𝒯), ωl)
+        _, σl, _, _ = BK.hopf_ma_test(𝐇, BK.IdentityOperator(), Jl, 𝐇.a, 𝐇.b, zero(𝒯), 𝐇.zero, one(𝒯), ωl)
         σl
     end
 

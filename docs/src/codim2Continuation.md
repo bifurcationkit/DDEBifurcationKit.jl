@@ -16,6 +16,9 @@ In this page, we explain how to perform continuation of Fold / Hopf points and d
 
 In a nutshell, all you have to do (see below) is to call `continuation(br, ind_bif, lens2)` to continue the bifurcation point stored in `br.specialpoint[ind_bif]` and set proper options.
 
+!!! tip "BifurcationKit.jl"
+    We only highlight what is specific to DDE. For more information go to [BifurcationKit](https://bifurcationkit.github.io/BifurcationKitDocs.jl/dev/).
+
 !!! info "Implementation"
     The continuation of Fold / Hopf points is **not implemented** from scratch. It relies on BifurcationKit from which we call "regular" Fold / Hopf continuation methods.
 

@@ -76,11 +76,6 @@ opts_po_cont = ContinuationPar(dsmax = 0.1, ds = 0.001, dsmin = 1e-4, p_max = 12
 
 # arguments for periodic orbits
 args_po = (
-	plot_solution = (x, p; k...) -> begin
-		xtt = BK.get_periodic_orbit(p.prob, x, nothing)
-		plot!(xtt.t, xtt[1,:]; label = "x", k...)
-		plot!(br; subplot = 1, putspecialptlegend = false)
-		end,
 	normC = norminf)
 
 probpo = Collocation(30, 5; N = 1, jacobian = BK.DenseAnalytical(), meshadapt = true, K = 400.)
