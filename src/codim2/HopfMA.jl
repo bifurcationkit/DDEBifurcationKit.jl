@@ -19,7 +19,7 @@ end
 # Dispatch hopf_ma_test for JacobianDDE.
 # The standard MA formulation from BifurcationKit solves (J - iωI)v + aσ = 0
 # For DDEs, we build Δ(iω) = iωI - J₀ - Σ exp(-iωτⱼ)·Jⱼ and solve Δ(iω)v + aσ = 0
-function BK.hopf_ma_test(𝐇, J::JacobianDDE, a, b, J22, _zero, n, ω::𝒯) where 𝒯
+function BK.hopf_ma_test(𝐇, M, J::JacobianDDE, a, b, J22, _zero, n, ω::𝒯) where 𝒯
     # -(iωI - J₀ - Σ exp(-iωτⱼ)Jⱼ) = J₀ + Σ exp(-iωτⱼ)Jⱼ - iωI = A(iω) - iωI,
     # i.e. the DDE analogue of the ODE operator (J - iωI).
     Δω = -Δ(J, Complex{𝒯}(0, ω))
@@ -40,16 +40,16 @@ end
 # This method handles both HopfMinimallyAugmentedFormulation (from BK) and
 # HopfDDEFormulation (from DDEBifurcationKit) which share the same field structure.
 # function BK.__compute_bordered_vectors(𝐇::BK.HopfMinimallyAugmentedFormulation, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯) where 𝒯
-function BK.__compute_bordered_vectors_hopf(linbdsolver, linbdsolver_adjoint, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
+function BK.__compute_bordered_vectors_hopf(linbdsolver, linbdsolver_adjoint, Mass::BK.IdentityOperator, Mass★, J_at_xp::JacobianDDE, JAd_at_xp, ω::𝒯, a, b, _zero) where {𝒯}
     # consistent with BK.hopf_ma_test: solve (A(iω) - iωI)v + aσ = 0
     Δω = -Δ(J_at_xp, Complex{𝒯}(0, ω))
     # adjoint: (A(iω) - iωI)ᴴ = J₀ᵀ + Σ exp(iωτⱼ)Jⱼᵀ + iωI = -Δ(Jᵀ, -iω), the DDE analogue of (J - iωI)ᴴ
     Δω_adj = JAd_at_xp isa JacobianDDE ? -Δ(JAd_at_xp, Complex{𝒯}(0, -ω)) : JAd_at_xp
-    v, _, cv1, itv = linbdsolver(Δω, a, b, zero(𝒯), _zero, one(𝒯))
+    v, σ1, cv1, itv = linbdsolver(Δω, a, b, zero(𝒯), _zero, one(𝒯))
     ~cv1 && @debug "Bordered linear solver for Δ(iω) did not converge."
-    w, _, cv2, itw = linbdsolver_adjoint(Δω_adj, b, a, zero(𝒯), _zero, one(𝒯))
+    w, σ2, cv2, itw = linbdsolver_adjoint(Δω_adj, b, a, zero(𝒯), _zero, one(𝒯))
     ~cv2 && @debug "Bordered linear solver for Δ(iω)' did not converge."
-    return (; v, w, itv, itw)
+    return (; v, w, itv, itw, σ1, σ2)
 end
 ###################################################################################################
 # Matrix-Based Jacobian for the DDE Hopf MA problem with MinAugMatrixBased.

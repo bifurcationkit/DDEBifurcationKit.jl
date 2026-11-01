@@ -29,7 +29,8 @@ function BK.__hopf_normal_form(prob::AbstractDDEBifurcationProblem,
                             pt::BK.Hopf, 
                             ls::BK.AbstractLinearSolver; # for dispatch from BK 
                             verbose::Bool = false,
-                            L = nothing)
+                            L = nothing,
+                            Mass = BK.IdentityOperator())
     x0 = pt.x0
     p = pt.p
     lens = pt.lens
@@ -181,7 +182,8 @@ function BK.__hopf_normal_form(prob::SDDDEBifProblem,
                          pt::BK.Hopf, 
                         ls::BK.AbstractLinearSolver; # for dispatch from BK 
                         verbose::Bool = false,
-                        L = nothing)
+                        L = nothing,
+                        Mass = BK.IdentityOperator())
     x0 = pt.x0
     p = pt.p
     lens = pt.lens
@@ -318,7 +320,7 @@ function BK.hopf_normal_form(prob::AbstractDDEBifurcationProblem,
 
     # left eigen-elements
     _Jt = BK.has_adjoint(prob) ? BK.jacobian_adjoint(prob, convert(Teigvec, bifpt.x), parbif) : adjoint(L)
-    ζ★, λ★ = BK.get_adjoint_basis(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = verbose)
+    ζ★, λ★ = BK._get_target_eigenvector_from_eigensolver(_Jt, conj(λ), options.eigsolver; nev = nev, verbose = verbose)
 
     # check that λ★ ≈ conj(λ)
     abs(λ + λ★) > 1e-2 && @warn "We did not find the left eigenvalue for the Hopf point to be very close to the imaginary part:\nλ ≈ $λ,\nλ★ ≈ $λ★?\n You can perhaps increase the number of computed eigenvalues, the number is nev = $nev"

@@ -21,7 +21,7 @@ function BK.continuation(br::BK.AbstractResult{Tkind, Tprob},
     # compute predictor for point on new branch
     ds = isnothing(δp) ? _contParams.ds : δp
     𝒯 = typeof(ds)
-    pred = predictor(hopfpt, ds; verbose, ampfactor = 𝒯(ampfactor))
+    pred = predictor(hopfpt, ds; ampfactor = 𝒯(ampfactor))
 
     # we compute a phase so that the constraint equation
     # < u(0) − u_hopf, ψ > is satisfied, i.e. equal to zero.
