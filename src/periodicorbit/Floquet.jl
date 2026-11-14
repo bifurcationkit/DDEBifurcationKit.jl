@@ -21,12 +21,12 @@ function __floquet_coll_gev(eig::FloquetGEV{ <: AbstractDDEEigenSolver},
                             nev = 3
                         )
     coll = BK.get_discretization(wrapcoll)
-    n, _, _ = size(coll)
-    period = BK.getperiod(coll, u0, nothing)
-    J = analytical_jacobian_dde_cst_floquetgev(coll, u0, par)
     if !(coll.prob_vf isa ConstantDDEBifProblem)
         error("FloquetGEV (Generalized Eigenvalue / NEP) requires constant delays.\nUse `FloquetColl` (Verheyden-Lust monodromy) for state-dependent delays.")
     end
+    n, _, _ = size(coll)
+    period = BK.getperiod(coll, u0, nothing)
+    J = analytical_jacobian_dde_cst_floquetgev(coll, u0, par)
     _delays = delays(coll.prob_vf, nothing, par)
 
     # λ⋅B * p + D * p - J0 * p - exp(-λ⋅τ) * Jd1 * p = 0

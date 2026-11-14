@@ -49,7 +49,7 @@ plot(brhopf..., vars = (:κ1, :κ2))
 ################################################################################
 # computation periodic orbit
 # continuation parameters
-opts_po_cont = ContinuationPar(dsmax = 0.025, ds= 0.001, dsmin = 1e-4, p_max = 12.5, p_min=-5., max_steps = 300,
+opts_po_cont = ContinuationPar(dsmax = 0.025, ds= 0.001, dsmin = 1e-4, p_max = 12.5, p_min=-5., max_steps = 500,
 nev = 20, tol_stability = 4e-3, plot_every_step = 20, newton_options = NewtonPar(tol = 1e-12))
 
 # arguments for periodic orbits
@@ -61,11 +61,12 @@ args_po = (
 
 probpo = Collocation(30, 5; N = 1, jacobian = DDEBK.BifurcationKit.DenseAnalytical(), meshadapt = true, verbose_mesh_adapt = false, K = 400.)
 br_pocoll = @time continuation(
-    br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 2),
+    br, 1, ContinuationPar(opts_po_cont; detect_bifurcation = 3, n_inversion = 6),
     probpo;
     alg = PALC(tangent = Bordered()),
     # regular continuation options
-    verbosity = 1, plot = true,
+   #  verbosity = 1, 
+    plot = true,
     args_po...,
     δp = 0.01,
     )

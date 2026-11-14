@@ -75,7 +75,7 @@ We compute the branch of periodic orbits from the Hopf bifurcation points using 
 opts_po_cont = ContinuationPar(dsmax = 0.1, ds = 0.001, dsmin = 1e-4, p_max = 12., max_steps = 3000, detect_bifurcation = 3, plot_every_step = 20, tol_stability = 4e-3)
 
 # arguments for periodic orbits
-args_po = (
+args_po = (;
 	normC = norminf)
 
 probpo = Collocation(30, 5; N = 1, jacobian = BK.DenseAnalytical(), meshadapt = true, K = 400.)
